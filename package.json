@@ -8,7 +8,8 @@
     "start": "concurrently 'npm run server' 'npm run client'",
     "test": "neutrino test",
     "server": "node server.js",
-    "client": "neutrino start"
+    "client": "neutrino start",
+    "heroku-postbuild": "npm run build"
   },
   "repository": {
     "type": "git",
