@@ -10,6 +10,8 @@ const courierSchema = new mongoose.Schema({
     status: { type: String },
     active: { type: Boolean },
     taxWithholding: { type: Number }
+}, {
+    timestamps: true
 });
 
 module.exports = mongoose.model('Courier', courierSchema);

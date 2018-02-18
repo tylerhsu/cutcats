@@ -5,17 +5,17 @@ const jobSchema = new mongoose.Schema({
     billingReference: { type: String },
     orderPlacer: { type: String },
     provider: { type: String },
-    client: { type: mongoose.schema.types.ObjectId, ref: 'Client' },
-    courier: { type: mongoose.schema.types.ObjectId, ref: 'Courier' },
+    client: { type: mongoose.Schema.Types.ObjectId, ref: 'Client' },
+    courier: { type: mongoose.Schema.Types.ObjectId, ref: 'Courier' },
     originName: { type: String },
     originAddress: { type: String },
     originPostalCode: { type: String },
-    originZone: { type: mongoose.schema.types.ObjectId, ref: 'Zone' },
+    originZone: { type: mongoose.Schema.Types.ObjectId, ref: 'Zone' },
     destinationName: { type: String },
     destinationAddress1: { type: String },
     destinationAddress2: { type: String },
     destinationPostalCode: { type: String },
-    destinationZone: { type: mongoose.schema.types.ObjectId, ref: 'Zone' },
+    destinationZone: { type: mongoose.Schema.Types.ObjectId, ref: 'Zone' },
     deliveryStatus: { type: String, enum: ['delivered', 'complete'] },
     elapsedPickupTimeSeconds: { type: Number },
     transitTimeSeconds: { type: Number },
@@ -42,6 +42,8 @@ const jobSchema = new mongoose.Schema({
     specialInstructions: { type: String },
     haversineMiles: { type: Number },
     routeMiles: { type: Number }
+}, {
+    timestamps: true
 });
 
 module.exports = mongoose.model('Job', jobSchema);
