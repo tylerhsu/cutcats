@@ -5,7 +5,16 @@ const models = require('../models');
 router.get('/', getCouriers);
 
 function getCouriers(req, res, next) {
-    models.Courier.find()
+    let query = models.Courier.find();
+
+    if (req.query.q) {
+        query
+            .find(
+                { $text: { $search: req.query.q } }
+            );
+    }
+    
+    return query.exec()
         .then(couriers => {
             res.json(couriers);
         })
