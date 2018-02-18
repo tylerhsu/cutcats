@@ -34,10 +34,10 @@
     "underscore": "^1.8.3",
     "neutrino": "^8.1.1",
     "@neutrinojs/mocha": "^8.1.1",
-    "@neutrinojs/react": "^8.1.1"
+    "@neutrinojs/react": "^8.1.1",
+    "dotenv": "^5.0.0"
   },
   "devDependencies": {
-    "concurrently": "^3.5.1",
-    "dotenv": "^5.0.0"
+    "concurrently": "^3.5.1"
   }
 }
