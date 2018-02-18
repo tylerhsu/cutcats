@@ -57,3 +57,8 @@ typings/
 # dotenv environment variables file
 .env
 
+.dir-locals.el
+
+client/build
+
+misc
