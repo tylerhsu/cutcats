@@ -1,3 +1,6 @@
+require('dotenv').config();
+const port = (parseInt(process.env.PORT) || 3000) + 1;
+
 module.exports = {
     options: {
         source: 'client/src',
@@ -14,7 +17,8 @@ module.exports = {
                     title: 'cutcats'
                 },
                 devServer: {
-                    proxy: 'http://localhost:3000'
+                    proxy: 'http://localhost:' + (port - 1),
+                    port: port
                 }
             }
         ],

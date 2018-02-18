@@ -46,4 +46,12 @@ const jobSchema = new mongoose.Schema({
     timestamps: true
 });
 
+jobSchema.index({
+    jobId: 'text',
+    externalId: 'text',
+    billingReference: 'text',
+    orderPlacer: 'text',
+    originName: 'text'
+});
+
 module.exports = mongoose.model('Job', jobSchema);

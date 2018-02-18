@@ -16,4 +16,10 @@ const clientSchema = new mongoose.Schema({
     timestamps: true
 });
 
+clientSchema.index({
+    name: 'text',
+    qbName: 'text',
+    company: 'text'
+});
+
 module.exports = mongoose.model('Client', clientSchema);

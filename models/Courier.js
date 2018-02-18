@@ -14,4 +14,11 @@ const courierSchema = new mongoose.Schema({
     timestamps: true
 });
 
+courierSchema.index({
+    name: 'text',
+    qbName: 'text',
+    radioCallNumber: 'text',
+    email: 'text'
+});
+
 module.exports = mongoose.model('Courier', courierSchema);
