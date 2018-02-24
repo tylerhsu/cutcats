@@ -1,6 +1,6 @@
 require('dotenv').config();
 
-const port = parseInt(process.env.PORT) || 3000;
+const apiPort = parseInt(process.env.PORT) || 3000;
 
 
 module.exports = {
@@ -19,8 +19,14 @@ module.exports = {
                     title: 'cutcats'
                 },
                 devServer: {
-                    proxy: 'http://localhost:' + (port - 1),
-                    port: port
+                    staticOptions: {
+                        extensions: 'html'
+                    },
+                    proxy: [{
+                        context: ['/api', '/auth'],
+                        target: 'http://localhost:' + apiPort,
+                    }],
+                    port: apiPort + 1
                 }
             }
         ],

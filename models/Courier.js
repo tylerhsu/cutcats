@@ -5,7 +5,7 @@ const courierSchema = new mongoose.Schema({
     radioCallNumber: { type: Number },
     radioFee: { type: Number },
     phone: { type: String },
-    email: { type: String },
+    email: { type: String, index: true },
     depositPaid: { type: Boolean },
     status: { type: String },
     active: { type: Boolean },
