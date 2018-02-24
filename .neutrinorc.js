@@ -1,6 +1,6 @@
 require('dotenv').config();
 
-const port = (parseInt(process.env.PORT) || 3000) + 1;
+const port = parseInt(process.env.PORT) || 3000;
 
 
 module.exports = {
