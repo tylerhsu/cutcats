@@ -39,6 +39,13 @@ module.exports = {
                 }
             }
         ],
-        '@neutrinojs/mocha'
+        '@neutrinojs/mocha',
+        neutrino => neutrino.config
+            .entry('vendor')
+            .add('babel-polyfill')
+            .add('react')
+            .add('react-dom')
+            .add('prop-types')
+            .add('cross-fetch')
     ]
 };
