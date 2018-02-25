@@ -1,5 +1,6 @@
-import fetch from 'cross-fetch';
 import React from 'react';
+import fetch from 'cross-fetch';
+import qs from 'qs';
 
 export default function requiresAuth(WrappedComponent) {
     return class extends React.Component {
@@ -24,7 +25,12 @@ export default function requiresAuth(WrappedComponent) {
                     this.setState({ user });
                 })
                 .catch(() => {
-                    /* window.location.replace('/auth/login');*/
+                    const returnUrl = (window.location.pathname || '') + (window.location.search || '');
+                    let loginUrl = '/auth/login';
+                    if (returnUrl) {
+                        loginUrl += '?' + qs.stringify({ returnUrl });
+                    }
+                    window.location.replace(loginUrl);
                 });
         }
 

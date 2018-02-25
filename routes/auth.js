@@ -12,14 +12,19 @@ router.get(
 router.get(
     '/google/callback',
     passport.authenticate('google', {
-        successRedirect: '/',
         failureRedirect: '/auth/login',
         failureFlash: true
     }),
+    (req, res, next) => {
+        const redirect = req.session.returnUrl || '/';
+        delete req.session.returnUrl
+        res.redirect(redirect);
+    }
 );
 
 function getLogin(req, res, next) {
     const error = (req.flash('error') || [])[0];
+    req.session.returnUrl = req.query.returnUrl;
     res.render('login', { error });
 }
 
