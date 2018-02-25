@@ -18,7 +18,7 @@ app.set('view engine', 'jsx');
 app.engine('jsx', require('express-react-views').createEngine());
 
 app.use(session({
-    store: process.env.NODE_ENV === 'production' ? new RedisStore({ url: process.env.REDIS_URL }) : undefined,
+    store: process.env.REDIS_URL ? new RedisStore({ url: process.env.REDIS_URL }) : undefined,
     secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false
