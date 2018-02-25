@@ -29,7 +29,7 @@ passport.use(new GoogleStrategy({
 }));
 
 passport.serializeUser((user, done) => {
-    done(null, `${user.type}-${user._id}`);
+    done(null, `${user.type}-${user._doc._id}`);
 });
 
 passport.deserializeUser((id, done) => {

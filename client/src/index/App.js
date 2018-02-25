@@ -1,16 +1,15 @@
 import React from 'react';
 import requiresAuth from '../global/requiresAuth';
-import CouriersTable from './CouriersTable';
 
 export class App extends React.Component {
     constructor(props) {
         super(props);
+
+        window.location.replace('/couriers');
     }
-    
+
     render() {
-        return (
-            <CouriersTable />
-        );
+        return null;
     }
 }
 

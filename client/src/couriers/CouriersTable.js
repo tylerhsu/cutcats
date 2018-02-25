@@ -1,6 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import qs from 'qs';
+import fetch from 'cross-fetch';
 
 export default class CouriersTable extends React.Component {
     constructor(props) {
@@ -24,7 +25,7 @@ export default class CouriersTable extends React.Component {
             query.q = this.state.freetext;
         }
         
-        return fetch([url, qs.stringify(query)].join('?'))
+        return fetch([url, qs.stringify(query)].join('?'), { auth: true })
             .then(res => {
                 return res.json();
             })

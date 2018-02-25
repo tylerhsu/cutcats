@@ -8,6 +8,7 @@ module.exports = {
         source: 'client/src',
         output: 'client/build',
         mains: {
+            'index': 'index',
             'couriers': 'couriers'
         }
     },
@@ -20,7 +21,15 @@ module.exports = {
                 },
                 devServer: {
                     staticOptions: {
-                        extensions: 'html'
+                        redirect: false
+                    },
+                    historyApiFallback: {
+                        rewrites: [
+                            {
+                                from: /.*/,
+                                to: context => (context.match + '.html')
+                            }
+                        ]
                     },
                     proxy: [{
                         context: ['/api', '/auth'],
