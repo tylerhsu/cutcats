@@ -27,7 +27,9 @@ app.use(passport.initialize());
 app.use(passport.session());
 app.use(flash());
 
-app.use(express.static('client/build', { extensions: 'html' }));
+if (process.env.NODE_ENV === 'production') {
+    app.use(express.static('client/build', { extensions: 'html' }));
+}
 
 app.use('/', routes);
 
