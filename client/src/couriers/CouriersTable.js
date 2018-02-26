@@ -53,30 +53,20 @@ export default class CouriersTable extends React.Component {
                     <tr key={courier._id}>
                       <td>{courier.name}</td>
                       <td>{courier.radioCallNumber}</td>
-                      <td>{courier.radioFee}</td>
                       <td>{courier.phone}</td>
                       <td>{courier.email}</td>
-                      <td>{courier.depositPaid}</td>
-                      <td>{courier.status}</td>
-                      <td>{courier.active}</td>
-                      <td>{courier.taxWithholding}</td>
                     </tr>
                 );
             });
 
             return (
-                <table>
+                <table className="table">
                   <thead>
                     <tr>
                       <th>Name</th>
                       <th>Call Number</th>
-                      <th>Radio Fee</th>
                       <th>Phone</th>
                       <th>Email</th>
-                      <th>Deposit Paid?</th>
-                      <th>Status</th>
-                      <th>Active</th>
-                      <th>Tax Withholding</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -93,10 +83,24 @@ export default class CouriersTable extends React.Component {
 
     render() {
         return (
-            <div>
-              <label htmlFor="freetext">Search by name or email </label>
-              <input id="freetext" name="freetext" type="text" value={this.state.freetext} onChange={this.handleFreetextChange} />
-              { this.renderTable() }
+            <div className="container">
+              <div className="row mb-4">
+                <div className="col-lg-4">
+                  <div className="input-group">
+                    <div className="input-group-prepend">
+                      <span className="input-group-text">
+                        <i className="fa fa-search"></i>
+                      </span>
+                    </div>
+                    <input id="freetext" className="form-control" name="freetext" type="text" value={this.state.freetext} onChange={this.handleFreetextChange} placeholder="Search by name or email" />
+                  </div>
+                </div>
+              </div>
+              <div className="row">
+                <div className="col">
+                  { this.renderTable() }
+                </div>
+              </div>
             </div>
         );
     }
