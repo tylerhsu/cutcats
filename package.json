@@ -15,6 +15,10 @@
     "type": "git",
     "url": "git+https://github.com/tylerhsu/cutcats.git"
   },
+  "engines": {
+    "node": "8.9.4",
+    "npm": "5.6.0"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
