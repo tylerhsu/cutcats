@@ -2,7 +2,7 @@
   "name": "cutcats",
   "version": "1.0.0",
   "description": "Cut Cats accounting software",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
     "build": "neutrino build",
     "start": "concurrently 'npm run server' 'npm run client'",
