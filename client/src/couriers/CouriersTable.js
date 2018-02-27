@@ -25,7 +25,7 @@ export default class CouriersTable extends React.Component {
             query.q = this.state.freetext;
         }
         
-        return fetch([url, qs.stringify(query)].join('?'), { auth: true })
+        return fetch([url, qs.stringify(query)].join('?'), { credentials: 'include' })
             .then(res => {
                 return res.json();
             })

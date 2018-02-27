@@ -9,7 +9,8 @@ module.exports = {
         output: 'client/build',
         mains: {
             'index': 'index',
-            'couriers': 'couriers'
+            'couriers': 'couriers',
+            'jobs': 'jobs',
         }
     },
     use: [
