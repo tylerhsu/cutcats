@@ -1,10 +1,9 @@
 require('dotenv').config();
 
 const express = require('express');
-const session = require('express-session');
-const RedisStore = require('connect-redis')(session);
 const flash = require('connect-flash');
 const app = express();
+const sessionConfig = require('./sessionConfig');
 const routes = require('./routes');
 const mongoose = require('mongoose');
 const passport = require('passport');
@@ -17,12 +16,7 @@ app.set('views', './views');
 app.set('view engine', 'jsx');
 app.engine('jsx', require('express-react-views').createEngine());
 
-app.use(session({
-    store: process.env.REDIS_URL ? new RedisStore({ url: process.env.REDIS_URL }) : undefined,
-    secret: process.env.SESSION_SECRET,
-    resave: false,
-    saveUninitialized: false
-}));
+app.use(sessionConfig);
 app.use(passport.initialize());
 app.use(passport.session());
 app.use(flash());
