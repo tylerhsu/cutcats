@@ -1,6 +1,7 @@
 import React from 'react';
 import requiresAuth from '../global/requiresAuth';
 import Navbar from '../navbar';
+import { hot } from 'react-hot-loader';
 import '../global/global.css';
 import 'bootstrap/dist/css/bootstrap.css';
 import 'font-awesome/css/font-awesome.css';
@@ -10,7 +11,7 @@ export class App extends React.Component {
         super(props);
 
         this.state = {
-            csvPreview: null
+            errors: []
         };
 
         this.handleFileChange = this.handleFileChange.bind(this);
@@ -19,16 +20,21 @@ export class App extends React.Component {
     handleFileChange(e) {
         let data = new FormData();
         data.append('file', e.target.files[0]);
-        fetch('/api/jobs/import', { credentials: 'include', body: data, method: 'post' })
+        fetch('/api/jobs/importpreview', { credentials: 'include', body: data, method: 'post' })
             .then(res => {
                 return res.text();
             })
             .then(text => {
-                this.setState({ csvPreview: text });
+                this.setState({ errors: text.split('\n') });
             });
     }
     
     render() {
+        const errors = this.state.errors.map(error => {
+            return (
+                <div>{error}</div>
+            );
+        });
         return (
             <React.Fragment>
               <Navbar />
@@ -39,7 +45,7 @@ export class App extends React.Component {
                   </div>
                 </div>
                 <div className="row">
-                  {this.state.csvPreview}
+                  {errors}
                 </div>
               </div>
             </React.Fragment>
@@ -47,5 +53,5 @@ export class App extends React.Component {
     }
 }
 
-export default requiresAuth(App);
+export default hot(module)(requiresAuth(App));
 

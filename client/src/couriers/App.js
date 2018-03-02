@@ -1,5 +1,6 @@
 import React from 'react';
 import requiresAuth from '../global/requiresAuth';
+import { hot } from 'react-hot-loader';
 import Navbar from '../navbar';
 import CouriersTable from './CouriersTable';
 import '../global/global.css';
@@ -21,4 +22,4 @@ export class App extends React.Component {
     }
 }
 
-export default requiresAuth(App);
+export default hot(module)(requiresAuth(App));

@@ -10,7 +10,7 @@ module.exports = {
         mains: {
             'index': 'index',
             'couriers': 'couriers',
-            'jobs': 'jobs',
+            'closeshift': 'closeshift',
         }
     },
     use: [

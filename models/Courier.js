@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const courierSchema = new mongoose.Schema({
     name: { type: String, required: true },
     qbName: { type: String },
-    radioCallNumber: { type: Number },
+    radioCallNumber: { type: Number, index: true },
     radioFee: { type: Number },
     phone: { type: String },
     email: { type: String, index: true },
