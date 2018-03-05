@@ -7,7 +7,7 @@ module.exports = function(csvRow, columnMap) {
         columnName = columnName.toLowerCase();
             
         let modelField = columnMap[columnName];
-        const csvValue = csvRow[columnName].trim();
+        let csvValue = csvRow[columnName];
         const hydrateField = modelField.hydrate || (() => Promise.resolve(csvValue));
 
         if (typeof(modelField) === 'object') {
@@ -17,6 +17,8 @@ module.exports = function(csvRow, columnMap) {
         if (!csvRow.hasOwnProperty(columnName)) {
             return Promise.reject(new Error(`Expected a column named "${columnName}"`));
         }
+
+        csvValue = csvValue.trim();
 
         try {
             return Promise.resolve(hydrateField(csvValue, csvRow))
