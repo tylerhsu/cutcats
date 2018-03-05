@@ -22,7 +22,15 @@ export class App extends React.Component {
         let data = new FormData();
         data.append('file', e.target.files[0]);
         let reqOptions = { credentials: 'include', body: data, method: 'post' };
-        this.setState({ status: 'validating' });
+
+        if (!e.target.files.length) {
+            return;
+        }
+        
+        this.setState({
+            status: 'validating',
+            errors: null
+        });
         fetch('/api/jobs/import?save=false', reqOptions)
             .then(res => {
                 if (res.ok) {
