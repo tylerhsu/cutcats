@@ -11,7 +11,8 @@ export class App extends React.Component {
         super(props);
 
         this.state = {
-            errors: []
+            status: 'ready',
+            errors: null
         };
 
         this.handleFileChange = this.handleFileChange.bind(this);
@@ -20,19 +21,42 @@ export class App extends React.Component {
     handleFileChange(e) {
         let data = new FormData();
         data.append('file', e.target.files[0]);
-        fetch('/api/jobs/importpreview', { credentials: 'include', body: data, method: 'post' })
+        let reqOptions = { credentials: 'include', body: data, method: 'post' };
+        this.setState({ status: 'validating' });
+        fetch('/api/jobs/import?save=false', reqOptions)
             .then(res => {
-                return res.text();
+                if (res.ok) {
+                    this.setState({ status: 'importing' });
+                    return fetch('/api/jobs/import?save=true', reqOptions);
+                } else {
+                    return res;
+                }
             })
-            .then(text => {
-                this.setState({ errors: text.split('\n') });
+            .then(res => {
+                if (res.ok) {
+                    this.setState({ status: 'success' });
+                } else {
+                    return res.text()
+                        .then(text => {
+                            this.setState({
+                                status: 'error',
+                                errors: text
+                            });
+                        });
+                }
+            })
+            .catch(err => {
+                this.setState({
+                    status: 'error',
+                    errors: 'Something unexpected went wrong: ' + err.message
+                });
             });
     }
     
     render() {
-        const errors = this.state.errors.map(error => {
+        const errors = (this.state.errors || '').split('\n').map((error, index) => {
             return (
-                <div>{error}</div>
+                <div key={index} className="py-1">{error}</div>
             );
         });
         return (
@@ -45,7 +69,10 @@ export class App extends React.Component {
                   </div>
                 </div>
                 <div className="row">
-                  {errors}
+                  <div>{this.state.status}</div>
+                  {errors.length &&
+                      <div>{errors}</div>
+                  }
                 </div>
               </div>
             </React.Fragment>

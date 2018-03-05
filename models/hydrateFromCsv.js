@@ -7,8 +7,8 @@ module.exports = function(csvRow, columnMap) {
         columnName = columnName.toLowerCase();
             
         let modelField = columnMap[columnName];
-        const csvValue = csvRow[columnName]
-        const hydrateField = modelField.hydrate || (() => Promise.resolve(csvValue))
+        const csvValue = csvRow[columnName].trim();
+        const hydrateField = modelField.hydrate || (() => Promise.resolve(csvValue));
 
         if (typeof(modelField) === 'object') {
             modelField = modelField.name;

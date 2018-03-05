@@ -1,4 +1,5 @@
 const express = require('express');
+const EventEmitter = require('events').EventEmitter;
 const router = express.Router();
 const models = require('../models');
 const parseCsv = require('csv-parse');
@@ -6,7 +7,6 @@ const Busboy = require('busboy');
 const transform = require('stream-transform');
 
 router.get('/', getJobs);
-router.post('/importpreview', importPreview);
 router.post('/import', importJobs);
 
 function getJobs(req, res, next) {
@@ -17,69 +17,70 @@ function getJobs(req, res, next) {
         .catch(next);
 }
 
-function importPreview(req, res, next) {
+function importJobs(req, res, next) {
+    let save = ['true', '1'].includes((req.query.save || '').toLowerCase());
+    let jobImporter = new JobImporter({ save });
     const csvParser = parseCsv({
         columns: true
     });
-    const busboy = new Busboy({ headers: req.headers });
+    
+    const busboy = new Busboy({
+        headers: req.headers
+    });
 
     req
         .pipe(busboy)
         .on('file', (fieldName, file, filename) => {
-            let rowNumber = 0;
             file
                 .pipe(csvParser)
-                .pipe(transform((record, callback) => {
-                    rowNumber++;
-                    reportErrors(rowNumber, record, callback);
-                }))
-                .pipe(res)
-                .on('error', err => {
-                    next(err);
-                });
+                .on('end', () => {
+                    jobImporter.markEnd();
+                })
+                .pipe(transform(jobImporter.importRow))
+                .pipe(res);
         });
 
-    function reportErrors(rowNumber, record, callback) {
+    jobImporter.on('error', () => {
+        res.status(400);
+    });
+}
+
+class JobImporter extends EventEmitter {
+    constructor(options = { save: true }) {
+        super();
+        this.save = !!options.save;
+        this.currentRow = 0;
+        this.numRows = null;
+        this.jobImport = new models.JobImport();
+        this.importRow = this.importRow.bind(this);
+    }
+
+    markEnd() {
+        this.numRows = this.currentRow;
+    }
+    
+    importRow(record, callback) {
+        this.currentRow++;
+        const row = this.currentRow;
         return Promise.resolve(models.Job.hydrateFromCsv(record))
             .then(job => {
-                return job.validate();
+                job.jobImport = this.jobImport;
+                return this.save ? job.save() : job.validate();
+            })
+            .then(() => {
+                if (this.save && this.jobImport.isNew) {
+                    return this.jobImport.save();
+                }
             })
             .then(() => {
                 callback();
             })
             .catch(err => {
-                const message = `Problem on row ${rowNumber}: ${err.message}\n`;
+                const message = `Problem on row ${row + 1}: ${err.message}\n`;
+                this.emit('error', message);
                 callback(null, message);
             });
     }
-}
-
-function justGetAnArray(req) {
-    return new Promise((resolve, reject) => {
-        let parsedCsv = [];
-        req
-            .pipe(busboy)
-            .on('file', (fieldName, file, filename) => {
-                file
-                    .pipe(csvParser)
-                    .on('readable', () => {
-                        let record
-                        while(record = csvParser.read()) {
-                            parsedCsv.push(record);
-                        }
-                    })
-                    .on('finish', () => {
-                        resolve(parsedCsv);
-                    })
-                    .on('error', err => {
-                        reject(err);
-                    });
-            })
-    });
-}
-
-function importJobs(req, res, next) {
-
 }
 
 module.exports = router;

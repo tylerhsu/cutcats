@@ -2,7 +2,8 @@ const mongoose = require('mongoose');
 const models = require('.');
 const hydrateFromCsv = require('./hydrateFromCsv');
 const jobSchema = new mongoose.Schema({
-    jobId: { type: String, },
+    jobId: { type: String, unique: true },
+    jobImport: { type: mongoose.Schema.Types.ObjectId, ref: 'JobImport' },
     externalId: { type: String },
     billingReference: { type: String },
     orderPlacer: { type: String },
@@ -18,12 +19,12 @@ const jobSchema = new mongoose.Schema({
     destinationAddress2: { type: String },
     destinationPostalCode: { type: String },
     destinationZone: { String },
-    deliveryStatus: { type: String, enum: ['delivered', 'complete'] },
-    elapsedPickupTimeSeconds: { type: Number },
-    transitTimeSeconds: { type: Number },
-    fulfillmentTime: { type: Number },
-    timeLeft: { type: Number },
-    dateTimeDelivered: { type: Date },
+    deliveryStatus: { type: String, enum: ['acknowledged', 'picked up', 'delivered', 'complete', 'cancelled'], lowercase: true },
+    elapsedPickupTime: { type: String },
+    transitTime: { type: String },
+    fulfillmentTime: { type: String },
+    timeLeft: { type: String },
+    timeFrame: { type: String },
     creationTime: { type: Date },
     readyTime: { type: Date },
     dueTime: { type: Date },
@@ -75,18 +76,18 @@ const CSV_COLUMN_MAP = {
     'destination postal code': 'destinationPostalCode',
     'destination zone': 'destinationZone',
     'delivery status': 'deliveryStatus',
-    'elapsed pickup time': 'elapsedPickupTimeSeconds',
-    'transit time': 'transitTimeSeconds',
+    'elapsed pickup time': 'elapsedPickupTime',
+    'transit time': 'transitTime',
     'fulfillment time': 'fulfillmentTime',
     'time left': 'timeLeft',
-    'timeframe': 'dateTimeDelivered',
+    'timeframe': 'timeFrame',
     'creation time': 'creationTime',
     'ready time': 'readyTime',
     'due time': 'dueTime',
     'job type': 'jobType',
     'service': 'service',
     'rate': 'rate',
-    'is paid': 'isPaid',
+    'is paid': { name: 'isPaid', hydrate: hydrateBoolean },
     'payment method as string': 'paymentMethod',
     'order total': 'orderTotal',
     'billable total': 'billableTotal',
@@ -102,8 +103,19 @@ const CSV_COLUMN_MAP = {
     'route mi': 'routeMiles'
 };
 
+function hydrateBoolean(csvValue) {
+    return ['true', 'yes', '1'].includes(csvValue.toLowerCase());
+}
+
 function hydrateClient(csvValue) {
-    return models.Client.find({ $text: { $search: csvValue } }).exec()
+    return models.Client.find({ name: csvValue }).exec()
+        .then(results => {
+            if (!(results && results.length)) {
+                return models.Client.find({ $text: { $search: `"${csvValue}"` } }).exec();
+            } else {
+                return results;
+            }
+        })
         .then(results => {
             if (!(results && results.length)) {
                 throw new Error(`Could not find client "${csvValue}"`);
