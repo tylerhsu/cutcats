@@ -2,7 +2,7 @@ import React from 'react';
 import requiresAuth from '../global/requiresAuth';
 import Navbar from '../navbar';
 import { hot } from 'react-hot-loader';
-import '../global/global.css';
+import '../global/global.scss';
 import 'bootstrap/dist/css/bootstrap.css';
 import 'font-awesome/css/font-awesome.css';
 
@@ -65,14 +65,22 @@ export class App extends React.Component {
               <div className="container">
                 <div className="row">
                   <div className="col">
-                    <input type="file" name="asdf" accept=".csv" onChange={this.handleFileChange} />
+                    <div>Import a csv from TwinJet</div>
+                    <input type="file" accept=".csv" onChange={this.handleFileChange} />
                   </div>
                 </div>
                 <div className="row">
-                  <div>{this.state.status}</div>
-                  {errors.length &&
-                      <div>{errors}</div>
-                  }
+                  <div className="col">
+                    <div>{this.state.status}</div>
+                    {this.state.status === 'success' &&
+                        <div>
+                          <a href="/jobs">See all jobs</a>
+                        </div>
+                    }
+                    {errors.length &&
+                        <div>{errors}</div>
+                    }
+                  </div>
                 </div>
               </div>
             </React.Fragment>

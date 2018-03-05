@@ -38,6 +38,9 @@ export default class Navbar extends React.Component {
                     <NavItem active={window.location.pathname === '/closeshift'}>
                       <NavLink href="/closeshift">Close Shift</NavLink>
                     </NavItem>
+                    <NavItem active={window.location.pathname === '/jobs'}>
+                      <NavLink href="/jobs">Jobs</NavLink>
+                    </NavItem>
                     <NavItem active={window.location.pathname === '/couriers'}>
                       <NavLink href="/couriers">Couriers</NavLink>
                     </NavItem>

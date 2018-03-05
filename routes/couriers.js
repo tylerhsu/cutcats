@@ -8,10 +8,7 @@ function getCouriers(req, res, next) {
     let query = models.Courier.find();
 
     if (req.query.q) {
-        query
-            .find(
-                { $text: { $search: req.query.q } }
-            );
+        query.find({ $text: { $search: req.query.q } });
     }
     
     return query.exec()

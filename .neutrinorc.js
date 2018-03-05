@@ -11,6 +11,7 @@ module.exports = {
             'index': 'index',
             'couriers': 'couriers',
             'closeshift': 'closeshift',
+            'jobs': 'jobs'
         }
     },
     use: [
@@ -37,6 +38,15 @@ module.exports = {
                         target: 'http://localhost:' + apiPort,
                     }],
                     port: apiPort + 1
+                },
+                style: {
+                    test: /\.s?css$/,
+                    loaders: [
+                        {
+                            loader: 'sass-loader',
+                            useId: 'sass'
+                        }
+                    ]
                 }
             }
         ],

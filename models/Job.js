@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
-const models = require('.');
+const Client = require('./Client');
+const Courier = require('./Courier');
 const hydrateFromCsv = require('./hydrateFromCsv');
 const jobSchema = new mongoose.Schema({
     jobId: { type: String, unique: true },
@@ -108,10 +109,10 @@ function hydrateBoolean(csvValue) {
 }
 
 function hydrateClient(csvValue) {
-    return models.Client.find({ name: csvValue }).exec()
+    return Client.find({ name: csvValue }).exec()
         .then(results => {
             if (!(results && results.length)) {
-                return models.Client.find({ $text: { $search: `"${csvValue}"` } }).exec();
+                return Client.find({ $text: { $search: `"${csvValue}"` } }).exec();
             } else {
                 return results;
             }
@@ -135,7 +136,7 @@ function hydrateCourier(csvValue, csvRow) {
         throw new Error('"courier number" column is missing or empty. This column is required.');
     }
     
-    return models.Courier.findOne({ radioCallNumber }).exec()
+    return Courier.findOne({ radioCallNumber }).exec()
         .then(courier => {
             if (!courier) {
                 throw new Error(`Could not find courier with call number ${radioCallNumber}`);
@@ -146,10 +147,7 @@ function hydrateCourier(csvValue, csvRow) {
 }
 
 jobSchema.statics.hydrateFromCsv = function(csvRow) {
-    return hydrateFromCsv(csvRow, CSV_COLUMN_MAP)
-        .then(fields => {
-            return new this(fields);
-        });
+    return hydrateFromCsv(csvRow, CSV_COLUMN_MAP);
 }
 
 module.exports = mongoose.model('Job', jobSchema);

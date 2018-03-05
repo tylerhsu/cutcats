@@ -10,7 +10,21 @@ router.get('/', getJobs);
 router.post('/import', importJobs);
 
 function getJobs(req, res, next) {
-    models.Job.find().exec()
+    let query = models.Job.find();
+    
+    if (req.query.q) {
+        query.find({ $text: { $search: req.query.q } });
+    }
+
+    if (req.query.populate) {
+        query.populate(req.query.populate);
+    }
+
+    if (req.query.sort) {
+        query.sort(req.query.sort);
+    }
+
+    return query.exec()
         .then(jobs => {
             res.json(jobs);
         })
@@ -63,23 +77,44 @@ class JobImporter extends EventEmitter {
         this.currentRow++;
         const row = this.currentRow;
         return Promise.resolve(models.Job.hydrateFromCsv(record))
-            .then(job => {
-                job.jobImport = this.jobImport;
-                return this.save ? job.save() : job.validate();
+            .then(fields => {
+                return models.Job.findOne({ jobId: fields.jobId }).exec()
+                    .then(job => {
+                        if (job) {
+                            job.set(fields);
+                        } else {
+                            job = new models.Job(fields);
+                            job.jobImport = this.jobImport;
+                            if (this.save && this.jobImport.isNew) {
+                                return this.jobImport.save()
+                                    .then(() => {
+                                        return job;
+                                    });
+                            }
+                        }
+                        return job;
+                    });
             })
-            .then(() => {
-                if (this.save && this.jobImport.isNew) {
-                    return this.jobImport.save();
-                }
+            .then(job => {
+                return this.save ? job.save() : job.validate();
             })
             .then(() => {
                 callback();
             })
             .catch(err => {
-                const message = `Problem on row ${row + 1}: ${err.message}\n`;
+                const message = `Problem on row ${row + 1}: ${friendly(err.message)}\n`;
                 this.emit('error', message);
                 callback(null, message);
             });
+    }
+}
+
+function friendly(error) {
+    if (error.match(/duplicate key/)) {
+        const jobId = error.match(/"(.*)"/);
+        return `A record with job ID ${jobId[1]} has already been imported`;
+    } else {
+        return error;
     }
 }
 
