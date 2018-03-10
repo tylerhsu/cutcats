@@ -9,13 +9,8 @@ router.get('/payroll', getPayroll);
 router.get('/invoice', getInvoice);
 
 function getPayroll(req, res, next) {
-    const fromDate = new Date(req.query.from);
-    const toDate = new Date(req.query.to);
-    const filename = [
-        'payroll',
-        moment(fromDate).format('M-D-YYYY'),
-        moment(toDate).format('M-D-YYYY')
-    ].join('_') + '.csv';
+    const { fromDate, toDate } = parseDates(req.query);
+    const filename = getFilename('payroll', fromDate, toDate);
 
     if (isNaN(fromDate.valueOf())) {
         return next(error('Start date is not a recognizable date', 400));
@@ -72,13 +67,8 @@ function getPayroll(req, res, next) {
 }
 
 function getInvoice(req, res, next) {
-    const fromDate = new Date(req.query.from);
-    const toDate = new Date(req.query.to);
-    const filename = [
-        'invoice',
-        moment(fromDate).format('M-D-YYYY'),
-        moment(toDate).format('M-D-YYYY')
-    ].join('_') + '.csv';
+    const { fromDate, toDate } = parseDates(req.query);
+    const filename = getFilename('invoice', fromDate, toDate);
 
     if (isNaN(fromDate.valueOf())) {
         return next(error('Start date is not a recognizable date', 400));
@@ -92,7 +82,7 @@ function getInvoice(req, res, next) {
         .match({
             readyTime: {
                 $gte: fromDate,
-                $lt: toDate
+                $lte: toDate
             }
         })
         .lookup({
@@ -137,6 +127,33 @@ function getInvoice(req, res, next) {
 function precisionRound(number, precision) {
     var factor = Math.pow(10, precision);
     return Math.round(number * factor) / factor;
+}
+
+function parseDates(query) {
+    let fromDateNumber = parseInt(query.from);
+    let toDateNumber = parseInt(query.to);
+    let fromDate = new Date(fromDateNumber || query.from );
+    let toDate = new Date(toDateNumber || query.to);
+
+    if (fromDate.getDate() === toDate.getDate()) {
+        fromDate = new Date(fromDate.getFullYear(), fromDate.getMonth(), fromDate.getDate(), 0, 0, 0, 0);
+        toDate = new Date(fromDate.getFullYear(), fromDate.getMonth(), fromDate.getDate(), 23, 59, 59, 999);
+    }
+    
+    return { fromDate, toDate };
+}
+
+function getFilename(prefix, fromDate, toDate) {
+    const dateFormat = 'M-D-YYYY';
+    const fromString = moment(fromDate).format(dateFormat);
+    const toString = moment(toDate).format(dateFormat);
+    return [
+        prefix,
+        (fromDate.getDate() === toDate.getDate() ?
+            fromString :
+            [fromString, toString].join('_')
+        )
+    ].join('_') + '.csv';
 }
 
 module.exports = router;
