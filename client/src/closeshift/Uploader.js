@@ -72,21 +72,19 @@ export default class Uploader extends React.Component {
     }
 
     renderSuccess() {
-        const now = new Date();
-        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
-        const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0, 0);
+        const today = new Date().valueOf();
         const query = qs.stringify({
             from: today,
-            to: tomorrow
+            to: today
         });
         
         return (
             <div>
               <div>
-                <a href={`/api/reports/payroll?${query}`}>Download today's payroll</a>
+                <a href={`/api/reports/payroll?${query}`} target="_blank">Download today's payroll</a>
               </div>
               <div>
-                <a href={`/api/reports/invoice?${query}`}>Download today's invoices</a>
+                <a href={`/api/reports/invoice?${query}`} target="_blank">Download today's invoices</a>
               </div>
               <div>
                 <a href="/reports">Download reports for a different time period</a>
