@@ -4,7 +4,6 @@ const Courier = require('./Courier');
 const hydrateFromCsv = require('./hydrateFromCsv');
 const jobSchema = new mongoose.Schema({
     jobId: { type: String, unique: true },
-    jobImport: { type: mongoose.Schema.Types.ObjectId, ref: 'JobImport' },
     externalId: { type: String },
     billingReference: { type: String },
     orderPlacer: { type: String },

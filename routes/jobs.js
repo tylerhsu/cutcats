@@ -65,7 +65,6 @@ class JobImporter extends EventEmitter {
         this.save = !!options.save;
         this.currentRow = 0;
         this.numRows = null;
-        this.jobImport = new models.JobImport();
         this.importRow = this.importRow.bind(this);
     }
 
@@ -75,6 +74,7 @@ class JobImporter extends EventEmitter {
     
     importRow(record, callback) {
         this.currentRow++;
+        // this function can be called multiple times concurrently, so this.currentRow may change
         const row = this.currentRow;
         return Promise.resolve(models.Job.hydrateFromCsv(record))
             .then(fields => {
@@ -84,13 +84,6 @@ class JobImporter extends EventEmitter {
                             job.set(fields);
                         } else {
                             job = new models.Job(fields);
-                            job.jobImport = this.jobImport;
-                            if (this.save && this.jobImport.isNew) {
-                                return this.jobImport.save()
-                                    .then(() => {
-                                        return job;
-                                    });
-                            }
                         }
                         return job;
                     });

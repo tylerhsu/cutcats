@@ -24,7 +24,7 @@ function getPayroll(req, res, next) {
     if (isNaN(toDate.valueOf())) {
         return next(error('End date is not a recognizable date', 400));
     }
-    
+
     let query = models.Job.aggregate()
         .match({
             readyTime: {

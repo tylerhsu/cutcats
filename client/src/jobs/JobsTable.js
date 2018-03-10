@@ -17,7 +17,7 @@ export default class JobsTable extends React.Component {
 
     fetchJobs() {
         let url = '/api/jobs',
-            query = { populate: 'client courier jobImport', sort: '-updatedAt' };
+            query = { populate: 'client courier', sort: '-updatedAt' };
 
         if (this.state.freetext) {
             query.q = this.state.freetext;
@@ -54,7 +54,7 @@ export default class JobsTable extends React.Component {
                       <td>{job.courier.name}</td>
                       <td>{job.originAddress}</td>
                       <td>{job.destinationAddress1}</td>
-                      <td>{job.jobImport.createdAt}</td>
+                      <td>{job.createdAt}</td>
                     </tr>
                 );
             });

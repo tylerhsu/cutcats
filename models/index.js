@@ -3,6 +3,5 @@ module.exports = {
     Courier: require('./Courier'),
     Guest: require('./Guest'),
     Job: require('./Job'),
-    JobImport: require('./JobImport'),
     Zone: require('./Zone')
 };
