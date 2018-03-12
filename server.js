@@ -7,10 +7,13 @@ const sessionConfig = require('./sessionConfig');
 const routes = require('./routes');
 const mongoose = require('mongoose');
 const passport = require('passport');
+const compression = require('compression');
 const port = parseInt(process.env.PORT) || 3000;
 require('./passportConfig');
 
 mongoose.connect(process.env.MONGODB_URI);
+
+app.use(compression());
 
 app.set('views', './views');
 app.set('view engine', 'jsx');
