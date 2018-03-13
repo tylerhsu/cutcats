@@ -2,18 +2,19 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import qs from 'qs';
 import fetch from 'cross-fetch';
-import CourierForm from './CourierForm';
+import ClientForm from './ClientForm';
 import { Modal } from 'reactstrap';
 
-export default class CouriersTable extends React.Component {
+export default class ClientsTable extends React.Component {
     constructor(props) {
         super(props);
 
         this.state = {
-            couriers: null,
+            clients: null,
+            zones: null,
             freetext: '',
             modalOpen: false,
-            courierBeingEdited: null,
+            clientBeingEdited: null,
             formErrorMessage: ''
         };
 
@@ -24,11 +25,12 @@ export default class CouriersTable extends React.Component {
     }
 
     componentWillMount() {
-        return this.fetchCouriers()
+        this.fetchClients();
+        this.fetchZones();
     }
 
-    fetchCouriers() {
-        let url = '/api/couriers',
+    fetchClients() {
+        let url = '/api/clients',
             query = {
                 q: this.state.freetext
             };
@@ -41,8 +43,20 @@ export default class CouriersTable extends React.Component {
             .then(res => {
                 return res.json();
             })
-            .then(couriers => {
-                this.setState({ couriers });
+            .then(clients => {
+                this.setState({ clients });
+            });
+    }
+
+    fetchZones() {
+        let url = '/api/zones';
+        
+        return fetch(url, { credentials: 'include' })
+            .then(res => {
+                return res.json();
+            })
+            .then(zones => {
+                this.setState({ zones });
             });
     }
 
@@ -50,13 +64,13 @@ export default class CouriersTable extends React.Component {
         this.setState({
             freetext: e.target.value
         }, () => {
-            this.fetchCouriers();
+            this.fetchClients();
         });
     }
 
-    openModal(courier) {
+    openModal(client) {
         this.setState({
-            courierBeingEdited: courier,
+            clientBeingEdited: client,
             modalOpen: true,
             formErrorMessage: ''
         });
@@ -64,31 +78,31 @@ export default class CouriersTable extends React.Component {
 
     closeModal() {
         this.setState({
-            courierBeingEdited: null,
+            clientBeingEdited: null,
             modalOpen: false,
             formErrorMessage: ''
         });
     }
 
-    handleFormSubmit(courier) {
-        return fetch(`/api/couriers/${courier._id}`, {
+    handleFormSubmit(client) {
+        return fetch(`/api/clients/${client._id}`, {
             credentials: 'include',
             method: 'PATCH',
             headers: {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify(courier)
+            body: JSON.stringify(client)
         })
             .then(res => {
                 return res.json();
             })
-            .then(updatedCourier => {
-                const indexToReplace = this.state.couriers.findIndex(courier => (courier._id === updatedCourier._id));
+            .then(updatedClient => {
+                const indexToReplace = this.state.clients.findIndex(client => (client._id === updatedClient._id));
                 if (indexToReplace > -1) {
-                    let couriers = this.state.couriers.slice();
-                    couriers.splice(indexToReplace, 1, updatedCourier);
-                    this.setState({ couriers });
+                    let clients = this.state.clients.slice();
+                    clients.splice(indexToReplace, 1, updatedClient);
+                    this.setState({ clients });
                     this.closeModal();
                 }
             })
@@ -98,31 +112,33 @@ export default class CouriersTable extends React.Component {
     }
 
     renderTable() {
-        if (!this.state.couriers) {
+        if (!this.state.clients) {
             return null;
         }
         
-        if (this.state.couriers.length) {
+        if (this.state.clients.length) {
             return (
                 <table className="table">
                   <thead>
                     <tr>
                       <th>Name</th>
-                      <th>Call Number</th>
+                      <th>QB Name</th>
+                      <th>Rep</th>
                       <th>Phone</th>
                       <th>Email</th>
                       <th></th>
                     </tr>
                   </thead>
                   <tbody>
-                    {this.state.couriers.map(courier => (
-                        <tr key={courier._id}>
-                          <td>{courier.name}</td>
-                          <td>{courier.radioCallNumber}</td>
-                          <td>{courier.phone}</td>
-                          <td>{courier.email}</td>
+                    {this.state.clients.map(client => (
+                        <tr key={client._id}>
+                          <td>{client.name}</td>
+                          <td>{client.qbName}</td>
+                          <td>{client.rep}</td>
+                          <td>{client.phone}</td>
+                          <td>{client.email}</td>
                           <td>
-                            <button onClick={() => this.openModal(courier)} className="btn btn-link">
+                            <button onClick={() => this.openModal(client)} className='btn btn-link'>
                               Edit
                             </button>
                           </td>
@@ -150,7 +166,7 @@ export default class CouriersTable extends React.Component {
                           <i className="fa fa-search"></i>
                         </span>
                       </div>
-                      <input id="freetext" className="form-control" name="freetext" type="text" value={this.state.freetext} onChange={this.handleFreetextChange} placeholder="Search by name or email" />
+                      <input id="freetext" className="form-control" name="freetext" type="text" value={this.state.freetext} onChange={this.handleFreetextChange} placeholder="Search by name or company" />
                     </div>
                   </div>
                 </div>
@@ -161,10 +177,11 @@ export default class CouriersTable extends React.Component {
                 </div>
               </div>
               <Modal isOpen={this.state.modalOpen} toggle={this.closeModal}>
-                <CourierForm courier={this.state.courierBeingEdited}
-                             onSubmit={this.handleFormSubmit}
-                             onCancel={this.closeModal}
-                             errorMessage={this.state.formErrorMessage}
+                <ClientForm client={this.state.clientBeingEdited}
+                            onSubmit={this.handleFormSubmit}
+                            onCancel={this.closeModal}
+                            errorMessage={this.state.formErrorMessage}
+                            zones={this.state.zones || []}
                 />
               </Modal>
             </React.Fragment>

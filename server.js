@@ -12,6 +12,7 @@ const port = parseInt(process.env.PORT) || 3000;
 require('./passportConfig');
 
 mongoose.connect(process.env.MONGODB_URI);
+mongoose.plugin(require('mongoose-deep-populate'));
 
 app.use(compression());
 

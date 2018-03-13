@@ -47,6 +47,9 @@ export default class Navbar extends React.Component {
                     <NavItem active={window.location.pathname === '/couriers'}>
                       <NavLink href="/couriers">Couriers</NavLink>
                     </NavItem>
+                    <NavItem active={window.location.pathname === '/clients'}>
+                      <NavLink href="/clients">Clients</NavLink>
+                    </NavItem>
                     <NavItem>
                       <NavLink href="/auth/logout">Sign out</NavLink>
                     </NavItem>

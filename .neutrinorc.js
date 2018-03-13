@@ -12,7 +12,8 @@ module.exports = {
             'couriers': 'couriers',
             'closeshift': 'closeshift',
             'jobs': 'jobs',
-            'reports': 'reports'
+            'reports': 'reports',
+            'clients': 'clients',
         }
     },
     use: [
