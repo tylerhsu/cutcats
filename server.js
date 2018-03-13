@@ -30,6 +30,18 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 app.use('/', routes);
+app.use(handleError);
+
+function handleError(err, req, res, next) {
+    if (req.accepts(['html', 'json']) === 'json') {
+        return res.status(500).json({
+            error: true,
+            message: err.message
+        });
+    } else {
+        return next(err);
+    }
+}
 
 app.listen(port, () => {
     if (process.env.NODE_ENV !== 'production') {

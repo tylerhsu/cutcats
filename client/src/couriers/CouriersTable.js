@@ -71,9 +71,19 @@ export default class CouriersTable extends React.Component {
     }
 
     handleFormSubmit(courier) {
-        return fetch(`/api/couriers/${courier._id}`, {
+        let url, method;
+        
+        if (courier._id) {
+            url = `/api/couriers/${courier._id}`;
+            method = 'PATCH';
+        } else {
+            url = '/api/couriers';
+            method = 'POST';
+        }
+        
+        return fetch(url, {
             credentials: 'include',
-            method: 'PATCH',
+            method: method,
             headers: {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json'
@@ -84,13 +94,20 @@ export default class CouriersTable extends React.Component {
                 return res.json();
             })
             .then(updatedCourier => {
-                const indexToReplace = this.state.couriers.findIndex(courier => (courier._id === updatedCourier._id));
-                if (indexToReplace > -1) {
-                    let couriers = this.state.couriers.slice();
-                    couriers.splice(indexToReplace, 1, updatedCourier);
-                    this.setState({ couriers });
-                    this.closeModal();
+                if (updatedCourier.error) {
+                    throw new Error(updatedCourier.message);
                 }
+                
+                const indexToReplace = this.state.couriers.findIndex(courier => (courier._id === updatedCourier._id));
+                let couriers = this.state.couriers.slice();
+                if (indexToReplace === -1) {
+                    couriers.unshift(updatedCourier);
+                } else {
+                    couriers.splice(indexToReplace, 1, updatedCourier);
+                }
+                
+                this.setState({ couriers });
+                this.closeModal();
             })
             .catch(err => {
                 this.setState({ formErrorMessage: err.message })
@@ -142,8 +159,8 @@ export default class CouriersTable extends React.Component {
         return (
             <React.Fragment>
               <div className="container">
-                <div className="row mb-4">
-                  <div className="col-lg-4">
+                <div className="row">
+                  <div className="col-lg-4 mb-4">
                     <div className="input-group">
                       <div className="input-group-prepend">
                         <span className="input-group-text">
@@ -152,6 +169,12 @@ export default class CouriersTable extends React.Component {
                       </div>
                       <input id="freetext" className="form-control" name="freetext" type="text" value={this.state.freetext} onChange={this.handleFreetextChange} placeholder="Search by name or email" />
                     </div>
+                  </div>
+                  <div className="col text-lg-right mb-4">
+                    <button className="btn btn-info" onClick={() => this.openModal()}>
+                      <i className="fa fa-plus mr-2" />
+                      Add Courier
+                    </button>
                   </div>
                 </div>
                 <div className="row">

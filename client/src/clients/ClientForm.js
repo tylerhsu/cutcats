@@ -88,7 +88,7 @@ export default class ClientForm extends React.Component {
                 </FormGroup>
                 <FormGroup>
                   <Label for='zone'>Zone</Label>
-                  <Input id='zone' type='select' name='zone' value={this.state.client.zone._id || this.state.client.zone} onChange={this.handleChange}>
+                  <Input id='zone' type='select' name='zone' value={this.state.client.zone} onChange={this.handleChange}>
                     {this.props.zones.map(zone => (
                         <option key={zone._id} value={zone._id}>{zone.name}</option>
                     ))}

@@ -85,9 +85,19 @@ export default class ClientsTable extends React.Component {
     }
 
     handleFormSubmit(client) {
-        return fetch(`/api/clients/${client._id}`, {
+        let url, method;
+        
+        if (client._id) {
+            url = `/api/clients/${client._id}`;
+            method = 'PATCH';
+        } else {
+            url = '/api/clients';
+            method = 'POST';
+        }
+        
+        return fetch(url, {
             credentials: 'include',
-            method: 'PATCH',
+            method: method,
             headers: {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json'
@@ -98,13 +108,20 @@ export default class ClientsTable extends React.Component {
                 return res.json();
             })
             .then(updatedClient => {
-                const indexToReplace = this.state.clients.findIndex(client => (client._id === updatedClient._id));
-                if (indexToReplace > -1) {
-                    let clients = this.state.clients.slice();
-                    clients.splice(indexToReplace, 1, updatedClient);
-                    this.setState({ clients });
-                    this.closeModal();
+                if (updatedClient.error) {
+                    throw new Error(updatedClient.message);
                 }
+                
+                const indexToReplace = this.state.clients.findIndex(client => (client._id === updatedClient._id));
+                let clients = this.state.clients.slice();
+                if (indexToReplace === -1) {
+                    clients.unshift(updatedClient);
+                } else {
+                    clients.splice(indexToReplace, 1, updatedClient);
+                }
+                
+                this.setState({ clients });
+                this.closeModal();
             })
             .catch(err => {
                 this.setState({ formErrorMessage: err.message })
@@ -158,16 +175,22 @@ export default class ClientsTable extends React.Component {
         return (
             <React.Fragment>
               <div className="container">
-                <div className="row mb-4">
-                  <div className="col-lg-4">
+                <div className="row">
+                  <div className="col-lg-4 mb-4">
                     <div className="input-group">
                       <div className="input-group-prepend">
                         <span className="input-group-text">
                           <i className="fa fa-search"></i>
                         </span>
                       </div>
-                      <input id="freetext" className="form-control" name="freetext" type="text" value={this.state.freetext} onChange={this.handleFreetextChange} placeholder="Search by name or company" />
+                      <input id="freetext" className="form-control" name="freetext" type="text" value={this.state.freetext} onChange={this.handleFreetextChange} placeholder="Search by name" />
                     </div>
+                  </div>
+                  <div className="col text-lg-right mb-4">
+                    <button className="btn btn-info" onClick={() => this.openModal()}>
+                      <i className="fa fa-plus mr-2" />
+                      Add Client
+                    </button>
                   </div>
                 </div>
                 <div className="row">
