@@ -3,6 +3,10 @@ import {
     Navbar as BootstrapNavbar,
     NavbarBrand,
     NavbarToggler,
+    UncontrolledDropdown,
+    DropdownToggle,
+    DropdownMenu,
+    DropdownItem,
     Collapse,
     Nav,
     NavItem,
@@ -38,12 +42,25 @@ export default class Navbar extends React.Component {
                     <NavItem active={window.location.pathname === '/closeshift'}>
                       <NavLink href="/closeshift">Close Shift</NavLink>
                     </NavItem>
-                    <NavItem active={window.location.pathname === '/reports'}>
-                      <NavLink href="/reports">Reports</NavLink>
-                    </NavItem>
-                    <NavItem active={window.location.pathname === '/jobs'}>
-                      <NavLink href="/jobs">Jobs</NavLink>
-                    </NavItem>
+                    <UncontrolledDropdown nav inNavbar>
+                      <DropdownToggle nav caret active={window.location.pathname.match(/rides|payroll|invoices/)}>
+                        Reports
+                      </DropdownToggle>
+                      <DropdownMenu>
+                        <DropdownItem>
+                          <a href="/rides">Rides</a>
+                        </DropdownItem>
+                        <DropdownItem>
+                          <a href="/payroll">Payroll</a>
+                        </DropdownItem>
+                        <DropdownItem>
+                          <a href="/invoices">Invoices</a>
+                        </DropdownItem>
+                        <DropdownItem>
+                          <a href="/quickexport">Quick Export</a>
+                        </DropdownItem>
+                      </DropdownMenu>
+                    </UncontrolledDropdown>
                     <NavItem active={window.location.pathname === '/couriers'}>
                       <NavLink href="/couriers">Couriers</NavLink>
                     </NavItem>

@@ -2,18 +2,73 @@ const express = require('express');
 const EventEmitter = require('events').EventEmitter;
 const router = express.Router();
 const models = require('../models');
-const parseCsv = require('csv-parse');
+const csv = require('csv');
 const Busboy = require('busboy');
 const transform = require('stream-transform');
+const moment = require('moment');
+const reportUtils = require('./util/reportUtils')
 
 router.get('/', getJobs);
+router.get('/csv', getJobsCsv);
 router.post('/import', importJobs);
 
 function getJobs(req, res, next) {
+    return _getJobsQuery(req).exec()
+        .then(jobs => {
+            res.json(jobs);
+        })
+        .catch(next);
+}
+
+function getJobsCsv(req, res, next) {
+    const { fromDate, toDate } = reportUtils.parseDates(req.query);
+    const filename = reportUtils.getFilename('jobs', fromDate, toDate);
+    res.set({
+        'Content-Type': 'text/plain',
+        'Content-Disposition': 'attachment; filename=' + filename
+    });
+
+    req.query.populate = 'client courier';
+
+    return _getJobsQuery(req)
+        .cursor()
+        .pipe(csv.transform(transform))
+        .on('error', next)
+        .pipe(csv.stringify({
+            header: true
+        }))
+        .on('error', next)
+        .pipe(res)
+        .on('error', next);
+
+    function transform(job, callback) {
+        callback(null, {
+            'Ride ID': job.jobId,
+            'Client': job.client.name,
+            'Courier': job.courier.name,
+            'Origin address': job.originAddress,
+            'Destination address': job.destinationAddress1,
+            'Imported on': moment(job.createdAt).format('MM/DD/YYYY')
+        });
+    }
+}
+
+function _getJobsQuery(req) {
+    const { fromDate, toDate } = reportUtils.parseDates(req.query);
     let query = models.Job.find();
     
     if (req.query.q) {
         query.find({ $text: { $search: req.query.q } });
+    }
+
+    console.log(fromDate, toDate);
+
+    if (fromDate) {
+        query.where({ createdAt: { $gte: fromDate } });
+    }
+
+    if (toDate) {
+        query.where({ createdAt: { $lte: toDate } });
     }
 
     if (req.query.populate) {
@@ -24,17 +79,13 @@ function getJobs(req, res, next) {
         query.sort(req.query.sort);
     }
 
-    return query.exec()
-        .then(jobs => {
-            res.json(jobs);
-        })
-        .catch(next);
+    return query;
 }
 
 function importJobs(req, res, next) {
     let save = ['true', '1'].includes((req.query.save || '').toLowerCase());
     let jobImporter = new JobImporter({ save });
-    const csvParser = parseCsv({
+    const csvParser = csv.parse({
         columns: true
     });
     

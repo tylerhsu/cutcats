@@ -6,7 +6,7 @@ export class App extends React.Component {
     constructor(props) {
         super(props);
 
-        window.location.replace('/closeshift');
+        window.location.replace('/welcome');
     }
 
     render() {

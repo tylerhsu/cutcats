@@ -5,7 +5,7 @@ import App from './App';
 import '../global/global';
 
 import { configureUrlQuery } from 'react-url-query';
-import history from './history';
+import history from '../global/history';
 configureUrlQuery({ history });
 
 ReactDOM.render(

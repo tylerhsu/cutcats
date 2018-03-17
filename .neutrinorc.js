@@ -12,7 +12,10 @@ module.exports = {
             'couriers': 'couriers',
             'closeshift': 'closeshift',
             'welcome': 'welcome',
-            'reports': 'reports',
+            'quickexport': 'quickexport',
+            'rides': 'rides',
+            'payroll': 'payroll',
+            'invoices': 'invoices',
             'clients': 'clients',
         }
     },

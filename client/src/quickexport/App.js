@@ -3,7 +3,7 @@ import { hot } from 'react-hot-loader';
 import requiresAuth from '../global/requiresAuth';
 import Navbar from '../navbar';
 import ReportForm from './ReportForm';
-import history from './history';
+import history from '../global/history';
 
 export class App extends React.Component {
     constructor(props) {

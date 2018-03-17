@@ -2,6 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import qs from 'qs';
 import fetch from 'cross-fetch';
+import moment from 'moment';
 
 export default class JobsTable extends React.Component {
     constructor(props) {
@@ -54,7 +55,7 @@ export default class JobsTable extends React.Component {
                       <td>{job.courier.name}</td>
                       <td>{job.originAddress}</td>
                       <td>{job.destinationAddress1}</td>
-                      <td>{job.createdAt}</td>
+                      <td>{moment(job.createdAt).format('MM/DD/YYYY')}</td>
                     </tr>
                 );
             });
@@ -63,7 +64,7 @@ export default class JobsTable extends React.Component {
                 <table className="table">
                   <thead>
                     <tr>
-                      <th>Job ID</th>
+                      <th>Ride ID</th>
                       <th>Client</th>
                       <th>Courier</th>
                       <th>Origin</th>
@@ -94,7 +95,7 @@ export default class JobsTable extends React.Component {
                         <i className="fa fa-search"></i>
                       </span>
                     </div>
-                    <input id="freetext" className="form-control" name="freetext" type="text" value={this.state.freetext} onChange={this.handleFreetextChange} placeholder="Search by job id" />
+                    <input id="freetext" className="form-control" name="freetext" type="text" value={this.state.freetext} onChange={this.handleFreetextChange} placeholder="Search by ride id" />
                   </div>
                 </div>
               </div>

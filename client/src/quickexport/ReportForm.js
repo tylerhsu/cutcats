@@ -29,7 +29,7 @@ export class ReportForm extends React.Component {
         return (
             <React.Fragment>
               <div>
-                <label htmlFor="startDate">Report interval</label>
+                <label htmlFor="startDate">Date range</label>
               </div>
               <div>
                 <DateRangePicker
@@ -41,8 +41,6 @@ export class ReportForm extends React.Component {
                     focusedInput={this.state.focusedInput}
                     onFocusChange={focusedInput => this.setState({ focusedInput })}
                     minimumNights={0}
-                    numberOfMonths={1}
-                    enableOutsideDays={true}
                     isOutsideRange={() => false}
                     showDefaultInputIcon={true}
                 />
@@ -60,10 +58,13 @@ export class ReportForm extends React.Component {
         return (
             <div className="my-4">
               <div>
-                <a href={`/api/reports/payroll?${query}`} target="_blank">Download payroll for {this.getDateString()}</a>
+                <a href={`/api/jobs/csv?${query}`} target="_blank">Download rides for {this.getDateString()}</a>
               </div>
               <div>
-                <a href={`/api/reports/invoice?${query}`} target="_blank">Download invoices for {this.getDateString()}</a>
+                <a href={`/api/payroll/csv?${query}`} target="_blank">Download payroll for {this.getDateString()}</a>
+              </div>
+              <div>
+                <a href={`/api/invoice/csv?${query}`} target="_blank">Download invoices for {this.getDateString()}</a>
               </div>
             </div>
         );

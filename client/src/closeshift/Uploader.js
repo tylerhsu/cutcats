@@ -81,13 +81,13 @@ export default class Uploader extends React.Component {
         return (
             <div>
               <div>
-                <a href={`/api/reports/payroll?${query}`} target="_blank">Download today's payroll</a>
+                <a href={`/api/payroll/csv?${query}`} target="_blank">Download today's payroll</a>
               </div>
               <div>
-                <a href={`/api/reports/invoice?${query}`} target="_blank">Download today's invoices</a>
+                <a href={`/api/invoices/csv?${query}`} target="_blank">Download today's invoices</a>
               </div>
               <div>
-                <a href="/reports">Download reports for a different time period</a>
+                <a href="/quickexport">Download reports for a different time period</a>
               </div>
             </div>
         );
