@@ -55,24 +55,12 @@ export default class ClientForm extends React.Component {
                   <Input id='name' type='text' name='name' value={this.state.client.name || ''} onChange={this.handleChange} autoFocus />
                 </FormGroup>
                 <FormGroup>
-                  <Label for='qbName'>QB Name</Label>
-                  <Input id='qbName' type='text' name='qbName' value={this.state.client.qbName || ''} onChange={this.handleChange} />
-                </FormGroup>
-                <FormGroup>
                   <Label for='paymentType'>Payment Type</Label>
                   <Input id='paymentType' type='select' name='paymentType' value={this.state.client.paymentType} onChange={this.handleChange}>
                     <option value='invoiced' >Invoiced</option>
                     <option value='paid'>Paid</option>
                     <option value='legacy'>Legacy</option>
                   </Input>
-                </FormGroup>
-                <FormGroup>
-                  <Label for='rep'>Rep</Label>
-                  <Input id='rep' type='text' name='rep' value={this.state.client.rep || ''} onChange={this.handleChange} />
-                </FormGroup>
-                <FormGroup>
-                  <Label for='company'>Company</Label>
-                  <Input id='company' type='text' name='company' value={this.state.client.company || ''} onChange={this.handleChange} />
                 </FormGroup>
                 <FormGroup>
                   <Label for='address'>Address</Label>
@@ -87,14 +75,6 @@ export default class ClientForm extends React.Component {
                   <Input id='email' type='text' name='email' value={this.state.client.email || ''} onChange={this.handleChange} />
                 </FormGroup>
                 <FormGroup>
-                  <Label for='zone'>Zone</Label>
-                  <Input id='zone' type='select' name='zone' value={this.state.client.zone} onChange={this.handleChange}>
-                    {this.props.zones.map(zone => (
-                        <option key={zone._id} value={zone._id}>{zone.name}</option>
-                    ))}
-                  </Input>
-                </FormGroup>
-                <FormGroup>
                   <Label for='fixedAdminFee'>Fixed Admin Fee</Label>
                   <InputGroup>
                     <InputGroupAddon addonType='prepend'>$</InputGroupAddon>
@@ -104,10 +84,6 @@ export default class ClientForm extends React.Component {
                 <FormGroup>
                   <Label for='billingEmail'>Billing Email</Label>
                   <Input id='billingEmail' type='text' name='billingEmail' value={this.state.client.billingEmail || ''} onChange={this.handleChange} />
-                </FormGroup>
-                <FormGroup>
-                  <Label for='hours'>Hours</Label>
-                  <Input id='hours' type='text' name='hours' value={this.state.client.hours || ''} onChange={this.handleChange} />
                 </FormGroup>
               </ModalBody>
               <ModalFooter>

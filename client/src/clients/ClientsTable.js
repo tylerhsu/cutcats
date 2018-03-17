@@ -139,8 +139,6 @@ export default class ClientsTable extends React.Component {
                   <thead>
                     <tr>
                       <th>Name</th>
-                      <th>QB Name</th>
-                      <th>Rep</th>
                       <th>Phone</th>
                       <th>Email</th>
                       <th></th>
@@ -150,8 +148,6 @@ export default class ClientsTable extends React.Component {
                     {this.state.clients.map(client => (
                         <tr key={client._id}>
                           <td>{client.name}</td>
-                          <td>{client.qbName}</td>
-                          <td>{client.rep}</td>
                           <td>{client.phone}</td>
                           <td>{client.email}</td>
                           <td>

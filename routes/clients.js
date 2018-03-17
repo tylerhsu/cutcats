@@ -38,7 +38,6 @@ function createClient(req, res, next) {
 function editClient(req, res, next) {
     const body = _.chain(req.body)
         .omit(['_id', 'updatedAt', 'createdAt', '__v'])
-        .omit((value, key) => (value === ''))
         .value();
     req.client.set(body);
     req.client.save()

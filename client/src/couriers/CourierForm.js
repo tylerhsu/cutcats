@@ -53,16 +53,8 @@ export default class CourierForm extends React.Component {
                   <Input id='name' type='text' name='name' value={this.state.courier.name || ''} onChange={this.handleChange} autoFocus />
                 </FormGroup>
                 <FormGroup>
-                  <Label for='qbName'>QB Name</Label>
-                  <Input id='qbName' type='text' name='qbName' value={this.state.courier.qbName || ''} onChange={this.handleChange} />
-                </FormGroup>
-                <FormGroup>
                   <Label for='radioCallNumber'>Radio Call Number</Label>
                   <Input id='radioCallNumber' type='text' name='radioCallNumber' value={this.state.courier.radioCallNumber || ''} onChange={this.handleChange} />
-                </FormGroup>
-                <FormGroup>
-                  <Label for='radioFee'>Radio Fee</Label>
-                  <Input id='radioFee' type='text' name='radioFee' value={this.state.courier.radioFee || ''} onChange={this.handleChange} />
                 </FormGroup>
                 <FormGroup>
                   <Label for='phone'>Phone</Label>
@@ -74,19 +66,11 @@ export default class CourierForm extends React.Component {
                 </FormGroup>
                 <FormGroup>
                   <Label for='status'>Status</Label>
-                  <Input id='status' type='text' name='status' value={this.state.courier.status || ''} onChange={this.handleChange} />
-                </FormGroup>
-                <FormGroup>
-                  <Label for='taxWithholding'>Tax Withholding</Label>
-                  <Input id='taxWithholding' type='text' name='taxWithholding' value={this.state.courier.taxWithholding || ''} onChange={this.handleChange} />
-                </FormGroup>
-                <FormGroup check>
-                  <Input id='depositPaid' type='checkbox' name='depositPaid' checked={this.state.courier.depositPaid} onChange={this.handleChange} />
-                  <Label check for='depositPaid'>&nbsp;Deposit Paid?</Label>
-                </FormGroup>
-                <FormGroup check>
-                  <Input id='active' type='checkbox' name='active' checked={this.state.courier.active} onChange={this.handleChange} />
-                  <Label check for='active'>&nbsp;Active?</Label>
+                  <Input id='status' type='select' name='status' value={this.state.courier.status || ''} onChange={this.handleChange}>
+                    <option value=''></option>
+                    <option value='member' >Member</option>
+                    <option value='guest'>Guest</option>
+                  </Input>
                 </FormGroup>
               </ModalBody>
               <ModalFooter>

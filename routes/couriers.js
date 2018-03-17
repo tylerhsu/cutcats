@@ -39,7 +39,6 @@ function createCourier(req, res, next) {
 function editCourier(req, res, next) {
     const body = _.chain(req.body)
         .omit(['_id', 'updatedAt', 'createdAt', '__v'])
-        .omit((value, key) => (value === ''))
         .value();
     req.courier.set(body);
     req.courier.save()
