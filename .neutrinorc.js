@@ -11,7 +11,7 @@ module.exports = {
             'index': 'index',
             'couriers': 'couriers',
             'closeshift': 'closeshift',
-            'jobs': 'jobs',
+            'welcome': 'welcome',
             'reports': 'reports',
             'clients': 'clients',
         }
