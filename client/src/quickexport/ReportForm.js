@@ -64,7 +64,7 @@ export class ReportForm extends React.Component {
                 <a href={`/api/payroll/csv?${query}`} target="_blank">Download payroll for {this.getDateString()}</a>
               </div>
               <div>
-                <a href={`/api/invoice/csv?${query}`} target="_blank">Download invoices for {this.getDateString()}</a>
+                <a href={`/api/invoices/csv?${query}`} target="_blank">Download invoices for {this.getDateString()}</a>
               </div>
             </div>
         );
