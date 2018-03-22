@@ -4,7 +4,8 @@ const courierSchema = new mongoose.Schema({
     radioCallNumber: { type: Number, index: true, required: true },
     phone: { type: String },
     email: { type: String, index: true },
-    status: { type: String, enum: ['member', 'guest'], lowercase: true }
+    status: { type: String, enum: ['member', 'guest'], lowercase: true, required: true },
+    startDate: { type: Date, required: true }
 }, {
     timestamps: true
 });

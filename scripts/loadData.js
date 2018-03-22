@@ -65,7 +65,8 @@ function getCouriers() {
             depositPaid: (row['deposit paid?'] || '').toLowerCase() === 'yes',
             status: row['status'],
             active: row['Active / Inactive'] === 'Active',
-            taxWithholding: row['tax withholding']
+            taxWithholding: row['tax withholding'],
+            startDate: row['Timestamp']
         };
     });
 }

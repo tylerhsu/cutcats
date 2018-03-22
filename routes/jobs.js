@@ -22,7 +22,7 @@ function getJobs(req, res, next) {
 
 function getJobsCsv(req, res, next) {
     const { fromDate, toDate } = reportUtils.parseDates(req.query);
-    const filename = reportUtils.getFilename('jobs', fromDate, toDate);
+    const filename = reportUtils.getFilename('rides', fromDate, toDate);
     res.set({
         'Content-Type': 'text/plain',
         'Content-Disposition': 'attachment; filename=' + filename
