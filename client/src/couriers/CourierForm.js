@@ -67,7 +67,7 @@ export default class CourierForm extends React.Component {
                 <FormGroup>
                   <Label for='status'>Status</Label>
                   <Input id='status' type='select' name='status' value={this.state.courier.status || ''} onChange={this.handleChange}>
-                    <option value=''></option>
+                    {!this.state.courier.status && <option default>Select one</option> }
                     <option value='member' >Member</option>
                     <option value='guest'>Guest</option>
                   </Input>

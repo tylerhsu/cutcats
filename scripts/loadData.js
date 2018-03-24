@@ -63,12 +63,20 @@ function getCouriers() {
             phone: row['Phone Number'],
             email: row['Rider E-mail'],
             depositPaid: (row['deposit paid?'] || '').toLowerCase() === 'yes',
-            status: row['status'],
+            status: mapCourierStatus(row['status']),
             active: row['Active / Inactive'] === 'Active',
             taxWithholding: row['tax withholding'],
-            startDate: row['Timestamp']
+            startDate: row['Timestamp'] === 'moonlighter' ? undefined : row['Timestamp']
         };
     });
+}
+
+function mapCourierStatus(csvStatus) {
+    switch (csvStatus) {
+        case 'Non-Partner Rider Payouts': return 'guest';
+        case 'Guaranteed Pay to Partners': return 'member';
+        default: return;
+    }
 }
 
 function getClients(zones) {

@@ -19,7 +19,7 @@ const jobSchema = new mongoose.Schema({
     destinationAddress2: { type: String },
     destinationPostalCode: { type: String },
     destinationZone: { String },
-    deliveryStatus: { type: String, enum: ['acknowledged', 'picked up', 'delivered', 'complete', 'cancelled'], lowercase: true },
+    deliveryStatus: { type: String, enum: ['assigned', 'acknowledged', 'undeliverable', 'picked up', 'delivered', 'complete', 'cancelled'], lowercase: true },
     elapsedPickupTime: { type: String },
     transitTime: { type: String },
     fulfillmentTime: { type: String },
