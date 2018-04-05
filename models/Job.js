@@ -8,8 +8,8 @@ const jobSchema = new mongoose.Schema({
     billingReference: { type: String },
     orderPlacer: { type: String },
     provider: { type: String },
-    client: { type: mongoose.Schema.Types.ObjectId, ref: 'Client' },
-    courier: { type: mongoose.Schema.Types.ObjectId, ref: 'Courier' },
+    client: { type: mongoose.Schema.Types.ObjectId, ref: 'Client', required: true },
+    courier: { type: mongoose.Schema.Types.ObjectId, ref: 'Courier', required: true },
     originName: { type: String },
     originAddress: { type: String },
     originPostalCode: { type: String },
@@ -108,6 +108,11 @@ function hydrateBoolean(csvValue) {
 }
 
 function hydrateClient(csvValue) {
+    let clientName = (csvValue || '').trim();
+    if (!clientName) {
+        throw new Error('"client name" column is missing or empty.  This column is required');
+    }
+    
     return Client.find({ name: csvValue }).exec()
         .then(results => {
             if (!(results && results.length)) {

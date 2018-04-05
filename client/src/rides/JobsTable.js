@@ -51,8 +51,8 @@ export default class JobsTable extends React.Component {
                 return (
                     <tr key={job._id}>
                       <td>{job.jobId}</td>
-                      <td>{job.client.name}</td>
-                      <td>{job.courier.name}</td>
+                      <td>{job.client ? job.client.name : 'None'}</td>
+                      <td>{job.courier ? job.courier.name : 'None'}</td>
                       <td>{job.originAddress}</td>
                       <td>{job.destinationAddress1}</td>
                       <td>{moment(job.createdAt).format('MM/DD/YYYY')}</td>
