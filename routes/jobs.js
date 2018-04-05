@@ -13,9 +13,24 @@ router.get('/csv', getJobsCsv);
 router.post('/import', importJobs);
 
 function getJobs(req, res, next) {
-    return _getJobsQuery(req).exec()
+    let query = _getJobsQuery(req);
+    const page = parseInt(req.query.page) || 1;
+    const resultsPerPage = parseInt(req.query.resultsPerPage) || 100;
+    const count = ['true', '1'].indexOf(req.query.count) > -1;
+
+    if (count) {
+        query.count();
+    } else {
+        query.skip((page - 1) * resultsPerPage).limit(resultsPerPage);
+    }
+
+    return query.exec()
         .then(jobs => {
-            res.json(jobs);
+            if (count) {
+                res.json({ count: jobs });
+            } else {
+                res.json(jobs);
+            }
         })
         .catch(next);
 }
@@ -60,8 +75,6 @@ function _getJobsQuery(req) {
     if (req.query.q) {
         query.find({ $text: { $search: req.query.q } });
     }
-
-    console.log(fromDate, toDate);
 
     if (fromDate) {
         query.where({ createdAt: { $gte: fromDate } });

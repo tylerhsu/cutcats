@@ -43,7 +43,7 @@ export default class Navbar extends React.Component {
                       <NavLink href="/closeshift">Close Shift</NavLink>
                     </NavItem>
                     <UncontrolledDropdown nav inNavbar>
-                      <DropdownToggle nav caret active={window.location.pathname.match(/rides|payroll|invoices/)}>
+                      <DropdownToggle nav caret style={{ color: window.location.pathname.match(/rides|payroll|invoices/) ? 'white' : undefined }}>
                         Reports
                       </DropdownToggle>
                       <DropdownMenu>

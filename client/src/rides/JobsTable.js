@@ -4,13 +4,17 @@ import qs from 'qs';
 import fetch from 'cross-fetch';
 import moment from 'moment';
 
+const RESULTS_PER_PAGE = 100;
+
 export default class JobsTable extends React.Component {
     constructor(props) {
         super(props);
 
         this.state = {
             jobs: [],
-            freetext: ''
+            freetext: '',
+            loading: true,
+            page: 1
         };
 
         this.handleFreetextChange = this.handleFreetextChange.bind(this);
@@ -18,18 +22,37 @@ export default class JobsTable extends React.Component {
 
     fetchJobs() {
         let url = '/api/jobs',
-            query = { populate: 'client courier', sort: '-updatedAt' };
+            query = {
+                populate: 'client courier',
+                sort: '-updatedAt',
+                page: this.state.page,
+                resultsPerPage: RESULTS_PER_PAGE
+            };
 
         if (this.state.freetext) {
             query.q = this.state.freetext;
         }
+
+        this.setState({ loading: true });
         
-        return fetch([url, qs.stringify(query)].join('?'), { credentials: 'include' })
-            .then(res => {
-                return res.json();
+        return Promise.all([
+            fetch([url, qs.stringify(query)].join('?'), { credentials: 'include' }),
+            fetch([url, qs.stringify({ ...query, count: true })].join('?'), { credentials: 'include' })
+        ])
+            .then(responses => {
+                return Promise.all([
+                    responses[0].json(),
+                    responses[1].json()
+                ]);
             })
-            .then(jobs => {
-                this.setState({ jobs });
+            .then(data => {
+                this.setState({
+                    jobs: data[0],
+                    count: data[1].count
+                });
+            })
+            .finally(() => {
+                this.setState({ loading: false });
             });
     }
 
@@ -46,7 +69,13 @@ export default class JobsTable extends React.Component {
     }
 
     renderTable() {
-        if (this.state.jobs.length) {
+        if (this.state.loading) {
+            return (
+                <div>
+                  <i className='fa fa-spin fa-spinner' />
+                </div>
+            );
+        } else if (this.state.jobs.length) {
             const jobs = this.state.jobs.map(job => {
                 return (
                     <tr key={job._id}>
@@ -61,21 +90,24 @@ export default class JobsTable extends React.Component {
             });
 
             return (
-                <table className="table">
-                  <thead>
-                    <tr>
-                      <th>Ride ID</th>
-                      <th>Client</th>
-                      <th>Courier</th>
-                      <th>Origin</th>
-                      <th>Destination</th>
-                      <th>Imported on</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {jobs}
-                  </tbody>
-                </table>
+                <React.Fragment>
+                  <div className='mb-4'>Showing {this.state.count > RESULTS_PER_PAGE ? `first ${RESULTS_PER_PAGE} of ` : ''}{this.state.count} ride{this.state.count === 1 ? '' : 's'}</div>
+                  <table className="table">
+                    <thead>
+                      <tr>
+                        <th>Ride ID</th>
+                        <th>Client</th>
+                        <th>Courier</th>
+                        <th>Origin</th>
+                        <th>Destination</th>
+                        <th>Imported on</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {jobs}
+                    </tbody>
+                  </table>
+                </React.Fragment>
             );
         } else {
             return (
