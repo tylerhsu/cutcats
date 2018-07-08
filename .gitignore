@@ -63,3 +63,4 @@ client/build
 
 misc
 sessions
+test/db/*

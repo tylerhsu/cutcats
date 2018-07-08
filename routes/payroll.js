@@ -79,3 +79,4 @@ function _getPayrollQuery(req) {
 }
 
 module.exports = router;
+module.exports.getPayroll = getPayroll;

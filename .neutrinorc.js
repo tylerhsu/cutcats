@@ -1,7 +1,8 @@
-require('dotenv').config();
+if (process.env.NODE_ENV !== 'test') {
+    require('dotenv').config();
+}
 
 const apiPort = parseInt(process.env.PORT) || 3000;
-
 
 module.exports = {
     options: {
@@ -55,7 +56,13 @@ module.exports = {
                 }
             }
         ],
-        '@neutrinojs/mocha',
+        [
+            '@neutrinojs/mocha',
+            {
+                require: './dbConnection',
+                exit: true
+            }
+        ],
         neutrino => neutrino.config
             .entry('vendor')
             .add('babel-polyfill')

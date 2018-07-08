@@ -5,14 +5,11 @@ const flash = require('connect-flash');
 const app = express();
 const sessionConfig = require('./sessionConfig');
 const routes = require('./routes');
-const mongoose = require('mongoose');
 const passport = require('passport');
 const compression = require('compression');
 const port = parseInt(process.env.PORT) || 3000;
 require('./passportConfig');
-
-mongoose.connect(process.env.MONGODB_URI);
-mongoose.plugin(require('mongoose-deep-populate'));
+require('./dbConnection');
 
 app.use(compression());
 

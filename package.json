@@ -6,7 +6,7 @@
   "scripts": {
     "build": "neutrino build",
     "start": "concurrently 'npm run server' 'npm run client'",
-    "test": "neutrino test",
+    "test": "mongod --config test/db/mongod.conf && MONGODB_URI=mongodb://localhost:27357/test neutrino test; mongod --config test/db/mongod.conf --shutdown",
     "server": "node server.js",
     "client": "neutrino start",
     "heroku-postbuild": "npm run build"
@@ -17,7 +17,7 @@
   },
   "engines": {
     "node": "8.9.4",
-    "npm": "5.6.0"
+    "npm": "6.1.0"
   },
   "keywords": [],
   "author": "",
@@ -27,8 +27,8 @@
   },
   "homepage": "https://github.com/tylerhsu/cutcats#readme",
   "dependencies": {
-    "@neutrinojs/mocha": "^8.1.1",
-    "@neutrinojs/react": "^8.1.1",
+    "@neutrinojs/mocha": "^8.3.0",
+    "@neutrinojs/react": "^8.3.0",
     "auto-loader": "^0.2.0",
     "babel-polyfill": "^6.26.0",
     "body-parser": "^1.18.2",
@@ -46,7 +46,7 @@
     "font-awesome": "^4.7.0",
     "history": "^4.7.2",
     "moment": "^2.21.0",
-    "mongoose": "^5.0.6",
+    "mongoose": "^5.2.1",
     "mongoose-deep-populate": "^3.1.1",
     "neutrino": "^8.1.1",
     "node-sass": "^4.7.2",
