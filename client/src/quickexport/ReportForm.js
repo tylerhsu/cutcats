@@ -58,7 +58,7 @@ export class ReportForm extends React.Component {
         return (
             <div className="my-4">
               <div>
-                <a href={`/api/jobs/csv?${query}`} target="_blank">Download rides for {this.getDateString()}</a>
+                <a href={`/api/rides/csv?${query}`} target="_blank">Download rides for {this.getDateString()}</a>
               </div>
               <div>
                 <a href={`/api/payroll/csv?${query}`} target="_blank">Download payroll for {this.getDateString()}</a>

@@ -38,11 +38,11 @@ function getInvoicesCsv(req, res, next) {
         .pipe(res)
         .on('error', next);
 
-    function transform(jobsByClient, callback) {
+    function transform(ridesByClient, callback) {
         callback(null, {
-            'Client name': jobsByClient._id.client.name,
-            'Jobs completed': jobsByClient.jobCount,
-            'Billable total': reportUtils.precisionRound(jobsByClient.balance, 2)
+            'Client name': ridesByClient._id.client.name,
+            'Rides completed': ridesByClient.rideCount,
+            'Billable total': reportUtils.precisionRound(ridesByClient.balance, 2)
         });
     }
 }
@@ -58,7 +58,7 @@ function _getInvoicesQuery(req, res, next) {
         throw error('End date is not a recognizable date', 400);
     }
     
-    return models.Job.aggregate()
+    return models.Ride.aggregate()
         .match({
             readyTime: {
                 $gte: fromDate,
@@ -73,7 +73,7 @@ function _getInvoicesQuery(req, res, next) {
         })
         .group({
             _id: { client: { $arrayElemAt: ['$client', 0] } },
-            jobCount: { $sum: 1 },
+            rideCount: { $sum: 1 },
             balance: { $sum: '$billableTotal' }
         });
 }

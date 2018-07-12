@@ -2,7 +2,7 @@ import React from 'react';
 import requiresAuth from '../global/requiresAuth';
 import { hot } from 'react-hot-loader';
 import Navbar from '../navbar';
-import JobsTable from './JobsTable';
+import RidesTable from './RidesTable';
 
 export class App extends React.Component {
     constructor(props) {
@@ -13,7 +13,7 @@ export class App extends React.Component {
         return (
             <React.Fragment>
               <Navbar />
-              <JobsTable />
+              <RidesTable />
             </React.Fragment>
         );
     }

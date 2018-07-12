@@ -64,7 +64,7 @@ export class InvoicesTable extends React.Component {
                     {this.state.invoiceRows.map(invoiceRow => (
                         <tr key={invoiceRow._id.client._id}>
                           <td>{invoiceRow._id.client.name}</td>
-                          <td>{invoiceRow.jobCount}</td>
+                          <td>{invoiceRow.rideCount}</td>
                           <td>${precisionRound(invoiceRow.balance, 2).toFixed(2)}</td>
                         </tr>
                     ))}

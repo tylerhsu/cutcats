@@ -28,11 +28,11 @@ export default class Uploader extends React.Component {
             errors: null
         });
         
-        fetch('/api/jobs/import?save=false', reqOptions)
+        fetch('/api/rides/import?save=false', reqOptions)
             .then(res => {
                 if (res.ok) {
                     this.setState({ status: 'importing' });
-                    return fetch('/api/jobs/import?save=true', reqOptions);
+                    return fetch('/api/rides/import?save=true', reqOptions);
                 } else {
                     return res;
                 }

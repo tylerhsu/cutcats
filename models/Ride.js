@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const Client = require('./Client');
 const Courier = require('./Courier');
 const hydrateFromCsv = require('./hydrateFromCsv');
-const jobSchema = new mongoose.Schema({
+const rideSchema = new mongoose.Schema({
     jobId: { type: String, unique: true },
     externalId: { type: String },
     billingReference: { type: String },
@@ -49,7 +49,7 @@ const jobSchema = new mongoose.Schema({
     timestamps: true
 });
 
-jobSchema.index({
+rideSchema.index({
     jobId: 'text',
     externalId: 'text',
     billingReference: 'text',
@@ -150,9 +150,9 @@ function hydrateCourier(csvValue, csvRow) {
         });
 }
 
-jobSchema.statics.hydrateFromCsv = function(csvRow) {
+rideSchema.statics.hydrateFromCsv = function(csvRow) {
     return hydrateFromCsv(csvRow, CSV_COLUMN_MAP);
 }
 
-module.exports = mongoose.model('Job', jobSchema);
+module.exports = mongoose.model('Ride', rideSchema);
 module.exports.CSV_COLUMN_MAP = CSV_COLUMN_MAP;

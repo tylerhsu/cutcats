@@ -64,7 +64,7 @@ export class PayrollTable extends React.Component {
                     {this.state.payrollRows.map(payrollRow => (
                         <tr key={payrollRow._id.courier._id}>
                           <td>{payrollRow._id.courier.name}</td>
-                          <td>{payrollRow.jobCount}</td>
+                          <td>{payrollRow.rideCount}</td>
                           <td>${precisionRound(payrollRow.balance, 2).toFixed(2)}</td>
                         </tr>
                     ))}

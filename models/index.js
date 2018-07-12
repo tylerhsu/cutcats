@@ -2,6 +2,6 @@ module.exports = {
     Client: require('./Client'),
     Courier: require('./Courier'),
     Guest: require('./Guest'),
-    Job: require('./Job'),
+    Ride: require('./Ride'),
     Zone: require('./Zone')
 };

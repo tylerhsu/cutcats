@@ -38,11 +38,11 @@ function getPayrollCsv(req, res, next) {
         .pipe(res)
         .on('error', next);
     
-    function transform(jobsByCourier, callback) {
+    function transform(ridesByCourier, callback) {
         callback(null, {
-            'Courier name': jobsByCourier._id.courier.name,
-            'Rides completed': jobsByCourier.jobCount,
-            'Amount owed': reportUtils.precisionRound(jobsByCourier.balance, 2)
+            'Courier name': ridesByCourier._id.courier.name,
+            'Rides completed': ridesByCourier.rideCount,
+            'Amount owed': reportUtils.precisionRound(ridesByCourier.balance, 2)
         });
     }
 }
@@ -58,7 +58,7 @@ function _getPayrollQuery(req) {
         throw error('End date is not a recognizable date', 400);
     }
 
-    return models.Job.aggregate()
+    return models.Ride.aggregate()
         .match({
             readyTime: {
                 $gte: fromDate,
@@ -73,7 +73,7 @@ function _getPayrollQuery(req) {
         })
         .group({
             _id: { courier: { $arrayElemAt: ['$courier', 0] } },
-            jobCount: { $sum: 1 },
+            rideCount: { $sum: 1 },
             balance: { $sum: { $multiply: ['$billableTotal', .1] } }
         });
 }

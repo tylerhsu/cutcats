@@ -5,8 +5,7 @@ const _ = require('underscore');
 const models = require('../models');
 const fs = require('fs');
 const parseCsv = require('csv-parse/lib/sync');
-
-mongoose.connect(process.env.MONGODB_URI);
+require('../dbConnection');
 
 Promise.all([
     models.Courier.remove(),

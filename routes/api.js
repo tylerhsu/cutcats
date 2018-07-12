@@ -3,7 +3,7 @@ const router = express.Router();
 
 router.use('/couriers', require('./couriers'));
 router.use('/me', require('./me'));
-router.use('/jobs', require('./jobs'));
+router.use('/rides', require('./rides'));
 router.use('/payroll', require('./payroll'));
 router.use('/invoices', require('./invoices'));
 router.use('/clients', require('./clients'));

@@ -6,12 +6,12 @@ import moment from 'moment';
 
 const RESULTS_PER_PAGE = 100;
 
-export default class JobsTable extends React.Component {
+export default class RidesTable extends React.Component {
     constructor(props) {
         super(props);
 
         this.state = {
-            jobs: [],
+            rides: [],
             freetext: '',
             loading: true,
             page: 1
@@ -20,8 +20,8 @@ export default class JobsTable extends React.Component {
         this.handleFreetextChange = this.handleFreetextChange.bind(this);
     }
 
-    fetchJobs() {
-        let url = '/api/jobs',
+    fetchRides() {
+        let url = '/api/rides',
             query = {
                 populate: 'client courier',
                 sort: '-updatedAt',
@@ -47,7 +47,7 @@ export default class JobsTable extends React.Component {
             })
             .then(data => {
                 this.setState({
-                    jobs: data[0],
+                    rides: data[0],
                     count: data[1].count
                 });
             })
@@ -57,14 +57,14 @@ export default class JobsTable extends React.Component {
     }
 
     componentWillMount() {
-        return this.fetchJobs()
+        return this.fetchRides()
     }
 
     handleFreetextChange(e) {
         this.setState({
             freetext: e.target.value
         }, () => {
-            this.fetchJobs();
+            this.fetchRides();
         });
     }
 
@@ -75,16 +75,16 @@ export default class JobsTable extends React.Component {
                   <i className='fa fa-spin fa-spinner' />
                 </div>
             );
-        } else if (this.state.jobs.length) {
-            const jobs = this.state.jobs.map(job => {
+        } else if (this.state.rides.length) {
+            const rides = this.state.rides.map(ride => {
                 return (
-                    <tr key={job._id}>
-                      <td>{job.jobId}</td>
-                      <td>{job.client ? job.client.name : 'None'}</td>
-                      <td>{job.courier ? job.courier.name : 'None'}</td>
-                      <td>{job.originAddress}</td>
-                      <td>{job.destinationAddress1}</td>
-                      <td>{moment(job.createdAt).format('MM/DD/YYYY')}</td>
+                    <tr key={ride._id}>
+                      <td>{ride.jobId}</td>
+                      <td>{ride.client ? ride.client.name : 'None'}</td>
+                      <td>{ride.courier ? ride.courier.name : 'None'}</td>
+                      <td>{ride.originAddress}</td>
+                      <td>{ride.destinationAddress1}</td>
+                      <td>{moment(ride.createdAt).format('MM/DD/YYYY')}</td>
                     </tr>
                 );
             });
@@ -95,7 +95,7 @@ export default class JobsTable extends React.Component {
                   <table className="table">
                     <thead>
                       <tr>
-                        <th>Ride ID</th>
+                        <th>Job ID</th>
                         <th>Client</th>
                         <th>Courier</th>
                         <th>Origin</th>
@@ -104,7 +104,7 @@ export default class JobsTable extends React.Component {
                       </tr>
                     </thead>
                     <tbody>
-                      {jobs}
+                      {rides}
                     </tbody>
                   </table>
                 </React.Fragment>
