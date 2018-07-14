@@ -1,7 +1,7 @@
 import React from 'react';
 import requiresAuth from '../global/requiresAuth';
 import Navbar from '../navbar';
-import Uploader from './Uploader';
+import CloseShiftForm from './CloseShiftForm';
 import { hot } from 'react-hot-loader';
 
 export class App extends React.Component {
@@ -14,11 +14,7 @@ export class App extends React.Component {
             <React.Fragment>
               <Navbar />
               <div className="container">
-                <div className="row">
-                  <div className="col">
-                    <Uploader />
-                  </div>
-                </div>
+                <CloseShiftForm />
               </div>
             </React.Fragment>
         );
