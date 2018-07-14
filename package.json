@@ -6,7 +6,7 @@
   "scripts": {
     "build": "neutrino build",
     "start": "concurrently 'npm run server' 'npm run client'",
-    "test": "mongod --config test/db/mongod.conf && MONGODB_URI=mongodb://localhost:27357/test neutrino test; mongod --config test/db/mongod.conf --shutdown",
+    "test": "mongod --config testDb/mongod.conf && MONGODB_URI=mongodb://localhost:27357/test neutrino test -- ./setupTests.js ./models/**/*.test.js ./client/**/*.test.js ./routes/**/*.test.js; mongod --config testDb/mongod.conf --shutdown",
     "server": "node server.js",
     "client": "neutrino start",
     "heroku-postbuild": "npm run build"
@@ -40,6 +40,8 @@
     "cross-fetch": "^2.1.0",
     "csv": "^2.0.0",
     "dotenv": "^5.0.0",
+    "enzyme": "^3.3.0",
+    "enzyme-adapter-react-16": "^1.1.1",
     "express": "^4.16.2",
     "express-react-views": "^0.10.5",
     "express-session": "^1.15.6",
