@@ -5,21 +5,20 @@ import CloseShiftForm from './CloseShiftForm';
 import { hot } from 'react-hot-loader';
 
 export class App extends React.Component {
-    constructor(props) {
-        super(props);
-    }
-    
-    render() {
-        return (
-            <React.Fragment>
-              <Navbar />
-              <div className="container">
-                <CloseShiftForm />
-              </div>
-            </React.Fragment>
-        );
-    }
+  constructor (props) {
+    super(props);
+  }
+
+  render () {
+    return (
+      <React.Fragment>
+        <Navbar />
+        <div className="container">
+          <CloseShiftForm />
+        </div>
+      </React.Fragment>
+    );
+  }
 }
 
 export default hot(module)(requiresAuth(App));
-

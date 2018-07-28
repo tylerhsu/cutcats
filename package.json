@@ -10,7 +10,7 @@
     "server": "node server.js",
     "client": "neutrino start",
     "heroku-postbuild": "npm run build",
-      "lint": "eslint --ext .js,.jsx ."
+    "lint": "eslint --ext .js,.jsx ."
   },
   "repository": {
     "type": "git",

@@ -11,9 +11,14 @@ export default class CloseShiftForm extends React.Component {
       uploaderValidationErrors: null,
       uploaderError: null
     };
+
+    this.handleValidationSuccess = this.handleValidationSuccess.bind(this);
+    this.handleValidationFailure = this.handleValidationFailure.bind(this);
+    this.handleUploaderError = this.handleUploaderError.bind(this);
+    this.submit = this.submit.bind(this);
   }
 
-  handleValidationSuccess = (file) => {
+  handleValidationSuccess (file) {
     this.setState({
       importFile: file,
       uploaderValidationErrors: null,
@@ -21,7 +26,7 @@ export default class CloseShiftForm extends React.Component {
     });
   }
 
-  handleValidationFailure = (errors) => {
+  handleValidationFailure (errors) {
     this.setState({
       importFile: null,
       uploaderValidationErrors: errors,
@@ -29,7 +34,7 @@ export default class CloseShiftForm extends React.Component {
     });
   }
 
-  handleUploaderError = (err) => {
+  handleUploaderError (err) {
     this.setState({
       importFile: null,
       uploaderValidationErrors: null,
@@ -37,7 +42,9 @@ export default class CloseShiftForm extends React.Component {
     });
   }
 
-  submit
+  submit () {
+
+  }
   
   render() {
     return (

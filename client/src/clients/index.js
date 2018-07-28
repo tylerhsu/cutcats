@@ -4,6 +4,6 @@ import App from './App';
 import '../global/global';
 
 ReactDOM.render(
-    <App />,
-    document.getElementById('root')
+  <App />,
+  document.getElementById('root')
 );

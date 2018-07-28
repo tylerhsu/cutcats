@@ -8,6 +8,6 @@ import history from '../global/history';
 configureUrlQuery({ history });
 
 ReactDOM.render(
-    <App />,
-    document.getElementById('root')
+  <App />,
+  document.getElementById('root')
 );
