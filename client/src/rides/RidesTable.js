@@ -1,6 +1,5 @@
 import React from 'react';
 import qs from 'qs';
-import fetch from 'cross-fetch';
 import moment from 'moment';
 
 const RESULTS_PER_PAGE = 100;

@@ -1,6 +1,5 @@
 import React from 'react';
 import qs from 'qs';
-import fetch from 'cross-fetch';
 import CourierForm from './CourierForm';
 import { Modal } from 'reactstrap';
 

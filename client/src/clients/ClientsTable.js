@@ -1,6 +1,5 @@
 import React from 'react';
 import qs from 'qs';
-import fetch from 'cross-fetch';
 import ClientForm from './ClientForm';
 import { Modal } from 'reactstrap';
 

@@ -1,5 +1,4 @@
 import React from 'react';
-import fetch from 'cross-fetch';
 import qs from 'qs';
 
 export default function requiresAuth (WrappedComponent) {

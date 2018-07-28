@@ -45,6 +45,10 @@ export default class CloseShiftForm extends React.Component {
   submit () {
 
   }
+
+  componentDidMount() {
+    fetch('/api/couriers', { credentials: 'include' });
+  }
   
   render() {
     return (

@@ -2,7 +2,6 @@ import 'react-dates/initialize';
 import 'react-dates/lib/css/_datepicker.css';
 import React from 'react';
 import PropTypes from 'prop-types';
-import fetch from 'cross-fetch';
 import moment from 'moment';
 import { precisionRound } from '../global/misc';
 import qs from 'qs';
