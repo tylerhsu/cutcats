@@ -1,6 +1,11 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import axios from 'axios';
+import {
+  FormGroup,
+  Label,
+  Input
+} from 'reactstrap';
 
 export default class ShiftDetails extends React.Component {
   constructor (props) {
@@ -34,12 +39,28 @@ export default class ShiftDetails extends React.Component {
     } else {
       return (
         <div>
-          <label htmlFor='amDispatcher'>AM Dispatcher</label>
-          <select name='amDispatcher' onChange={this.handleChange} value={this.state.amDispatcher}>
-            {this.state.couriers.map(courier => (
-              <option key={courier._id} value={courier._id}>{courier.name}</option>
-            ))}
-          </select>
+          <FormGroup>
+            <Label for='amDispatcher'>AM Dispatcher</Label>
+            <Input type='select' name='amDispatcher' onChange={this.handleChange} value={this.props.amDispatcher} style={{ width: '15rem' }} required>
+              <option value=''>Select a dispatcher</option>
+              {this.state.couriers.map(courier => (
+                <option key={courier._id} value={courier._id}>{courier.name}</option>
+              ))}
+            </Input>
+          </FormGroup>
+          <FormGroup>
+            <Label for='pmDispatcher'>PM Dispatcher</Label>
+            <Input type='select' name='pmDispatcher' onChange={this.handleChange} value={this.props.pmDispatcher} style={{ width: '15rem' }} required>
+              <option value=''>Select a dispatcher</option>
+              {this.state.couriers.map(courier => (
+                <option key={courier._id} value={courier._id}>{courier.name}</option>
+              ))}
+            </Input>
+          </FormGroup>
+          <FormGroup>
+            <Label for='comments'>Comments</Label>
+            <Input type='textarea' name='comments' onChange={this.handleChange} value={this.props.comments} required />
+          </FormGroup>
         </div>
       );
     }

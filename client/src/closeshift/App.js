@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import requiresAuth from '../global/requiresAuth';
 import Navbar from '../navbar';
 import CloseShiftForm from './CloseShiftForm';
@@ -14,11 +15,17 @@ export class App extends React.Component {
       <React.Fragment>
         <Navbar />
         <div className="container">
-          <CloseShiftForm />
+          <div className="col-md-8 mx-auto">
+            <CloseShiftForm user={this.props.user} />
+          </div>
         </div>
       </React.Fragment>
     );
   }
 }
+
+App.propTypes = {
+  user: PropTypes.object
+};
 
 export default hot(module)(requiresAuth(App));

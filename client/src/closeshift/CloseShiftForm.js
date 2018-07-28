@@ -1,6 +1,11 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import Uploader from './Uploader';
 import ShiftDetails from './ShiftDetails';
+import {
+  Button,
+  Form
+} from 'reactstrap';
 
 export default class CloseShiftForm extends React.Component {
   constructor(props) {
@@ -8,8 +13,8 @@ export default class CloseShiftForm extends React.Component {
 
     this.state = {
       importFile: null,
-      amDispatcher: null,
-      pmDispatcher: null,
+      amDispatcher: '',
+      pmDispatcher: this.props.user._id,
       comments: '',
       uploaderValidationErrors: null,
       uploaderError: null
@@ -18,6 +23,7 @@ export default class CloseShiftForm extends React.Component {
     this.handleValidationSuccess = this.handleValidationSuccess.bind(this);
     this.handleValidationFailure = this.handleValidationFailure.bind(this);
     this.handleUploaderError = this.handleUploaderError.bind(this);
+    this.handleShiftDetailsChange = this.handleShiftDetailsChange.bind(this);
     this.submit = this.submit.bind(this);
   }
 
@@ -49,15 +55,15 @@ export default class CloseShiftForm extends React.Component {
     this.setState({ [field]: value });
   }
 
-  submit () {
-
+  submit (e) {
+    e.preventDefault();
   }
   
   render() {
     return (
-      <div>
+      <Form>
         <div>
-          <h1>1. Import ride data</h1>
+          <h3 style={{ fontWeight: 'bold' }}>1. Import ride data</h3>
           <Uploader
             validationUrl='/api/rides/import?save=false'
             onValidationSuccess={this.handleValidationSuccess}
@@ -71,19 +77,23 @@ export default class CloseShiftForm extends React.Component {
             <div style="color: red">An unexpected error occurred: {this.state.uploaderError}</div>
           )}
         </div>
-        <div>
+        <div style={{ marginTop: '2rem' }}>
           <fieldset disabled={!this.state.importFile} style={{ color: !this.state.importFile ? 'lightgray' : null }}>
-            <h1>2. Enter shift details</h1>
+            <h3 style={{ fontWeight: 'bold' }}>2. Enter shift details</h3>
             <ShiftDetails
               onChange={this.handleShiftDetailsChange}
               amDispatcher={this.state.amDispatcher}
               pmDispatcher={this.state.pmDispatcher}
               comments={this.state.comments}
             />
-            <button onClick={this.submit}>Close shift</button>
+            <Button color='primary' type='submit' onClick={this.submit}>Close shift</Button>
           </fieldset>
         </div>
-      </div>
+      </Form>
     );
   }
 }
+
+CloseShiftForm.propTypes = {
+  user: PropTypes.object.isRequired
+};
