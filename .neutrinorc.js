@@ -69,7 +69,7 @@ module.exports = {
             .add('react')
             .add('react-dom')
             .add('prop-types')
-            .add('cross-fetch')
+            .add('axios')
             .add('reactstrap')
     ]
 };

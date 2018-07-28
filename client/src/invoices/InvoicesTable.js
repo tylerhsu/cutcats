@@ -3,8 +3,8 @@ import 'react-dates/lib/css/_datepicker.css';
 import React from 'react';
 import PropTypes from 'prop-types';
 import moment from 'moment';
+import axios from 'axios';
 import { precisionRound } from '../global/misc';
-import qs from 'qs';
 import { DateRangePicker } from 'react-dates';
 import { encode, decode, replaceInUrlQuery, addUrlProps, UrlQueryParamTypes } from 'react-url-query';
 
@@ -31,17 +31,14 @@ export class InvoicesTable extends React.Component {
   fetchInvoices () {
     let url = '/api/invoices';
 
-    let query = {
+    let params = {
       from: this.props.startDate,
       to: this.props.endDate
     };
 
-    return fetch([url, qs.stringify(query)].join('?'), { credentials: 'include' })
+    return axios.get(url, { params })
       .then(res => {
-        return res.json();
-      })
-      .then(invoiceRows => {
-        this.setState({ invoiceRows });
+        this.setState({ invoiceRows: res.data });
       });
   }
 

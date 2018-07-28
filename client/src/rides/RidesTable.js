@@ -1,5 +1,5 @@
 import React from 'react';
-import qs from 'qs';
+import axios from 'axios';
 import moment from 'moment';
 
 const RESULTS_PER_PAGE = 100;
@@ -21,7 +21,7 @@ export default class RidesTable extends React.Component {
   fetchRides () {
     let url = '/api/rides';
 
-    let query = {
+    let params = {
       populate: 'client courier',
       sort: '-updatedAt',
       page: this.state.page,
@@ -29,25 +29,19 @@ export default class RidesTable extends React.Component {
     };
 
     if (this.state.freetext) {
-      query.q = this.state.freetext;
+      params.q = this.state.freetext;
     }
 
     this.setState({ loading: true });
 
     return Promise.all([
-      fetch([url, qs.stringify(query)].join('?'), { credentials: 'include' }),
-      fetch([url, qs.stringify({ ...query, count: true })].join('?'), { credentials: 'include' })
+      axios.get(url, { params }),
+      axios.get(url, { params: { ...params, count: true } })
     ])
       .then(responses => {
-        return Promise.all([
-          responses[0].json(),
-          responses[1].json()
-        ]);
-      })
-      .then(data => {
         this.setState({
-          rides: data[0],
-          count: data[1].count
+          rides: responses[0].data,
+          count: responses[1].data.count
         });
       })
       .finally(() => {

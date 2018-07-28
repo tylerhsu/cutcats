@@ -1,5 +1,5 @@
 import React from 'react';
-import qs from 'qs';
+import axios from 'axios';
 import ClientForm from './ClientForm';
 import { Modal } from 'reactstrap';
 
@@ -30,32 +30,26 @@ export default class ClientsTable extends React.Component {
   fetchClients () {
     let url = '/api/clients';
 
-    let query = {
+    let params = {
       q: this.state.freetext
     };
 
     if (this.state.freetext) {
-      query.q = this.state.freetext;
+      params.q = this.state.freetext;
     }
 
-    return fetch([url, qs.stringify(query)].join('?'), { credentials: 'include' })
+    return axios.get(url, { params })
       .then(res => {
-        return res.json();
-      })
-      .then(clients => {
-        this.setState({ clients });
+        this.setState({ clients: res.data });
       });
   }
 
   fetchZones () {
     let url = '/api/zones';
 
-    return fetch(url, { credentials: 'include' })
+    return axios.get(url)
       .then(res => {
-        return res.json();
-      })
-      .then(zones => {
-        this.setState({ zones });
+        this.setState({ zones: res.data });
       });
   }
 
@@ -94,29 +88,18 @@ export default class ClientsTable extends React.Component {
       method = 'POST';
     }
 
-    return fetch(url, {
-      credentials: 'include',
-      method: method,
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(client)
+    return axios({
+      url,
+      method,
+      data: client
     })
       .then(res => {
-        return res.json();
-      })
-      .then(updatedClient => {
-        if (updatedClient.error) {
-          throw new Error(updatedClient.message);
-        }
-
-        const indexToReplace = this.state.clients.findIndex(client => (client._id === updatedClient._id));
+        const indexToReplace = this.state.clients.findIndex(client => (client._id === res.data._id));
         let clients = this.state.clients.slice();
         if (indexToReplace === -1) {
-          clients.unshift(updatedClient);
+          clients.unshift(res.data);
         } else {
-          clients.splice(indexToReplace, 1, updatedClient);
+          clients.splice(indexToReplace, 1, res.data);
         }
 
         this.setState({ clients });

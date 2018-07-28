@@ -1,5 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import axios from 'axios';
 
 export default class Uploader extends React.Component {
   constructor(props) {
@@ -16,18 +17,17 @@ export default class Uploader extends React.Component {
     const file = e.target.files[0];
     const data = new FormData();
     data.append('file', file);
-    const reqOptions = { credentials: 'include', body: data, method: 'post' };
     
-    fetch(this.props.validationUrl, reqOptions)
-      .then(res => {
-        if (res.ok) {
-          return this.props.onValidationSuccess(file);
+    axios.post(this.props.validationUrl, data)
+      .then(() => {
+        return this.props.onValidationSuccess(file);
+      })
+      .catch(err => {
+        if (err.response && err.response.status === 400) {
+          const errorMessages = (err.response.data || '').split('\n');
+          return this.props.onValidationFailure(errorMessages, file);
         } else {
-          return res.text()
-            .then(text => {
-              const errorMessages = (text || '').split('\n');
-              return this.props.onValidationFailure(errorMessages, file);
-            });
+          return this.props.onError(err.response.data || err.message);
         }
       });
   }

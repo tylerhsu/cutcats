@@ -1,5 +1,5 @@
 import React from 'react';
-import qs from 'qs';
+import axios from 'axios';
 import CourierForm from './CourierForm';
 import { Modal } from 'reactstrap';
 
@@ -28,20 +28,17 @@ export default class CouriersTable extends React.Component {
   fetchCouriers () {
     let url = '/api/couriers';
 
-    let query = {
+    let params = {
       q: this.state.freetext
     };
 
     if (this.state.freetext) {
-      query.q = this.state.freetext;
+      params.q = this.state.freetext;
     }
 
-    return fetch([url, qs.stringify(query)].join('?'), { credentials: 'include' })
+    return axios.get(url, { params })
       .then(res => {
-        return res.json();
-      })
-      .then(couriers => {
-        this.setState({ couriers });
+        this.setState({ couriers: res.data });
       });
   }
 
@@ -80,29 +77,18 @@ export default class CouriersTable extends React.Component {
       method = 'POST';
     }
 
-    return fetch(url, {
-      credentials: 'include',
-      method: method,
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(courier)
+    return axios({
+      url,
+      method,
+      data: courier
     })
       .then(res => {
-        return res.json();
-      })
-      .then(updatedCourier => {
-        if (updatedCourier.error) {
-          throw new Error(updatedCourier.message);
-        }
-
-        const indexToReplace = this.state.couriers.findIndex(courier => (courier._id === updatedCourier._id));
+        const indexToReplace = this.state.couriers.findIndex(courier => (courier._id === res.data._id));
         let couriers = this.state.couriers.slice();
         if (indexToReplace === -1) {
-          couriers.unshift(updatedCourier);
+          couriers.unshift(res.data);
         } else {
-          couriers.splice(indexToReplace, 1, updatedCourier);
+          couriers.splice(indexToReplace, 1, res.data);
         }
 
         this.setState({ couriers });

@@ -8,6 +8,9 @@ export default class CloseShiftForm extends React.Component {
 
     this.state = {
       importFile: null,
+      amDispatcher: null,
+      pmDispatcher: null,
+      comments: '',
       uploaderValidationErrors: null,
       uploaderError: null
     };
@@ -42,12 +45,12 @@ export default class CloseShiftForm extends React.Component {
     });
   }
 
-  submit () {
-
+  handleShiftDetailsChange (field, value) {
+    this.setState({ [field]: value });
   }
 
-  componentDidMount() {
-    fetch('/api/couriers', { credentials: 'include' });
+  submit () {
+
   }
   
   render() {
@@ -61,11 +64,22 @@ export default class CloseShiftForm extends React.Component {
             onValidationFailure={this.handleValidationFailure}
             onError={this.handleUploaderError}
           />
+          {this.state.uploaderValidationErrors && this.state.uploaderValidationErrors.map((error, index) => (
+            <div key={index}>{error}</div>
+          ))}
+          {this.state.uploaderError && (
+            <div style="color: red">An unexpected error occurred: {this.state.uploaderError}</div>
+          )}
         </div>
         <div>
           <fieldset disabled={!this.state.importFile} style={{ color: !this.state.importFile ? 'lightgray' : null }}>
             <h1>2. Enter shift details</h1>
-            <ShiftDetails />
+            <ShiftDetails
+              onChange={this.handleShiftDetailsChange}
+              amDispatcher={this.state.amDispatcher}
+              pmDispatcher={this.state.pmDispatcher}
+              comments={this.state.comments}
+            />
             <button onClick={this.submit}>Close shift</button>
           </fieldset>
         </div>

@@ -1,5 +1,6 @@
 import React from 'react';
 import qs from 'qs';
+import axios from 'axios';
 
 export default function requiresAuth (WrappedComponent) {
   return class RequiresAuth extends React.Component {
@@ -12,16 +13,9 @@ export default function requiresAuth (WrappedComponent) {
     }
 
     componentDidMount () {
-      fetch('/api/me', { headers: { 'accept': 'application/json' } })
+      axios.get('/api/me')
         .then(res => {
-          if (res.status !== 200) {
-            throw new Error('Unauthorized');
-          } else {
-            return res.json();
-          }
-        })
-        .then(user => {
-          this.setState({ user });
+          this.setState({ user: res.data });
         })
         .catch(() => {
           const returnUrl = (window.location.pathname || '') + (window.location.search || '');
