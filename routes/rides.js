@@ -104,7 +104,7 @@ function importRides (req, res, next) {
   }
   let rideImporter = new RideImporter({
     save,
-    fieldsForAll: { shiftId }
+    fieldsForAll: { shift: shiftId }
   });
   const csvParser = csv.parse({
     columns: true
