@@ -1,3 +1,4 @@
+import 'should';
 import hydrateFromCsv from '../models/hydrateFromCsv';
 
 describe('hydrateFromCsv()', function () {
