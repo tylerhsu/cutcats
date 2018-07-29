@@ -23,25 +23,26 @@ app.use(passport.session());
 app.use(flash());
 
 if (process.env.NODE_ENV === 'production') {
-    app.use(express.static('client/build', { extensions: 'html' }));
+  app.use(express.static('client/build', { extensions: 'html' }));
 }
 
 app.use('/', routes);
 app.use(handleError);
 
-function handleError(err, req, res, next) {
-    if (req.accepts(['html', 'json']) === 'json') {
-        return res.status(500).json({
-            error: true,
-            message: err.message
-        });
-    } else {
-        return next(err);
-    }
+function handleError (err, req, res, next) {
+  if (req.accepts(['html', 'json']) === 'json') {
+    return res.status(err.status || 500).json({
+      error: true,
+      message: err.message
+    });
+  } else {
+    return next(err);
+  }
 }
 
 app.listen(port, () => {
-    if (process.env.NODE_ENV !== 'production') {
-        console.log('webpack dev server listening on port ' + (port + 1))
-    }
+  if (process.env.NODE_ENV !== 'production') {
+    /* eslint-disable no-console */
+    console.log('webpack dev server listening on port ' + (port + 1));
+  }
 });

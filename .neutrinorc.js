@@ -18,7 +18,8 @@ module.exports = {
             'payroll': 'payroll',
             'invoices': 'invoices',
             'clients': 'clients',
-        }
+        },
+        tests: 'client'
     },
     use: [
         [
@@ -59,7 +60,6 @@ module.exports = {
         [
             '@neutrinojs/mocha',
             {
-                require: './dbConnection',
                 exit: true
             }
         ],
@@ -69,7 +69,7 @@ module.exports = {
             .add('react')
             .add('react-dom')
             .add('prop-types')
-            .add('cross-fetch')
+            .add('axios')
             .add('reactstrap')
     ]
 };

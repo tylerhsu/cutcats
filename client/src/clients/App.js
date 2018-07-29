@@ -5,18 +5,18 @@ import Navbar from '../navbar';
 import ClientsTable from './ClientsTable';
 
 export class App extends React.Component {
-    constructor(props) {
-        super(props);
-    }
-    
-    render() {
-        return (
-            <React.Fragment>
-              <Navbar />
-              <ClientsTable />
-            </React.Fragment>
-        );
-    }
+  constructor (props) {
+    super(props);
+  }
+
+  render () {
+    return (
+      <React.Fragment>
+        <Navbar />
+        <ClientsTable />
+      </React.Fragment>
+    );
+  }
 }
 
 export default hot(module)(requiresAuth(App));

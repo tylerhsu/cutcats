@@ -1,107 +1,99 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import qs from 'qs'
+import axios from 'axios';
+import DropZone from 'react-dropzone';
+import filesize from 'file-size';
+import { Button } from 'reactstrap';
 
 export default class Uploader extends React.Component {
-    constructor(props) {
-        super(props);
+  constructor(props) {
+    super(props);
 
-        this.state = {
-            status: 'ready',
-            errors: null
-        };
+    this.state = {
+      loading: false
+    };
 
-        this.handleFileChange = this.handleFileChange.bind(this);
-    }
+    this.handleDrop = this.handleDrop.bind(this);
+    this.handleClear = this.handleClear.bind(this);
+  }
 
-    handleFileChange(e) {
-        let data = new FormData();
-        data.append('file', e.target.files[0]);
-        let reqOptions = { credentials: 'include', body: data, method: 'post' };
-
-        if (!e.target.files.length) {
-            return;
-        }
-        
-        this.setState({
-            status: 'validating',
-            errors: null
-        });
-        
-        fetch('/api/rides/import?save=false', reqOptions)
-            .then(res => {
-                if (res.ok) {
-                    this.setState({ status: 'importing' });
-                    return fetch('/api/rides/import?save=true', reqOptions);
-                } else {
-                    return res;
-                }
-            })
-            .then(res => {
-                if (res.ok) {
-                    this.setState({ status: 'success' });
-                } else {
-                    return res.text()
-                        .then(text => {
-                            this.setState({
-                                status: 'error',
-                                errors: text
-                            });
-                        });
-                }
-            })
-            .catch(err => {
-                console.error(err);
-                this.setState({
-                    status: 'error',
-                    errors: 'Something unexpected went wrong: ' + err.message
-                });
-            });
+  handleDrop (acceptedFiles) {
+    if (!acceptedFiles.length) {
+      return;
     }
     
-    render() {
-        return (
-            <div>
-              <div>Import a csv from TwinJet</div>
-              <input type="file" accept=".csv" onChange={this.handleFileChange} />
-              <div>{this.state.status}</div>
-              {this.state.status === 'success' && this.renderSuccess() }
-              {this.state.errors && this.state.errors.length && this.renderErrors() }
+    const file = acceptedFiles[0];
+    const data = new FormData();
+    data.append('file', file);
+
+    this.setState({ loading: true });
+    
+    axios.post(this.props.validationUrl, data)
+      .then(() => {
+        return this.props.onValidationSuccess(file);
+      })
+      .catch(err => {
+        if (err.response && err.response.status === 400) {
+          const errorMessages = (err.response.data || '').split('\n');
+          return this.props.onValidationFailure(errorMessages, file);
+        } else {
+          return this.props.onError(err.response.data || err.message);
+        }
+      })
+      .finally(() => {
+        this.setState({ loading: false });
+      });
+  }
+
+  handleClear () {
+    this.props.onClear();
+  }
+  
+  render () {
+    return (
+      <div>
+        {!this.props.file && (
+          <DropZone
+            multiple={false}
+            style={{ height: '5rem', border: '2px dashed lightgray', cursor: 'pointer' }}
+            className='d-flex w-100 justify-content-center align-items-center'
+            activeClassName='bg-light'
+            onDrop={this.handleDrop}
+            disabled={!!this.state.loading}
+          >
+            <div className='text-secondary' style={{ fontSize: '1.5rem' }}>
+              {this.state.loading ? (
+                <span>Validating...</span>
+              ) : (
+                <span>Drag file here or click to browse</span>
+              )}
             </div>
-        );
-    }
-
-    renderSuccess() {
-        const today = new Date().valueOf();
-        const query = qs.stringify({
-            from: today,
-            to: today
-        });
-        
-        return (
-            <div>
-              <div>
-                <a href={`/api/payroll/csv?${query}`} target="_blank">Download today's payroll</a>
-              </div>
-              <div>
-                <a href={`/api/invoices/csv?${query}`} target="_blank">Download today's invoices</a>
-              </div>
-              <div>
-                <a href="/quickexport">Download reports for a different time period</a>
+          </DropZone>
+        )}
+        {!!this.props.file && (
+          <div>
+            <div className='d-flex align-items-center mt-2'>
+              <i className='fa fa-file' style={{ fontSize: '2rem' }} />
+              <div className='ml-2'>
+                <div>{this.props.file.name}</div>
+                <div className='text-secondary' style={{ fontSize: '.8rem' }}>{filesize(this.props.file.size).human('si')}</div>
               </div>
             </div>
-        );
-    }
-
-    renderErrors() {
-        const errors = (this.state.errors || '').split('\n').map((error, index) => {
-            return (
-                <div key={index} className="py-1">{error}</div>
-            );
-        });
-
-        return (
-            <div>{errors}</div>
-        );
-    }
+            <Button color='link' className='mt-2 p-0 text-secondary' onClick={this.handleClear}>
+               Choose a different file
+            </Button>
+          </div>
+        )}
+      </div>
+    );
+  }
 }
+
+Uploader.propTypes = {
+  file: PropTypes.object,
+  validationUrl: PropTypes.string.isRequired,
+  onValidationSuccess: PropTypes.func.isRequired,
+  onValidationFailure: PropTypes.func.isRequired,
+  onError: PropTypes.func.isRequired,
+  onClear: PropTypes.func.isRequired
+};
