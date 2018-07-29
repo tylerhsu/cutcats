@@ -6,7 +6,8 @@
   "scripts": {
     "build": "neutrino build",
     "start": "concurrently 'npm run server' 'npm run client'",
-    "test": "mongod --config testDb/mongod.conf && MONGODB_URI=mongodb://localhost:27357/test neutrino test -- ./setupTests.js ./models/**/*.test.js ./client/**/*.test.js ./routes/**/*.test.js; mongod --config testDb/mongod.conf --shutdown",
+    "pretest": "mongod --config testDb/mongod.conf",
+    "test": "MONGODB_URI=mongodb://localhost:27357/test neutrino test -- ./setupTests.js ./models/**/*.test.js ./client/**/*.test.js ./routes/**/*.test.js; status=$?; mongod --config testDb/mongod.conf --shutdown; exit $status",
     "server": "node server.js",
     "client": "neutrino start",
     "heroku-postbuild": "npm run build",
