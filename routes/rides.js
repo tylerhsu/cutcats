@@ -7,6 +7,7 @@ const Busboy = require('busboy');
 const transform = require('stream-transform');
 const moment = require('moment');
 const reportUtils = require('./util/reportUtils');
+const error = require('./util/error');
 
 router.get('/', getRides);
 router.get('/csv', getRidesCsv);
@@ -95,9 +96,16 @@ function _getRidesQuery (req) {
   return query;
 }
 
-function importRides (req, res) {
+function importRides (req, res, next) {
   let save = ['true', '1'].includes((req.query.save || '').toLowerCase());
-  let rideImporter = new RideImporter({ save });
+  let shiftId = req.query.shiftId;
+  if (save && !shiftId) {
+    return next(error('shiftId is required'));
+  }
+  let rideImporter = new RideImporter({
+    save,
+    fieldsForAll: { shiftId }
+  });
   const csvParser = csv.parse({
     columns: true
   });
@@ -124,9 +132,13 @@ function importRides (req, res) {
 }
 
 class RideImporter extends EventEmitter {
-  constructor (options = { save: true }) {
+  constructor (options = {
+    save: true,
+    fieldsForAll: {}
+  }) {
     super();
     this.save = !!options.save;
+    this.fieldsForAll = options.fieldsForAll;
     this.currentRow = 0;
     this.numRows = null;
     this.importRow = this.importRow.bind(this);
@@ -145,9 +157,15 @@ class RideImporter extends EventEmitter {
         return models.Ride.findOne({ jobId: fields.jobId }).exec()
           .then(ride => {
             if (ride) {
-              ride.set(fields);
+              ride.set({
+                ...this.fieldsForAll,
+                ...fields
+              });
             } else {
-              ride = new models.Ride(fields);
+              ride = new models.Ride({
+                ...this.fieldsForAll,
+                ...fields
+              });
             }
             return ride;
           });

@@ -2,6 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import Uploader from './Uploader';
 import ShiftDetails from './ShiftDetails';
+import axios from 'axios';
 import {
   Button,
   Form
@@ -17,7 +18,10 @@ export default class CloseShiftForm extends React.Component {
       pmDispatcher: this.props.user._id,
       comments: '',
       uploaderValidationErrors: null,
-      uploaderError: null
+      uploaderError: null,
+      errorMessage: '',
+      loading: false,
+      success: false
     };
 
     this.handleValidationSuccess = this.handleValidationSuccess.bind(this);
@@ -70,47 +74,99 @@ export default class CloseShiftForm extends React.Component {
 
   submit (e) {
     e.preventDefault();
+    this.setState({ loading: true });
+    axios.post('/api/shifts', {
+      amDispatcher: this.state.amDispatcher,
+      pmDispatcher: this.state.pmDispatcher,
+      comments: this.state.comments,
+      date: new Date()
+    })
+      .then(res => {
+        const data = new FormData();
+        data.append('file', this.state.importFile);
+        return axios.post(`/api/rides/import?save=true&shiftId=${res.data._id}`, data);
+      })
+      .then(() => {
+        this.setState({ success: true });
+      })
+      .catch(err => {
+        this.setState({
+          success: false,
+          errorMessage: (err.response && err.response.data) ? err.response.data.message : err.message
+        });
+      })
+      .finally(() => {
+        this.setState({ loading: false });
+      });
   }
   
   render() {
-    return (
-      <Form>
-        <div>
-          <h3 style={{ fontWeight: 'bold' }}>
-            Ride data
-          </h3>
-          <Uploader
-            file={this.state.importFile}
-            validationUrl='/api/rides/import?save=false'
-            onValidationSuccess={this.handleValidationSuccess}
-            onValidationFailure={this.handleValidationFailure}
-            onError={this.handleUploaderError}
-            onClear={this.handleUploaderClear}
-          />
-          {(this.state.uploaderValidationErrors && this.state.uploaderValidationErrors.length) && (
-            <div className='mt-4'>
-              {this.state.uploaderValidationErrors.map((error, index) => (
-                <div key={index}>{error}</div>
-              ))}
-            </div>
-          )}
-          {this.state.uploaderError && (
-            <div style="color: red">An unexpected error occurred: {this.state.uploaderError}</div>
-          )}
-        </div>
-        <div style={{ marginTop: '2rem' }}>
-          <fieldset disabled={!this.state.importFile} style={{ color: !this.state.importFile ? 'lightgray' : null }}>
-            <h3 style={{ fontWeight: 'bold' }}>Shift details</h3>
-            <ShiftDetails
-              onChange={this.handleShiftDetailsChange}
-              amDispatcher={this.state.amDispatcher}
-              pmDispatcher={this.state.pmDispatcher}
-              comments={this.state.comments}
+    if (this.state.success) {
+      return this.renderSuccess();
+    } else {
+      return (
+        <Form>
+          <div>
+            <h3 style={{ fontWeight: 'bold' }}>
+              Ride data
+            </h3>
+            <Uploader
+              file={this.state.importFile}
+              validationUrl='/api/rides/import?save=false'
+              onValidationSuccess={this.handleValidationSuccess}
+              onValidationFailure={this.handleValidationFailure}
+              onError={this.handleUploaderError}
+              onClear={this.handleUploaderClear}
             />
-            <Button color={this.state.importFile ? 'primary' : 'secondary'} type='submit' onClick={this.submit}>Close shift</Button>
-          </fieldset>
+            {(this.state.uploaderValidationErrors && this.state.uploaderValidationErrors.length) && (
+              <div className='mt-4'>
+                {this.state.uploaderValidationErrors.map((error, index) => (
+                  <div key={index}>{error}</div>
+                ))}
+              </div>
+            )}
+            {this.state.uploaderError && (
+              <div className='mt-4' style={{ color: 'red' }}>There was a problem while attempting to validate the file: {this.state.uploaderError}</div>
+            )}
+          </div>
+          <div style={{ marginTop: '2rem' }}>
+            <fieldset disabled={!this.state.importFile} style={{ color: !this.state.importFile ? 'lightgray' : null }}>
+              <h3 style={{ fontWeight: 'bold' }}>Shift details</h3>
+              <ShiftDetails
+                onChange={this.handleShiftDetailsChange}
+                amDispatcher={this.state.amDispatcher}
+                pmDispatcher={this.state.pmDispatcher}
+                comments={this.state.comments}
+              />
+
+              <Button color={this.state.importFile ? 'primary' : 'secondary'} type='submit' onClick={this.submit} disabled={this.state.loading} style={{ width: '7rem' }}>
+                {this.state.loading ? (
+                  <i className='fa fa-spin fa-spinner' />
+                ) : (
+                  'Close shift'
+                )}
+              </Button>
+              {this.state.errorMessage && (
+                <div className='text-danger'>{this.state.errorMessage}</div>
+              )}
+            </fieldset>
+          </div>
+        </Form>
+      );
+    }
+  }
+
+  renderSuccess () {
+    return (
+      <div className='text-center'>
+        <div className='mt-6' style={{ fontSize: '5rem' }}>
+          <i className='fa fa-check-circle text-success' />
         </div>
-      </Form>
+        <h3>Shift closed</h3>
+        <div>
+          <a href='/rides'>View rides</a>
+        </div>
+      </div>
     );
   }
 }

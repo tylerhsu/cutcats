@@ -3,5 +3,6 @@ module.exports = {
   Courier: require('./Courier'),
   Guest: require('./Guest'),
   Ride: require('./Ride'),
-  Zone: require('./Zone')
+  Zone: require('./Zone'),
+  Shift: require('./Shift')
 };

@@ -31,7 +31,7 @@ app.use(handleError);
 
 function handleError (err, req, res, next) {
   if (req.accepts(['html', 'json']) === 'json') {
-    return res.status(500).json({
+    return res.status(err.status || 500).json({
       error: true,
       message: err.message
     });

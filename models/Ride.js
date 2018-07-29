@@ -44,7 +44,8 @@ const rideSchema = new mongoose.Schema({
   pod: { type: String },
   specialInstructions: { type: String },
   haversineMiles: { type: Number },
-  routeMiles: { type: Number }
+  routeMiles: { type: Number },
+  shift: { type: mongoose.Schema.Types.ObjectId, ref: 'Shift', required: false }
 }, {
   timestamps: true
 });
