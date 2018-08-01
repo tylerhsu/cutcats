@@ -3,10 +3,6 @@ import {
   Navbar as BootstrapNavbar,
   NavbarBrand,
   NavbarToggler,
-  UncontrolledDropdown,
-  DropdownToggle,
-  DropdownMenu,
-  DropdownItem,
   Collapse,
   Nav,
   NavItem,
@@ -34,7 +30,7 @@ export default class Navbar extends React.Component {
       <BootstrapNavbar dark className="navbar-expand-sm bg-dark mb-4">
         <div className="container">
           <NavbarBrand href="/" >
-                  Cut Cats
+            Cut Cats
           </NavbarBrand>
           <NavbarToggler onClick={this.toggle} />
           <Collapse isOpen={this.state.isOpen} navbar>
@@ -42,30 +38,20 @@ export default class Navbar extends React.Component {
               <NavItem active={window.location.pathname === '/closeshift'}>
                 <NavLink href="/closeshift">Close Shift</NavLink>
               </NavItem>
-              <UncontrolledDropdown nav inNavbar>
-                <DropdownToggle nav caret style={{ color: window.location.pathname.match(/rides|payroll|invoices/) ? 'white' : undefined }}>
-                        Reports
-                </DropdownToggle>
-                <DropdownMenu>
-                  <DropdownItem>
-                    <a href="/rides">Rides</a>
-                  </DropdownItem>
-                  <DropdownItem>
-                    <a href="/payroll">Payroll</a>
-                  </DropdownItem>
-                  <DropdownItem>
-                    <a href="/invoices">Invoices</a>
-                  </DropdownItem>
-                  <DropdownItem>
-                    <a href="/quickexport">Quick Export</a>
-                  </DropdownItem>
-                </DropdownMenu>
-              </UncontrolledDropdown>
+              <NavItem active={window.location.pathname === '/invoices'}>
+                <NavLink href="/invoices">Invoices</NavLink>
+              </NavItem>
+              <NavItem active={window.location.pathname === '/payroll'}>
+                <NavLink href="/payroll">Payroll</NavLink>
+              </NavItem>
               <NavItem active={window.location.pathname === '/couriers'}>
                 <NavLink href="/couriers">Couriers</NavLink>
               </NavItem>
               <NavItem active={window.location.pathname === '/clients'}>
                 <NavLink href="/clients">Clients</NavLink>
+              </NavItem>
+              <NavItem active={window.location.pathname === '/rides'}>
+                <NavLink href="/rides">Rides</NavLink>
               </NavItem>
               <NavItem>
                 <NavLink href="/auth/logout">Sign out</NavLink>

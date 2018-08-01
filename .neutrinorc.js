@@ -13,7 +13,6 @@ module.exports = {
       'couriers': 'couriers',
       'closeshift': 'closeshift',
       'welcome': 'welcome',
-      'quickexport': 'quickexport',
       'rides': 'rides',
       'payroll': 'payroll',
       'invoices': 'invoices',
