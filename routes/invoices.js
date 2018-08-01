@@ -1,80 +1,114 @@
 const express = require('express');
+const _ = require('underscore');
 const router = express.Router();
 const models = require('../models');
-const error = require('./util/error');
-const csv = require('csv');
 const reportUtils = require('./util/reportUtils');
+const getDocument = require('./middleware/getDocument');
 
 router.get('/', getInvoices);
-router.get('/csv', getInvoicesCsv);
+router.post('/', createInvoice);
+router.patch('/:id', getDocument(models.Invoice), editInvoice);
+/* router.get('/csv', getInvoicesCsv);*/
 
 function getInvoices (req, res, next) {
-  return _getInvoicesQuery(req).exec()
-    .then(results => {
-      res.json(results);
+  let query = _getInvoicesQuery(req);
+  const page = parseInt(req.query.page) || 1;
+  const resultsPerPage = parseInt(req.query.resultsPerPage) || 100;
+  const count = ['true', '1'].indexOf(req.query.count) > -1;
+
+  if (count) {
+    query.count();
+  } else {
+    query.skip((page - 1) * resultsPerPage).limit(resultsPerPage);
+  }
+
+  return query.exec()
+    .then(invoices => {
+      if (count) {
+        res.json({ count: invoices });
+      } else {
+        res.json(invoices);
+      }
     })
     .catch(next);
 }
 
-function getInvoicesCsv (req, res, next) {
-  const { fromDate, toDate } = reportUtils.parseDates(req.query);
-  const filename = reportUtils.getFilename('invoices', fromDate, toDate);
-  res.set({
-    'Content-Type': 'text/plain',
-    'Content-Disposition': 'attachment; filename=' + filename
-  });
-
-  return _getInvoicesQuery(req)
-    .cursor()
-    .exec()
-    .on('error', next)
-    .pipe(csv.transform(transform))
-    .on('error', next)
-    .pipe(csv.stringify({
-      header: true
-    }))
-    .on('error', next)
-    .pipe(res)
-    .on('error', next);
-
-  function transform (ridesByClient, callback) {
-    callback(null, {
-      'Client name': ridesByClient._id.client.name,
-      'Rides completed': ridesByClient.rideCount,
-      'Billable total': reportUtils.precisionRound(ridesByClient.balance, 2)
-    });
-  }
+function createInvoice (req, res, next) {
+  const body = _.chain(req.body)
+    .omit(['_id', 'updatedAt', 'createdAt', '__v'])
+    .omit((value) => (value === ''))
+    .value();
+  const invoice = new models.Invoice(body);
+  invoice.save()
+    .then(invoice => {
+      res.json(invoice);
+    })
+    .catch(next);
 }
+
+function editInvoice (req, res, next) {
+  const body = _.chain(req.body)
+    .omit(['_id', 'updatedAt', 'createdAt', '__v'])
+    .value();
+  req.invoice.set(body);
+  req.invoice.save()
+    .then(invoice => {
+      res.json(invoice);
+    })
+    .catch(next);
+}
+
+/* function getInvoicesCsv (req, res, next) {
+ *   const { fromDate, toDate } = reportUtils.parseDates(req.query);
+ *   const filename = reportUtils.getFilename('invoices', fromDate, toDate);
+ *   res.set({
+ *     'Content-Type': 'text/plain',
+ *     'Content-Disposition': 'attachment; filename=' + filename
+ *   });
+ * 
+ *   return _getInvoicesQuery(req)
+ *     .cursor()
+ *     .exec()
+ *     .on('error', next)
+ *     .pipe(csv.transform(transform))
+ *     .on('error', next)
+ *     .pipe(csv.stringify({
+ *       header: true
+ *     }))
+ *     .on('error', next)
+ *     .pipe(res)
+ *     .on('error', next);
+ * 
+ *   function transform (ridesByClient, callback) {
+ *     callback(null, {
+ *       'Client name': ridesByClient._id.client.name,
+ *       'Rides completed': ridesByClient.rideCount,
+ *       'Billable total': reportUtils.precisionRound(ridesByClient.balance, 2)
+ *     });
+ *   }
+ * }*/
 
 function _getInvoicesQuery (req) {
   const { fromDate, toDate } = reportUtils.parseDates(req.query);
+  let query = models.Invoice.find();
 
-  if (isNaN(fromDate.valueOf())) {
-    throw error('Start date is not a recognizable date', 400);
+  if (fromDate) {
+    query.where({ periodEnd: { $gte: fromDate } });
   }
 
-  if (isNaN(toDate.valueOf())) {
-    throw error('End date is not a recognizable date', 400);
+  if (toDate) {
+    query.where({ periodStart: { $lte: toDate } });
   }
 
-  return models.Ride.aggregate()
-    .match({
-      readyTime: {
-        $gte: fromDate,
-        $lte: toDate
-      }
-    })
-    .lookup({
-      from: 'clients',
-      localField: 'client',
-      foreignField: '_id',
-      as: 'client'
-    })
-    .group({
-      _id: { client: { $arrayElemAt: ['$client', 0] } },
-      rideCount: { $sum: 1 },
-      balance: { $sum: '$billableTotal' }
-    });
+  if (req.query.populate) {
+    query.populate(req.query.populate);
+  }
+
+  if (req.query.sort) {
+    query.sort(req.query.sort);
+  }
+
+  return query;
 }
 
 module.exports = router;

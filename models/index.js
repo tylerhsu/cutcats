@@ -4,5 +4,6 @@ module.exports = {
   Guest: require('./Guest'),
   Ride: require('./Ride'),
   Zone: require('./Zone'),
-  Shift: require('./Shift')
+  Shift: require('./Shift'),
+  Invoice: require('./Invoice')
 };
