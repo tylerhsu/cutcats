@@ -31,7 +31,7 @@ function getPotentialInvoices(invoices, toDate) {
   let potentialInvoices = [];
   const latestPeriodEnd = _.maxBy(invoices, invoice => invoice.periodEnd).periodEnd;
   let periodStart = moment(latestPeriodEnd).add(1, 'ms');
-  let periodEnd = moment(periodStart).add(15, 'days');
+  let periodEnd = nearestHalfMonth(moment(periodStart).add(15, 'days'));
   while (periodStart.valueOf() <= toDate) {
     potentialInvoices.unshift({
       periodStart: periodStart.toDate(),
@@ -41,4 +41,15 @@ function getPotentialInvoices(invoices, toDate) {
     periodEnd = moment(periodStart).add(15, 'days');
   }
   return potentialInvoices;
+}
+
+function nearestHalfMonth(momentDate) {
+  const calendarDate = momentDate.date();
+  if (calendarDate < 8) {
+    return moment(momentDate).date(1).endOf('day');
+  } else if (calendarDate > 22) {
+    return moment(momentDate).endOf('month').endOf('day');
+  } else {
+    return moment(momentDate).date(15).endOf('day');
+  }
 }
