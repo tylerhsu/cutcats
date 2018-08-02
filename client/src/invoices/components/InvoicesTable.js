@@ -1,6 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import DateFilterContainer from '../containers/DateFilterContainer';
+import InvoiceRow from './InvoiceRow';
 
 export class InvoicesTable extends React.Component {
   constructor (props) {
@@ -14,15 +15,26 @@ export class InvoicesTable extends React.Component {
           <thead>
             <tr>
               <th>Period</th>
-              <th>Download</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
+            {this.props.potentialInvoices.map((potentialInvoice, index) => (
+              <InvoiceRow
+                key={index}
+                periodStart={potentialInvoice.periodStart}
+                periodEnd={potentialInvoice.periodEnd}
+                showRunInvoicing={true}
+              />
+            ))}
             {this.props.invoices.map(invoice => (
-              <tr key={invoice._id}>
-                <td>{invoice.periodStart} - {invoice.periodEnd}</td>
-                <td>{invoice.filePath}</td>
-              </tr>
+              <InvoiceRow
+                key={invoice._id}
+                periodStart={invoice.periodStart}
+                periodEnd={invoice.periodEnd}
+                showRunInvoicing={false}
+                downloadUrl={`/api/invoices/${invoice._id}/download`}
+              />
             ))}
           </tbody>
         </table>
@@ -54,7 +66,8 @@ export class InvoicesTable extends React.Component {
 }
 
 InvoicesTable.propTypes = {
-  invoices: PropTypes.arrayOf(PropTypes.object).isRequired
+  invoices: PropTypes.arrayOf(PropTypes.object).isRequired,
+  potentialInvoices: PropTypes.arrayOf(PropTypes.object).isRequired
 };
 
 export default InvoicesTable;

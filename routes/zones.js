@@ -1,5 +1,5 @@
 const express = require('express');
-const _ = require('underscore');
+const _ = require('lodash');
 const router = express.Router();
 const models = require('../models');
 const getDocument = require('./middleware/getDocument');

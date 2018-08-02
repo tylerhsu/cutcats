@@ -5,7 +5,6 @@ import PropTypes from 'prop-types';
 import moment from 'moment';
 import { DateRangePicker } from 'react-dates';
 import { connect } from 'react-redux';
-import { setFromDate, setToDate } from '../reducers/dateFilter';
 import { fetchInvoices } from '../reducers/invoices';
 
 export class DateFilterContainer extends React.Component {
@@ -20,14 +19,7 @@ export class DateFilterContainer extends React.Component {
   }
 
   onDatesChange ({ startDate, endDate }) {
-    const startStamp = startDate ? startDate.valueOf() : null;
-    const endStamp = endDate ? endDate.valueOf() : null;
-    this.props.setFromDate(startStamp);
-    this.props.setToDate(endStamp);
-    this.props.fetchInvoices({
-      from: startStamp,
-      to: endStamp
-    });
+    this.props.fetchInvoices(startDate, endDate);
   }
 
   render () {
@@ -51,22 +43,18 @@ export class DateFilterContainer extends React.Component {
 DateFilterContainer.propTypes = {
   fromDate: PropTypes.number.isRequired,
   toDate: PropTypes.number.isRequired,
-  setFromDate: PropTypes.func.isRequired,
-  setToDate: PropTypes.func.isRequired,
   fetchInvoices: PropTypes.func.isRequired
 };
 
 
 function mapStateToProps(state) {
   return {
-    fromDate: state.dateFilter.fromDate,
-    toDate: state.dateFilter.toDate
+    fromDate: state.invoices.fromDate,
+    toDate: state.invoices.toDate
   };
 }
 
 const mapDispatchToProps = {
-  setFromDate,
-  setToDate,
   fetchInvoices
 };
 

@@ -1,29 +1,80 @@
 import axios from 'axios';
+import moment from 'moment';
 
 export const FETCH_INVOICES_BEGIN = 'FETCH_INVOICES_BEGIN';
 export const FETCH_INVOICES_SUCCESS = 'FETCH_INVOICES_SUCCESS';
 export const FETCH_INVOICES_ERROR = 'FETCH_INVOICES_ERROR';
-export const fetchInvoicesBegin = () => ({
-  type: FETCH_INVOICES_BEGIN
-});
-export const fetchInvoicesSuccess = (invoices) => ({
-  type: FETCH_INVOICES_SUCCESS,
-  payload: invoices
-});
-export const fetchInvoicesError = (err) => ({
+export const fetchInvoicesBegin = (fromDate, toDate) => ({
   type: FETCH_INVOICES_BEGIN,
-  payload: err,
-  error: true
+  fromDate,
+  toDate
 });
-export function fetchInvoices(queryParams) {
+export const fetchInvoicesSuccess = (invoices, fromDate, toDate) => ({
+  type: FETCH_INVOICES_SUCCESS,
+  payload: invoices,
+  fromDate,
+  toDate
+});
+export const fetchInvoicesError = (err, fromDate, toDate) => ({
+  type: FETCH_INVOICES_ERROR,
+  payload: err,
+  error: true,
+  fromDate,
+  toDate
+});
+export function fetchInvoices(fromDate, toDate) {
+  fromDate = new Date(fromDate).valueOf();
+  toDate = new Date(toDate).valueOf();
   return dispatch => {
-    dispatch(fetchInvoicesBegin());
-    axios.get('/api/invoices', { params: queryParams })
+    dispatch(fetchInvoicesBegin(fromDate, toDate));
+    axios.get('/api/invoices', {
+      params: {
+        from: fromDate,
+        to: toDate,
+        sort: '-periodStart'
+      }
+    })
       .then(res => {
-        dispatch(fetchInvoicesSuccess(res.data));
+        dispatch(fetchInvoicesSuccess(res.data, fromDate, toDate));
       })
       .catch(err => {
-        dispatch(fetchInvoicesError(err));
+        dispatch(fetchInvoicesError(err, fromDate, toDate));
+      });
+  };
+}
+
+export const RUN_INVOICING_BEGIN = 'RUN_INVOICING_BEGIN';
+export const RUN_INVOICING_SUCCESS = 'RUN_INVOICING_SUCCESS';
+export const RUN_INVOICING_ERROR = 'RUN_INVOICING_ERROR';
+export const runInvoicingBegin = (fromDate, toDate) => ({
+  type: RUN_INVOICING_BEGIN,
+  fromDate,
+  toDate
+});
+export const runInvoicingSuccess = (invoice, fromDate, toDate) => ({
+  type: RUN_INVOICING_SUCCESS,
+  payload: invoice,
+  fromDate,
+  toDate
+});
+export const runInvoicingError = (err, fromDate, toDate) => ({
+  type: RUN_INVOICING_ERROR,
+  payload: err,
+  error: true,
+  fromDate,
+  toDate
+});
+export function runInvoicing(fromDate, toDate) {
+  fromDate = new Date(fromDate).valueOf();
+  toDate = new Date(toDate).valueOf();
+  return dispatch => {
+    dispatch(runInvoicingBegin(fromDate, toDate));
+    axios.post(`/api/invoices/generate?periodStart=${fromDate}&periodEnd=${toDate}`)
+      .then(res => {
+        dispatch(runInvoicingSuccess(res.data, fromDate, toDate));
+      })
+      .catch(err => {
+        dispatch(runInvoicingError(err, fromDate, toDate));
       });
   };
 }
@@ -31,6 +82,8 @@ export function fetchInvoices(queryParams) {
 export default function invoices(state = {
   loading: null,
   payload: [],
+  fromDate: moment().subtract(2, 'months').valueOf(),
+  toDate: moment().valueOf(),
   error: false
 }, action) {
   switch(action.type) {
@@ -38,18 +91,24 @@ export default function invoices(state = {
     return {
       loading: true,
       payload: [],
+      fromDate: action.fromDate,
+      toDate: action.toDate,
       error: false
     };
   case FETCH_INVOICES_SUCCESS:
     return {
       loading: false,
       payload: action.payload,
+      fromDate: action.fromDate,
+      toDate: action.toDate,
       error: false
     };
   case FETCH_INVOICES_ERROR:
     return {
       loading: false,
       payload: action.payload,
+      fromDate: action.fromDate,
+      toDate: action.toDate,
       error: true
     };
   default: return state;

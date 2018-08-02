@@ -5,24 +5,8 @@ function precisionRound (number, precision) {
   return Math.round(number * factor) / factor;
 }
 
-function parseDates (query) {
-  let fromDate = query.from;
-  let toDate = query.to;
-
-  if (fromDate) {
-    fromDate = new Date(parseInt(fromDate) || fromDate);
-  }
-
-  if (toDate) {
-    toDate = new Date(parseInt(toDate) || toDate);
-  }
-
-  if (fromDate && toDate && fromDate.getDate() === toDate.getDate()) {
-    fromDate = new Date(fromDate.getFullYear(), fromDate.getMonth(), fromDate.getDate(), 0, 0, 0, 0);
-    toDate = new Date(fromDate.getFullYear(), fromDate.getMonth(), fromDate.getDate(), 23, 59, 59, 999);
-  }
-
-  return { fromDate, toDate };
+function parseDate (dateString) {
+  return new Date(parseInt(dateString) || dateString);
 }
 
 function getFilename (prefix, fromDate, toDate) {
@@ -40,6 +24,6 @@ function getFilename (prefix, fromDate, toDate) {
 
 module.exports = {
   precisionRound,
-  parseDates,
+  parseDate,
   getFilename
 };

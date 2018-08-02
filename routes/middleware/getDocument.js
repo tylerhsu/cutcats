@@ -1,6 +1,6 @@
 'use strict';
 
-const _ = require('underscore');
+const _ = require('lodash');
 
 /**
    Query for a document by an id found in the request url and attach the document to the req object.

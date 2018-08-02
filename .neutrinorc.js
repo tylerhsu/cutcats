@@ -70,5 +70,7 @@ module.exports = {
       .add('prop-types')
       .add('axios')
       .add('reactstrap')
+      .add('moment')
+      .add('lodash')
   ]
 };

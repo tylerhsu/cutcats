@@ -10,19 +10,17 @@ export class InvoicesTableContainer extends React.Component {
   }
 
   componentDidMount () {
-    return this.props.fetchInvoices({
-      from: this.props.fromDate,
-      to: this.props.toDate
-    });
+    return this.props.fetchInvoices(this.props.fromDate, this.props.toDate);
   }
 
   render () {
-    if (this.props.invoices.loading === null) {
+    if (this.props.loading === null) {
       return null;
     } else {
       return (
         <InvoicesTable
-          invoices={this.props.invoices.payload}
+          invoices={this.props.invoices}
+          potentialInvoices={this.props.potentialInvoices}
         />
       );
     }
@@ -33,14 +31,18 @@ InvoicesTableContainer.propTypes = {
   fetchInvoices: PropTypes.func.isRequired,
   fromDate: PropTypes.number.isRequired,
   toDate: PropTypes.number.isRequired,
-  invoices: PropTypes.object
+  invoices: PropTypes.arrayOf(PropTypes.object),
+  potentialInvoices: PropTypes.arrayOf(PropTypes.object),
+  loading: PropTypes.bool
 };
 
 function mapStateToProps(state) {
   return {
-    fromDate: state.dateFilter.fromDate,
-    toDate: state.dateFilter.toDate,
-    invoices: state.invoices
+    fromDate: state.invoices.fromDate,
+    toDate: state.invoices.toDate,
+    invoices: state.invoices.payload,
+    potentialInvoices: state.potentialInvoices.payload,
+    loading: state.invoices.loading
   };
 }
 

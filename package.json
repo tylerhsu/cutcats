@@ -38,6 +38,7 @@
     "body-parser": "^1.18.2",
     "bootstrap": "^4.0.0",
     "busboy": "^0.2.14",
+    "classnames": "^2.2.6",
     "compression": "^1.7.2",
     "connect-flash": "^0.1.1",
     "connect-redis": "^3.3.3",
@@ -51,6 +52,7 @@
     "file-size": "^1.0.0",
     "font-awesome": "^4.7.0",
     "history": "^4.7.2",
+    "lodash": "^4.17.10",
     "moment": "^2.21.0",
     "mongoose": "^5.2.1",
     "mongoose-deep-populate": "^3.1.1",
@@ -74,8 +76,7 @@
     "redux-thunk": "^2.3.0",
     "sass-loader": "^6.0.7",
     "session-file-store": "^1.2.0",
-    "should": "^13.2.1",
-    "underscore": "^1.8.3"
+    "should": "^13.2.1"
   },
   "devDependencies": {
     "concurrently": "^3.5.1",

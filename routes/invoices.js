@@ -1,5 +1,5 @@
 const express = require('express');
-const _ = require('underscore');
+const _ = require('lodash');
 const router = express.Router();
 const models = require('../models');
 const reportUtils = require('./util/reportUtils');
@@ -89,7 +89,8 @@ function editInvoice (req, res, next) {
  * }*/
 
 function _getInvoicesQuery (req) {
-  const { fromDate, toDate } = reportUtils.parseDates(req.query);
+  const fromDate = reportUtils.parseDate(req.query.from);
+  const toDate = reportUtils.parseDate(req.query.to);
   let query = models.Invoice.find();
 
   if (fromDate) {
