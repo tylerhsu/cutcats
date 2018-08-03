@@ -6,6 +6,10 @@ function precisionRound (number, precision) {
 }
 
 function parseDate (dateString) {
+  if (!dateString) {
+    return null;
+  }
+  
   return new Date(parseInt(dateString) || dateString);
 }
 

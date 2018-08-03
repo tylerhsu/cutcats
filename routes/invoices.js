@@ -39,9 +39,9 @@ function createInvoice (req, res, next) {
     .omit((value) => (value === ''))
     .value();
   const invoice = new models.Invoice(body);
-  invoice.save()
+  return invoice.save()
     .then(invoice => {
-      res.json(invoice);
+      res.status(201).json(invoice);
     })
     .catch(next);
 }
@@ -51,7 +51,7 @@ function editInvoice (req, res, next) {
     .omit(['_id', 'updatedAt', 'createdAt', '__v'])
     .value();
   req.invoice.set(body);
-  req.invoice.save()
+  return req.invoice.save()
     .then(invoice => {
       res.json(invoice);
     })
@@ -113,3 +113,6 @@ function _getInvoicesQuery (req) {
 }
 
 module.exports = router;
+module.exports.getInvoices = getInvoices;
+module.exports.createInvoice = createInvoice;
+module.exports.editInvoice = editInvoice;

@@ -1,7 +1,5 @@
 'use strict';
 
-const _ = require('lodash');
-
 /**
    Query for a document by an id found in the request url and attach the document to the req object.
    Return 404 if no document found.
@@ -29,7 +27,10 @@ function getDocument (model, options) {
 
     Promise.resolve()
       .then(() => {
-        const query = model.findOne(_.extend({ _id: req.params[options.idParam] }, options.extraQueryConditions));
+        const query = model.findOne({
+          _id: req.params[options.idParam],
+          ...(options.extraQueryConditions || {})
+        });
 
         if (populate && populate.length) {
           query.deepPopulate(populate);
