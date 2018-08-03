@@ -47,7 +47,8 @@ function getPayrollCsv (req, res, next) {
 }
 
 function _getPayrollQuery (req) {
-  const { fromDate, toDate } = reportUtils.parseDates(req.query);
+  const fromDate = reportUtils.parseDate(req.query.from);
+  const toDate = reportUtils.parseDate(req.query.to);
 
   if (isNaN(fromDate.valueOf())) {
     throw error('Start date is not a recognizable date', 400);
