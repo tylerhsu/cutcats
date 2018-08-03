@@ -46,6 +46,7 @@
     "dotenv": "^5.0.0",
     "enzyme": "^3.3.0",
     "enzyme-adapter-react-16": "^1.1.1",
+    "eslint-plugin-mocha": "^5.1.0",
     "express": "^4.16.2",
     "express-react-views": "^0.10.5",
     "express-session": "^1.15.6",
