@@ -29,17 +29,18 @@ export default function potentialInvoices(state = {
 
 function getPotentialInvoices(invoices, toDate) {
   let potentialInvoices = [];
-  const latestPeriodEnd = _.maxBy(invoices, invoice => invoice.periodEnd).periodEnd;
-  let periodStart = moment(latestPeriodEnd).add(1, 'ms');
-  let periodEnd = nearestHalfMonth(moment(periodStart).add(15, 'days'));
-  while (periodStart.valueOf() <= toDate) {
-    potentialInvoices.unshift({
-      periodStart: periodStart.toDate(),
-      periodEnd: periodEnd.toDate()
-    });
-    periodStart = moment(periodEnd).add(1, 'ms');
-    periodEnd = moment(periodStart).add(15, 'days');
-  }
+  let periodEnd = _.maxBy(invoices, invoice => invoice.periodEnd).periodEnd;
+  let periodStart;
+  do {
+    periodStart = moment(periodEnd).add(1, 'day').startOf('day');
+    periodEnd = nearestHalfMonth(moment(periodStart).add(15, 'days'));
+    if (periodStart.valueOf() <= toDate) {
+      potentialInvoices.unshift({
+        periodStart: periodStart.toDate(),
+        periodEnd: periodEnd.toDate()
+      });
+    }
+  } while (periodStart.valueOf() <= toDate)
   return potentialInvoices;
 }
 
