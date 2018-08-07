@@ -40,7 +40,7 @@ function getPotentialInvoices(invoices, toDate) {
         periodEnd: periodEnd.toDate()
       });
     }
-  } while (periodStart.valueOf() <= toDate)
+  } while (periodStart.valueOf() <= toDate);
   return potentialInvoices;
 }
 

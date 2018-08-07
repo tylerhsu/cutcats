@@ -1,13 +1,17 @@
 const express = require('express');
 const _ = require('lodash');
+const moment = require('moment');
 const router = express.Router();
 const models = require('../models');
 const reportUtils = require('./util/reportUtils');
 const getDocument = require('./middleware/getDocument');
+const ClientInvoice = require('./util/ClientInvoice');
+const error = require('./util/error');
 
 router.get('/', getInvoices);
 router.post('/', createInvoice);
 router.patch('/:id', getDocument(models.Invoice), editInvoice);
+router.get('/generate', generateInvoices);
 /* router.get('/csv', getInvoicesCsv);*/
 
 function getInvoices (req, res, next) {
@@ -56,6 +60,55 @@ function editInvoice (req, res, next) {
       res.json(invoice);
     })
     .catch(next);
+}
+
+function generateInvoices (req, res, next) {
+  const fromDate = reportUtils.parseDate(req.query.from);
+  const toDate = reportUtils.parseDate(req.query.to);
+  
+  if (isNaN(fromDate.valueOf())) {
+    throw error('Start date is not a recognizable date', 400);
+  }
+
+  if (isNaN(toDate.valueOf())) {
+    throw error('End date is not a recognizable date', 400);
+  }
+
+  return Promise.all([
+    getRidesByClient(fromDate, toDate),
+    getRidesByClient(moment(fromDate).startOf('month').toDate(), moment(toDate).endOf('month').toDate(), true)
+  ])
+    .then(results => {
+      const [ridesByClient, monthRideCountsByClient] = results;
+      const clientInvoices = ridesByClient.map(rideGroup => {
+        const monthRideCount = monthRideCountsByClient.find(countGroup => countGroup._id.client._id.toString() === rideGroup._id.client._id.toString()).rides;
+        return new ClientInvoice(rideGroup._id.client, rideGroup.rides, fromDate, toDate, monthRideCount);
+      });
+      res.json(clientInvoices);
+    })
+    .catch(next);
+}
+
+function getRidesByClient(fromDate, toDate, count = false) {
+  return models.Ride.aggregate()
+    .match({
+      readyTime: {
+        $gte: fromDate,
+        $lt: toDate
+      },
+      deliveryStatus: 'complete'
+    })
+    .lookup({
+      from: 'clients',
+      localField: 'client',
+      foreignField: '_id',
+      as: 'client'
+    })
+    .group({
+      _id: { client: { $arrayElemAt: ['$client', 0] } },
+      rides: count ? { $sum: 1 } : { $push: '$$ROOT' }
+    })
+    .exec();
 }
 
 /* function getInvoicesCsv (req, res, next) {
@@ -116,3 +169,4 @@ module.exports = router;
 module.exports.getInvoices = getInvoices;
 module.exports.createInvoice = createInvoice;
 module.exports.editInvoice = editInvoice;
+module.exports.generateInvoices = generateInvoices;

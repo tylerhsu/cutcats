@@ -1,19 +1,50 @@
+import mongoose from 'mongoose';
+const { ObjectID } = mongoose.mongo;
+import models from '.';
+
 const FIXTURES = {
-  Invoice: {
+  Invoice: () => ({
     periodStart: new Date('2000-01-01'),
     periodEnd: new Date('2000-01-15'),
     filePath: '/test.zip'
-  }
+  }),
+  Ride: () => ({
+    jobId:  new ObjectID().toString(),
+    client: new ObjectID(),
+    courier: new ObjectID(),
+    deliveryStatus: 'complete',
+    orderTotal: 1,
+    billableTotal: 2
+  }),
+  Client: () => ({
+    name: `client ${new ObjectID()}`,
+    paymentType: 'invoiced',
+    adminFeeType: 'scale'
+  }),
+  Courier: () => ({
+    name: 'fixture courier',
+    radioCallNumber: 1,
+    status: 'member'
+  }),
+  Shift: () => ({
+    amDispatcher: new ObjectID(),
+    pmDispatcher: new ObjectID(),
+    date: new Date('2000-01-01')
+  })
 };
 
-export function fixture(name, attrs) {
+export function fixtureJson(name, attrs) {
   return {
-    ...FIXTURES[name],
+    ...FIXTURES[name](),
     ...attrs
   };
 }
 
-export function fixtureArray(name, ...args) {
+export function fixtureModel(name, attrs) {
+  return new models[name](fixtureJson(name, attrs));
+}
+
+export function fixtureJsonArray(name, ...args) {
   let attrs = {};
   let quantity = 1;
   
@@ -28,7 +59,11 @@ export function fixtureArray(name, ...args) {
 
   let objs = [];
   for (let n = 0; n < quantity; n++) {
-    objs.push(fixture(name, attrs));
+    objs.push(fixtureJson(name, attrs));
   }
   return objs;
+}
+
+export function fixtureModelArray(name, ...args) {
+  return fixtureJsonArray(name, ...args).map(models[name]);
 }

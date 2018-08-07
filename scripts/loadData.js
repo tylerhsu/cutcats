@@ -63,7 +63,8 @@ function getClients () {
       address: row['Address'],
       phone: row['Restaurant Phone'],
       email: row['Email'],
-      fixedAdminFee: parseInt(row['Admin Fee']) ? row['Admin Fee'] : undefined,
+      adminFeeType: row['Admin Fee'].toLowerCase() === 'scale' ? 'scale' : 'fixed',
+      fixedAdminFee: !isNaN(parseInt(row['Admin Fee'])) ? row['Admin Fee'] : undefined,
       billingEmail: row['Billing Email']
     };
   });

@@ -5,7 +5,14 @@ const clientSchema = new mongoose.Schema({
   address: { type: String },
   phone: { type: String },
   email: { type: String },
-  fixedAdminFee: { type: Number },
+  adminFeeType: { type: String, enum: ['fixed', 'scale'], required: true },
+  fixedAdminFee: {
+    type: Number,
+    required: [
+      function() { return this.adminFeeType === 'fixed'; },
+      'fixedAdminFee is required when adminFeeType is "fixed".'
+    ]
+  },
   billingEmail: { type: String }
 }, {
   timestamps: true
