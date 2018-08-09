@@ -8,6 +8,9 @@ export function save() {
 }
 
 export function idsShouldBeEqual(...args) {
-  args = args.map(arg => arg._id ? arg._id.toString() : arg.toString());
-  args.forEach(arg => arg.should.eql(args[0]));
+  args.forEach(arg => getId(arg).should.eql(getId(args[0])));
+}
+
+export function getId(obj) {
+  return obj._id ? obj._id.toString() : obj.toString();
 }

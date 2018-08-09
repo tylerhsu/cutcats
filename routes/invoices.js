@@ -11,7 +11,7 @@ const error = require('./util/error');
 router.get('/', getInvoices);
 router.post('/', createInvoice);
 router.patch('/:id', getDocument(models.Invoice), editInvoice);
-router.get('/generate', generateInvoices);
+router.get('/generate', generateInvoices, serveInvoices);
 /* router.get('/csv', getInvoicesCsv);*/
 
 function getInvoices (req, res, next) {
@@ -84,7 +84,8 @@ function generateInvoices (req, res, next) {
         const monthRideCount = monthRideCountsByClient.find(countGroup => countGroup._id.client._id.toString() === rideGroup._id.client._id.toString()).rides;
         return new ClientInvoice(rideGroup._id.client, rideGroup.rides, fromDate, toDate, monthRideCount);
       });
-      res.json(clientInvoices);
+      req.clientInvoices = clientInvoices;
+      next();
     })
     .catch(next);
 }
@@ -104,11 +105,19 @@ function getRidesByClient(fromDate, toDate, count = false) {
       foreignField: '_id',
       as: 'client'
     })
+    // lookup stage always gives an array. Un-arrayify the client field.
+    .addFields({
+      client: { $arrayElemAt: ['$client', 0] }
+    })
     .group({
-      _id: { client: { $arrayElemAt: ['$client', 0] } },
+      _id: { client: '$client' },
       rides: count ? { $sum: 1 } : { $push: '$$ROOT' }
     })
     .exec();
+}
+
+function serveInvoices(req, res) {
+  res.send(200);
 }
 
 /* function getInvoicesCsv (req, res, next) {
@@ -170,3 +179,4 @@ module.exports.getInvoices = getInvoices;
 module.exports.createInvoice = createInvoice;
 module.exports.editInvoice = editInvoice;
 module.exports.generateInvoices = generateInvoices;
+module.exports.serveInvoices = serveInvoices;
