@@ -7,7 +7,7 @@
     "build": "neutrino build",
     "start": "concurrently 'npm run server' 'npm run client'",
     "pretest": "mongod --config testDb/mongod.conf",
-    "test": "neutrino test -- ./setupTests.js ./models/**/*.test.js ./client/**/*.test.js ./routes/**/*.test.js; status=$?; mongod --config testDb/mongod.conf --shutdown; exit $status",
+    "test": "neutrino test -- ./setupTests.js \"./models/**/*.test.js\" \"./client/**/*.test.js\" \"./routes/**/*.test.js\"; status=$?; mongod --config testDb/mongod.conf --shutdown; exit $status",
     "server": "node server.js",
     "client": "neutrino start",
     "heroku-postbuild": "npm run build",

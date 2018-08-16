@@ -74,23 +74,18 @@ function generateInvoices (req, res, next) {
     throw error('End date is not a recognizable date', 400);
   }
 
-  return Promise.all([
-    getRidesByClient(fromDate, toDate),
-    getRidesByClient(moment(fromDate).startOf('month').toDate(), moment(toDate).endOf('month').toDate(), true)
-  ])
-    .then(results => {
-      const [ridesByClient, monthRideCountsByClient] = results;
-      const clientInvoices = ridesByClient.map(rideGroup => {
-        const monthRideCount = monthRideCountsByClient.find(countGroup => countGroup._id.client._id.toString() === rideGroup._id.client._id.toString()).rides;
-        return new ClientInvoice(rideGroup._id.client, rideGroup.rides, fromDate, toDate, monthRideCount);
+  // Get rides for the entire month because some invoicing calculations need them all regardless of the period boundaries.
+  return getRidesByClient(moment(fromDate).startOf('month').toDate(), moment(toDate).endOf('month').toDate())
+    .then(ridesByClient => {
+      req.clientInvoices = ridesByClient.map(rideGroup => {
+        return new ClientInvoice(rideGroup._id.client, rideGroup.rides, fromDate, toDate);
       });
-      req.clientInvoices = clientInvoices;
       next();
     })
     .catch(next);
 }
 
-function getRidesByClient(fromDate, toDate, count = false) {
+function getRidesByClient(fromDate, toDate) {
   return models.Ride.aggregate()
     .match({
       readyTime: {
@@ -111,7 +106,7 @@ function getRidesByClient(fromDate, toDate, count = false) {
     })
     .group({
       _id: { client: '$client' },
-      rides: count ? { $sum: 1 } : { $push: '$$ROOT' }
+      rides: { $push: '$$ROOT' }
     })
     .exec();
 }

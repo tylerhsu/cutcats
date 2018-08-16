@@ -2,13 +2,16 @@ const moment = require('moment');
 const _ = require('lodash');
 
 class ClientInvoice {
-  constructor(client, rides, fromDate, toDate, monthRideCount) {
+  constructor(client, ridesInMonth, periodStart, periodEnd) {
     this.client = client;
-    this.rides = rides;
-    this.fromDate = fromDate,
-    this.toDate = toDate;
-    this.monthRideCount = monthRideCount;
-    this.isMonthEnd = moment(toDate).date() === moment(toDate).endOf('month').date();
+    this.periodStart = new Date(periodStart),
+    this.periodEnd = new Date(periodEnd);
+    this.ridesInMonth = ridesInMonth;
+    this.ridesInPeriod = ridesInMonth.filter(ride => {
+      const readyTime = new Date(ride.readyTime);
+      return readyTime >= this.periodStart && readyTime < this.periodEnd;
+    });
+    this.isMonthEnd = moment(periodEnd).date() === moment(periodEnd).endOf('month').date();
   }
 
   getClientName() {
@@ -16,15 +19,15 @@ class ClientInvoice {
   }
 
   getDateRange() {
-    return `${moment(this.fromDate).format('MMM Do, YYYY')} - ${moment(this.toDate).format('MMM Do, YYYY')}`;
+    return `${moment(this.periodStart).format('MMM Do, YYYY')} - ${moment(this.periodEnd).format('MMM Do, YYYY')}`;
   }
 
-  getTotalRidesInPeriod() {
-    return this.rides.length;
+  getNumRidesInPeriod() {
+    return this.ridesInPeriod.length;
   }
 
-  getTotalRidesInMonth() {
-    return this.monthRideCount;
+  getNumRidesInMonth() {
+    return this.ridesInMonth.length;
   }
 
   getAdminFee() {
@@ -33,11 +36,12 @@ class ClientInvoice {
     } else if (this.client.adminFeeType === 'fixed') {
       return this.client.fixedAdminFee;
     } else if (this.client.adminFeeType === 'scale') {
-      if (this.monthRideCount < 30) {
+      const numRidesInMonth = this.getNumRidesInMonth();
+      if (numRidesInMonth < 30) {
         return 50;
-      } else if (this.monthRideCount < 90) {
+      } else if (numRidesInMonth < 90) {
         return 75;
-      } else if (this.monthRideCount < 210) {
+      } else if (numRidesInMonth < 210) {
         return 100;
       } else {
         return 125;
@@ -48,11 +52,11 @@ class ClientInvoice {
   }
 
   getTipTotal () {
-    return _.sumBy(this.rides, ride => ride.tip || 0);
+    return _.sumBy(this.ridesInPeriod, ride => ride.tip || 0);
   }
 
   getFeeTotal () {
-    return _.sumBy(this.rides, ride => ride.deliveryFee || 0);
+    return _.sumBy(this.ridesInPeriod, ride => ride.deliveryFee || 0);
   }
 
   getDeliveryFeeTotal() {

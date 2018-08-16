@@ -29,12 +29,12 @@ describe('invoices routes', function () {
     
     it('respects ?from and ?to', function () {
       const invoices = [
-        fixtureModel('Invoice', { periodStart: new Date('2000-01-01'), periodEnd: new Date('2000-01-15') }),
-        fixtureModel('Invoice', { periodStart: new Date('2001-01-01'), periodEnd: new Date('2001-01-15') }),
-        fixtureModel('Invoice', { periodStart: new Date('2002-01-01'), periodEnd: new Date('2002-01-15') })
+        fixtureModel('Invoice', { periodStart: new Date('2000-1-1'), periodEnd: new Date('2000-1-15') }),
+        fixtureModel('Invoice', { periodStart: new Date('2001-1-1'), periodEnd: new Date('2001-1-15') }),
+        fixtureModel('Invoice', { periodStart: new Date('2002-1-1'), periodEnd: new Date('2002-1-15') })
       ];
-      this.req.query.from = new Date('2000-12-01');
-      this.req.query.to = new Date('2001-02-01');
+      this.req.query.from = new Date('2000-12-1');
+      this.req.query.to = new Date('2001-2-1');
       return save(invoices)
         .then(() => {
           return invoiceRoutes.getInvoices(this.req, this.res);
@@ -77,13 +77,13 @@ describe('invoices routes', function () {
   describe('generateInvoices()', function () {
     it('produces a list of ClientInvoices, one for each Client', function () {
       const clients = fixtureModelArray('Client', 2);
-      const commonRideAttrs = { readyTime: new Date('2000-01-02'), deliveryStatus: 'complete' };
+      const commonRideAttrs = { readyTime: new Date('2000-1-2'), deliveryStatus: 'complete' };
       const rides = [
         fixtureModel('Ride', { ...commonRideAttrs, client: clients[0] }),
         fixtureModel('Ride', { ...commonRideAttrs, client: clients[1] })
       ];
-      this.req.query.from = new Date('2000-01-01');
-      this.req.query.to = new Date('2000-01-03');
+      this.req.query.from = new Date('2000-1-1');
+      this.req.query.to = new Date('2000-1-3');
       return save(clients, rides)
         .then(() => {
           return invoiceRoutes.generateInvoices(this.req, this.res, sinon.stub());
@@ -98,14 +98,14 @@ describe('invoices routes', function () {
 
     it('each ClientInvoice contains a list of rides belonging to that client', function () {
       const clients = fixtureModelArray('Client', 2);
-      const commonRideAttrs = { readyTime: new Date('2000-01-02'), deliveryStatus: 'complete' };
+      const commonRideAttrs = { readyTime: new Date('2000-1-2'), deliveryStatus: 'complete' };
       const rides = [
         fixtureModel('Ride', { ...commonRideAttrs, client: clients[0] }),
         fixtureModel('Ride', { ...commonRideAttrs, client: clients[1] }),
         fixtureModel('Ride', { ...commonRideAttrs, client: clients[1] })
       ];
-      this.req.query.from = new Date('2000-01-01');
-      this.req.query.to = new Date('2000-01-03');
+      this.req.query.from = new Date('2000-1-1');
+      this.req.query.to = new Date('2000-1-3');
       return save(clients, rides)
         .then(() => {
           return invoiceRoutes.generateInvoices(this.req, this.res, sinon.stub());
@@ -113,10 +113,10 @@ describe('invoices routes', function () {
         .then(() => {
           const client0Invoice = this.req.clientInvoices.find(clientInvoice => getId(clientInvoice.client) === getId(clients[0]));
           const client1Invoice = this.req.clientInvoices.find(clientInvoice => getId(clientInvoice.client) === getId(clients[1]));
-          client0Invoice.rides.should.have.length(1);
-          client0Invoice.rides.forEach(ride => idsShouldBeEqual(ride.client, clients[0]));
-          client1Invoice.rides.should.have.length(2);
-          client1Invoice.rides.forEach(ride => idsShouldBeEqual(ride.client, clients[1]));
+          client0Invoice.ridesInPeriod.should.have.length(1);
+          client0Invoice.ridesInPeriod.forEach(ride => idsShouldBeEqual(ride.client, clients[0]));
+          client1Invoice.ridesInPeriod.should.have.length(2);
+          client1Invoice.ridesInPeriod.forEach(ride => idsShouldBeEqual(ride.client, clients[1]));
         });
     });
 
@@ -124,58 +124,58 @@ describe('invoices routes', function () {
       const client = fixtureModel('Client');
       const commonRideAttrs = { deliveryStatus: 'complete', client };
       const rides = [
-        fixtureModel('Ride', { ...commonRideAttrs, readyTime: new Date('2000-01-01') }),
-        fixtureModel('Ride', { ...commonRideAttrs, readyTime: new Date('2000-02-01') }),
-        fixtureModel('Ride', { ...commonRideAttrs, readyTime: new Date('2000-03-01') }),
+        fixtureModel('Ride', { ...commonRideAttrs, readyTime: new Date('2000-1-1') }),
+        fixtureModel('Ride', { ...commonRideAttrs, readyTime: new Date('2000-2-1') }),
+        fixtureModel('Ride', { ...commonRideAttrs, readyTime: new Date('2000-3-1') }),
       ];
-      this.req.query.from = new Date('2000-01-20');
-      this.req.query.to = new Date('2000-02-20');
+      this.req.query.from = new Date('2000-1-20');
+      this.req.query.to = new Date('2000-2-20');
       return save(client, rides)
         .then(() => {
           return invoiceRoutes.generateInvoices(this.req, this.res, sinon.stub());
         })
         .then(() => {
           this.req.clientInvoices.should.have.length(1);
-          this.req.clientInvoices[0].rides.should.have.length(1);
-          idsShouldBeEqual(this.req.clientInvoices[0].rides[0], rides[1]);
-          this.req.clientInvoices[0].fromDate.valueOf().should.eql(this.req.query.from.valueOf());
-          this.req.clientInvoices[0].toDate.valueOf().should.eql(this.req.query.to.valueOf());
+          this.req.clientInvoices[0].ridesInPeriod.should.have.length(1);
+          idsShouldBeEqual(this.req.clientInvoices[0].ridesInPeriod[0], rides[1]);
+          this.req.clientInvoices[0].periodStart.valueOf().should.eql(this.req.query.from.valueOf());
+          this.req.clientInvoices[0].periodEnd.valueOf().should.eql(this.req.query.to.valueOf());
         });
     });
 
     it('only includes rides with deliveryStatus == "complete"', function() {
       const client = fixtureModel('Client');
-      const commonRideAttrs = { readyTime: new Date('2000-01-02'), client };
+      const commonRideAttrs = { readyTime: new Date('2000-1-2'), client };
       const rides = models.Ride.schema.paths.deliveryStatus.enumValues.map(deliveryStatus => {
         return fixtureModel('Ride', { ...commonRideAttrs, deliveryStatus });
       });
-      this.req.query.from = new Date('2000-01-01');
-      this.req.query.to = new Date('2000-01-03');
+      this.req.query.from = new Date('2000-1-1');
+      this.req.query.to = new Date('2000-1-3');
       return save(client, rides)
         .then(() => {
           return invoiceRoutes.generateInvoices(this.req, this.res, sinon.stub());
         })
         .then(() => {
           this.req.clientInvoices.should.have.length(1);
-          this.req.clientInvoices[0].rides.should.have.length(1);
-          this.req.clientInvoices[0].rides[0].deliveryStatus.should.eql('complete');
+          this.req.clientInvoices[0].ridesInPeriod.should.have.length(1);
+          this.req.clientInvoices[0].ridesInPeriod[0].deliveryStatus.should.eql('complete');
         });
     });
 
     it('each client invoice contains a count of that client\'s rides for the entire month', function() {
       const client = fixtureModel('Client');
-      const commonRideAttrs = { readyTime: new Date('2000-01-01'), deliveryStatus: 'complete', client };
+      const commonRideAttrs = { readyTime: new Date('2000-1-1'), deliveryStatus: 'complete', client };
       const rides = fixtureModelArray('Ride', commonRideAttrs, 3);
-      this.req.query.from = new Date('2000-01-15');
-      this.req.query.to = new Date('2000-01-31');
+      this.req.query.from = new Date('2000-1-15');
+      this.req.query.to = new Date('2000-1-31');
       return save(client, rides)
         .then(() => {
           return invoiceRoutes.generateInvoices(this.req, this.res, sinon.stub());
         })
         .then(() => {
           this.req.clientInvoices.should.have.length(1);
-          this.req.clientInvoices[0].rides.should.have.length(0);
-          this.req.clientInvoices[0].monthRideCount.should.eql(3);
+          this.req.clientInvoices[0].ridesInPeriod.should.have.length(0);
+          this.req.clientInvoices[0].ridesInMonth.should.have.length(3);
         });
     });
   });
