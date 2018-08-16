@@ -17,7 +17,8 @@ function getPayroll (req, res, next) {
 }
 
 function getPayrollCsv (req, res, next) {
-  const { fromDate, toDate } = reportUtils.parseDates(req.query);
+  const fromDate = reportUtils.parseDate(req.query.from);
+  const toDate = reportUtils.parseDate(req.query.to);
   const filename = reportUtils.getFilename('payroll', fromDate, toDate);
   res.set({
     'Content-Type': 'text/plain',

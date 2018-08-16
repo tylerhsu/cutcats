@@ -37,7 +37,8 @@ function getRides (req, res, next) {
 }
 
 function getRidesCsv (req, res, next) {
-  const { fromDate, toDate } = reportUtils.parseDates(req.query);
+  const fromDate = reportUtils.parseDate(req.query.from);
+  const toDate = reportUtils.parseDate(req.query.to);
   const filename = reportUtils.getFilename('rides', fromDate, toDate);
   res.set({
     'Content-Type': 'text/plain',
@@ -70,7 +71,8 @@ function getRidesCsv (req, res, next) {
 }
 
 function _getRidesQuery (req) {
-  const { fromDate, toDate } = reportUtils.parseDates(req.query);
+  const fromDate = reportUtils.parseDate(req.query.from);
+  const toDate = reportUtils.parseDate(req.query.to);
   let query = models.Ride.find();
 
   if (req.query.q) {
