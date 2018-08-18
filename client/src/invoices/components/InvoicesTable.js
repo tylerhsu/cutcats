@@ -9,7 +9,7 @@ export class InvoicesTable extends React.Component {
   }
 
   renderTable () {
-    if (this.props.invoices.length) {
+    if (this.props.invoices.length || this.props.potentialInvoices.length) {
       return (
         <table className="table">
           <thead>

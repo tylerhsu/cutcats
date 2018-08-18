@@ -77,6 +77,7 @@ export default class RidesTable extends React.Component {
             <td>{ride.courier ? ride.courier.name : 'None'}</td>
             <td>{ride.originAddress}</td>
             <td>{ride.destinationAddress1}</td>
+            <td>{moment(ride.readyTime).format('MM/DD/YYYY')}</td>
             <td>{moment(ride.createdAt).format('MM/DD/YYYY')}</td>
           </tr>
         );
@@ -93,6 +94,7 @@ export default class RidesTable extends React.Component {
                 <th>Courier</th>
                 <th>Origin</th>
                 <th>Destination</th>
+                <th>Ready time</th>
                 <th>Imported on</th>
               </tr>
             </thead>

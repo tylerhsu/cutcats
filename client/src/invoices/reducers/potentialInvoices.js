@@ -17,7 +17,7 @@ export default function potentialInvoices(state = {
     };
   case FETCH_INVOICES_SUCCESS:
     return {
-      payload: getPotentialInvoices(action.payload, action.toDate),
+      payload: getPotentialInvoices(action.payload, action.fromDate, action.toDate),
     };
   case FETCH_INVOICES_ERROR:
     return {
@@ -27,9 +27,11 @@ export default function potentialInvoices(state = {
   }
 }
 
-function getPotentialInvoices(invoices, toDate) {
+function getPotentialInvoices(invoices, fromDate, toDate) {
   let potentialInvoices = [];
-  let periodEnd = _.maxBy(invoices, invoice => invoice.periodEnd).periodEnd;
+  let periodEnd = invoices.length ?
+    _.maxBy(invoices, invoice => invoice.periodEnd).periodEnd :
+    nearestHalfMonth(moment(fromDate)).subtract(1, 'day');
   let periodStart;
   do {
     periodStart = moment(periodEnd).add(1, 'day').startOf('day');
