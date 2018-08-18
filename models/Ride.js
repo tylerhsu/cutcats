@@ -3,7 +3,7 @@ const Client = require('./Client');
 const Courier = require('./Courier');
 const hydrateFromCsv = require('./hydrateFromCsv');
 const rideSchema = new mongoose.Schema({
-  jobId: { type: String, unique: true },
+  jobId: { type: String, unique: true, required: true },
   externalId: { type: String },
   billingReference: { type: String },
   orderPlacer: { type: String },
@@ -15,11 +15,11 @@ const rideSchema = new mongoose.Schema({
   originPostalCode: { type: String },
   originZone: { type: String },
   destinationName: { type: String },
-  destinationAddress1: { type: String },
+  destinationAddress1: { type: String, required: true },
   destinationAddress2: { type: String },
   destinationPostalCode: { type: String },
   destinationZone: { String },
-  deliveryStatus: { type: String, enum: ['assigned', 'acknowledged', 'undeliverable', 'picked up', 'delivered', 'complete', 'cancelled'], lowercase: true },
+  deliveryStatus: { type: String, enum: ['assigned', 'acknowledged', 'undeliverable', 'picked up', 'delivered', 'complete', 'cancelled'], lowercase: true, required: true },
   elapsedPickupTime: { type: String },
   transitTime: { type: String },
   fulfillmentTime: { type: String },
@@ -36,8 +36,8 @@ const rideSchema = new mongoose.Schema({
   orderTotal: { type: Number, required: true },
   billableTotal: { type: Number, required: true },
   breakdown: { type: String },
-  tip: { type: Number },
-  deliveryFee: { type: Number },
+  tip: { type: Number, required: true },
+  deliveryFee: { type: Number, required: true },
   extras: { type: String },
   items: { type: String },
   deliveryNotes: { type: String },

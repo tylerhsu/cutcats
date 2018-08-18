@@ -82,8 +82,8 @@ describe('invoices routes', function () {
         fixtureModel('Ride', { ...commonRideAttrs, client: clients[0] }),
         fixtureModel('Ride', { ...commonRideAttrs, client: clients[1] })
       ];
-      this.req.query.from = new Date('2000-1-1');
-      this.req.query.to = new Date('2000-1-3');
+      this.req.query.periodStart = new Date('2000-1-1');
+      this.req.query.periodEnd = new Date('2000-1-3');
       return save(clients, rides)
         .then(() => {
           return invoiceRoutes.generateInvoices(this.req, this.res, sinon.stub());
@@ -104,8 +104,8 @@ describe('invoices routes', function () {
         fixtureModel('Ride', { ...commonRideAttrs, client: clients[1] }),
         fixtureModel('Ride', { ...commonRideAttrs, client: clients[1] })
       ];
-      this.req.query.from = new Date('2000-1-1');
-      this.req.query.to = new Date('2000-1-3');
+      this.req.query.periodStart = new Date('2000-1-1');
+      this.req.query.periodEnd = new Date('2000-1-3');
       return save(clients, rides)
         .then(() => {
           return invoiceRoutes.generateInvoices(this.req, this.res, sinon.stub());
@@ -120,7 +120,7 @@ describe('invoices routes', function () {
         });
     });
 
-    it('respects ?from and ?to dates', function () {
+    it('respects ?periodStart and ?periodEnd dates', function () {
       const client = fixtureModel('Client');
       const commonRideAttrs = { deliveryStatus: 'complete', client };
       const rides = [
@@ -128,8 +128,8 @@ describe('invoices routes', function () {
         fixtureModel('Ride', { ...commonRideAttrs, readyTime: new Date('2000-2-1') }),
         fixtureModel('Ride', { ...commonRideAttrs, readyTime: new Date('2000-3-1') }),
       ];
-      this.req.query.from = new Date('2000-1-20');
-      this.req.query.to = new Date('2000-2-20');
+      this.req.query.periodStart = new Date('2000-1-20');
+      this.req.query.periodEnd = new Date('2000-2-20');
       return save(client, rides)
         .then(() => {
           return invoiceRoutes.generateInvoices(this.req, this.res, sinon.stub());
@@ -138,8 +138,8 @@ describe('invoices routes', function () {
           this.req.clientInvoices.should.have.length(1);
           this.req.clientInvoices[0].ridesInPeriod.should.have.length(1);
           idsShouldBeEqual(this.req.clientInvoices[0].ridesInPeriod[0], rides[1]);
-          this.req.clientInvoices[0].periodStart.valueOf().should.eql(this.req.query.from.valueOf());
-          this.req.clientInvoices[0].periodEnd.valueOf().should.eql(this.req.query.to.valueOf());
+          this.req.clientInvoices[0].periodStart.valueOf().should.eql(this.req.query.periodStart.valueOf());
+          this.req.clientInvoices[0].periodEnd.valueOf().should.eql(this.req.query.periodEnd.valueOf());
         });
     });
 
@@ -149,8 +149,8 @@ describe('invoices routes', function () {
       const rides = models.Ride.schema.paths.deliveryStatus.enumValues.map(deliveryStatus => {
         return fixtureModel('Ride', { ...commonRideAttrs, deliveryStatus });
       });
-      this.req.query.from = new Date('2000-1-1');
-      this.req.query.to = new Date('2000-1-3');
+      this.req.query.periodStart = new Date('2000-1-1');
+      this.req.query.periodEnd = new Date('2000-1-3');
       return save(client, rides)
         .then(() => {
           return invoiceRoutes.generateInvoices(this.req, this.res, sinon.stub());
@@ -166,8 +166,8 @@ describe('invoices routes', function () {
       const client = fixtureModel('Client');
       const commonRideAttrs = { readyTime: new Date('2000-1-1'), deliveryStatus: 'complete', client };
       const rides = fixtureModelArray('Ride', commonRideAttrs, 3);
-      this.req.query.from = new Date('2000-1-15');
-      this.req.query.to = new Date('2000-1-31');
+      this.req.query.periodStart = new Date('2000-1-15');
+      this.req.query.periodEnd = new Date('2000-1-31');
       return save(client, rides)
         .then(() => {
           return invoiceRoutes.generateInvoices(this.req, this.res, sinon.stub());
@@ -177,6 +177,15 @@ describe('invoices routes', function () {
           this.req.clientInvoices[0].ridesInPeriod.should.have.length(0);
           this.req.clientInvoices[0].ridesInMonth.should.have.length(3);
         });
+    });
+
+    xit('clients with paymentType === "paid" only receive month-end invoices', function() {
+      /*
+         From design doc section 6.2, in "Date Range" field description: "Period 1 invoices will ONLY be generated for 'Invoiced' clients"
+         But example screenshots show "View of current Period 1 Client Invoice for 'Paid' client"
+
+         TODO: ask for clarification on this apparent contradiction.
+       */
     });
   });
 });

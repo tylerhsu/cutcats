@@ -12,9 +12,12 @@ const FIXTURES = {
     jobId:  new ObjectID().toString(),
     client: new ObjectID(),
     courier: new ObjectID(),
+    destinationAddress1: 'destination address 1',
     deliveryStatus: 'complete',
     orderTotal: 1,
-    billableTotal: 2
+    billableTotal: 2,
+    deliveryFee: 3,
+    tip: 4
   }),
   Client: () => ({
     name: `client ${new ObjectID()}`,

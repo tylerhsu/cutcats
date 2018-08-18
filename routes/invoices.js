@@ -63,22 +63,22 @@ function editInvoice (req, res, next) {
 }
 
 function generateInvoices (req, res, next) {
-  const fromDate = reportUtils.parseDate(req.query.from);
-  const toDate = reportUtils.parseDate(req.query.to);
+  const periodStart = reportUtils.parseDate(req.query.periodStart);
+  const periodEnd = reportUtils.parseDate(req.query.periodEnd);
   
-  if (isNaN(fromDate.valueOf())) {
+  if (isNaN(periodStart.valueOf())) {
     throw error('Start date is not a recognizable date', 400);
   }
 
-  if (isNaN(toDate.valueOf())) {
+  if (isNaN(periodEnd.valueOf())) {
     throw error('End date is not a recognizable date', 400);
   }
 
   // Get rides for the entire month because some invoicing calculations need them all regardless of the period boundaries.
-  return getRidesByClient(moment(fromDate).startOf('month').toDate(), moment(toDate).endOf('month').toDate())
+  return getRidesByClient(moment(periodStart).startOf('month').toDate(), moment(periodEnd).endOf('month').toDate())
     .then(ridesByClient => {
       req.clientInvoices = ridesByClient.map(rideGroup => {
-        return new ClientInvoice(rideGroup._id.client, rideGroup.rides, fromDate, toDate);
+        return new ClientInvoice(rideGroup._id.client, rideGroup.rides, periodStart, periodEnd);
       });
       next();
     })
@@ -112,7 +112,13 @@ function getRidesByClient(fromDate, toDate) {
 }
 
 function serveInvoices(req, res) {
-  res.send(200);
+  const periodStart = reportUtils.parseDate(req.query.periodStart);
+  const periodEnd = reportUtils.parseDate(req.query.periodEnd);
+  const formatDate = (date) => moment(date).format('MMM-D-YYYY');
+  res.set({
+    'Content-Disposition': `attachment; filename=invoices-${formatDate(periodStart)}-${formatDate(periodEnd)}`
+  });
+  req.clientInvoices[0].renderPdf().pipe(res);
 }
 
 /* function getInvoicesCsv (req, res, next) {

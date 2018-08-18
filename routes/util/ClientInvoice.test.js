@@ -137,6 +137,18 @@ describe('ClientInvoice', function() {
       clientInvoices[4].getAdminFee().should.eql(125);
     });
 
+    it('with options.explain == true, returns an object { value, reason }', function() {
+      const client = fixtureModel('Client');
+      const rides = fixtureModelArray('Ride', 3);
+      const periodStart = new Date('2000-1-1');
+      const periodEnd = new Date('2000-1-1');
+      const clientInvoice = new ClientInvoice(client, rides, periodStart, periodEnd);
+      const adminFee = clientInvoice.getAdminFee({ explain: true });
+      adminFee.should.be.an.Object();
+      adminFee.value.should.be.a.Number();
+      adminFee.reason.should.be.a.String();
+    });
+
     it('throws an error when client.adminFeeType is neither "fixed" nor "scale"', function() {
       const client = fixtureModel('Client', { adminFeeType: 'foo' });
       (() => {
