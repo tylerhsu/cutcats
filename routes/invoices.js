@@ -122,6 +122,7 @@ function serveInvoices(req, res) {
   const formatDate = (date) => moment(date).format('M-D-YYYY');
   const zipFile = new yazl.ZipFile();
   res.set({
+    'Content-Type': 'application/zip',
     'Content-Disposition': `attachment; filename=invoices-${formatDate(periodStart)}-${formatDate(periodEnd)}.zip`
   });
   zipFile.outputStream.pipe(res);
