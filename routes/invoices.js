@@ -1,5 +1,6 @@
 const express = require('express');
 const _ = require('lodash');
+const yazl = require('yazl');
 const moment = require('moment');
 const router = express.Router();
 const models = require('../models');
@@ -77,9 +78,13 @@ function generateInvoices (req, res, next) {
   // Get rides for the entire month because some invoicing calculations need them all regardless of the period boundaries.
   return getRidesByClient(moment(periodStart).startOf('month').toDate(), moment(periodEnd).endOf('month').toDate())
     .then(ridesByClient => {
-      req.clientInvoices = ridesByClient.map(rideGroup => {
-        return new ClientInvoice(rideGroup._id.client, rideGroup.rides, periodStart, periodEnd);
-      });
+      req.clientInvoices = ridesByClient
+        .map(rideGroup => {
+          return new ClientInvoice(rideGroup._id.client, rideGroup.rides, periodStart, periodEnd);
+        })
+        .filter(clientInvoice => {
+          return clientInvoice.getInvoiceTotal() > 0;
+        });
       next();
     })
     .catch(next);
@@ -114,11 +119,16 @@ function getRidesByClient(fromDate, toDate) {
 function serveInvoices(req, res) {
   const periodStart = reportUtils.parseDate(req.query.periodStart);
   const periodEnd = reportUtils.parseDate(req.query.periodEnd);
-  const formatDate = (date) => moment(date).format('MMM-D-YYYY');
+  const formatDate = (date) => moment(date).format('M-D-YYYY');
+  const zipFile = new yazl.ZipFile();
   res.set({
-    'Content-Disposition': `attachment; filename=invoices-${formatDate(periodStart)}-${formatDate(periodEnd)}`
+    'Content-Disposition': `attachment; filename=invoices-${formatDate(periodStart)}-${formatDate(periodEnd)}.zip`
   });
-  req.clientInvoices[0].renderPdf().pipe(res);
+  zipFile.outputStream.pipe(res);
+  req.clientInvoices.forEach(clientInvoice => {
+    zipFile.addReadStream(clientInvoice.renderPdf(), `${clientInvoice.getClientName()}.pdf`);
+  });
+  zipFile.end();
 }
 
 /* function getInvoicesCsv (req, res, next) {

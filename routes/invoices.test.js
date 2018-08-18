@@ -3,6 +3,7 @@ import MockResponse from 'mock-express-response';
 import sinon from 'sinon';
 import models from '../models';
 import invoiceRoutes from '../routes/invoices';
+import ClientInvoice from './util/ClientInvoice';
 import { save, getId, idsShouldBeEqual } from './util/testUtils';
 import { fixtureJson, fixtureModel, fixtureModelArray } from '../models/fixtures';
 
@@ -71,6 +72,23 @@ describe('invoices routes', function () {
           idsShouldBeEqual(jsonResponse, this.req.invoice);
           jsonResponse.filePath.should.eql(this.req.body.filePath);
         });
+    });
+  });
+
+  describe('serveInvoices()', function() {
+    it('returns 200', function() {
+      const client = fixtureModel('Client');
+      const rides = fixtureModelArray('Ride', { client }, 3);
+      this.req.query.periodStart = new Date('2000-1-1');
+      this.req.query.periodEnd = new Date('2000-1-1');
+      this.req.clientInvoices = [
+        new ClientInvoice(client, rides, this.req.query.periodStart, this.req.query.periodEnd)
+      ];
+      invoiceRoutes.serveInvoices(this.req, this.res, sinon.stub());
+      return new Promise((resolve, reject) => {
+        this.res.on('finish', resolve);
+        this.res.on('error', reject);
+      });
     });
   });
 
@@ -177,15 +195,6 @@ describe('invoices routes', function () {
           this.req.clientInvoices[0].ridesInPeriod.should.have.length(0);
           this.req.clientInvoices[0].ridesInMonth.should.have.length(3);
         });
-    });
-
-    xit('clients with paymentType === "paid" only receive month-end invoices', function() {
-      /*
-         From design doc section 6.2, in "Date Range" field description: "Period 1 invoices will ONLY be generated for 'Invoiced' clients"
-         But example screenshots show "View of current Period 1 Client Invoice for 'Paid' client"
-
-         TODO: ask for clarification on this apparent contradiction.
-       */
     });
   });
 });

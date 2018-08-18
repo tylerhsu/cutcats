@@ -135,7 +135,7 @@ class ClientInvoice {
           layout: 'headerLineOnly',
           table: {
             headerRows: 1,
-            widths: ['auto', 'auto', '*', 'auto', 'auto', 'auto'],
+            widths: ['auto', '*', '*', 'auto', 'auto', 'auto'],
             body: [
               ['Job ID', 'Date', 'Address', 'Order Amount', 'Fee', 'Tip'].map(text => ({ text, color: 'gray' })),
               ...this.ridesInPeriod.map(ride => (

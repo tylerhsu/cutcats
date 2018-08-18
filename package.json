@@ -5,11 +5,10 @@
   "main": "server.js",
   "scripts": {
     "build": "neutrino build",
-    "start": "concurrently 'npm run devserver' 'npm run client'",
+    "dev": "concurrently 'nodemon server.js' 'npm run client'",
     "pretest": "mongod --config testDb/mongod.conf",
     "test": "neutrino test -- ./setupTests.js \"./models/**/*.test.js\" \"./client/**/*.test.js\" \"./routes/**/*.test.js\"; status=$?; mongod --config testDb/mongod.conf --shutdown; exit $status",
-    "server": "node server.js",
-    "devserver": "nodemon server.js",
+    "start": "node server.js",
     "client": "neutrino start",
     "heroku-postbuild": "npm run build",
     "lint": "eslint --ext .js,.jsx ."
@@ -79,7 +78,8 @@
     "redux-thunk": "^2.3.0",
     "sass-loader": "^6.0.7",
     "session-file-store": "^1.2.0",
-    "should": "^13.2.1"
+    "should": "^13.2.1",
+    "yazl": "^2.4.3"
   },
   "devDependencies": {
     "concurrently": "^3.5.1",
