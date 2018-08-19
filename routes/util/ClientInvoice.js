@@ -1,6 +1,7 @@
 const moment = require('moment');
 const _ = require('lodash');
 const pdf = require('./pdf');
+const path = require('path');
 
 class ClientInvoice {
   constructor(client, ridesInMonth, periodStart, periodEnd) {
@@ -15,6 +16,8 @@ class ClientInvoice {
     this.isMonthEnd = moment(periodEnd).date() === moment(periodEnd).endOf('month').date();
 
     this.getAdminFee = explainable(this.getAdminFee.bind(this));
+    this.getTipTotal = explainable(this.getTipTotal.bind(this));
+    this.getFeeTotal = explainable(this.getFeeTotal.bind(this));
     this.getDeliveryFeeTotal = explainable(this.getDeliveryFeeTotal.bind(this));
   }
 
@@ -35,19 +38,6 @@ class ClientInvoice {
   }
 
   getAdminFee() {
-    const getScaledFee = () => {
-      const numRidesInMonth = this.getNumRidesInMonth();
-      if (numRidesInMonth < 30) {
-        return 50;
-      } else if (numRidesInMonth < 90) {
-        return 75;
-      } else if (numRidesInMonth < 210) {
-        return 100;
-      } else {
-        return 125;
-      }
-    };
-    
     if (!this.isMonthEnd) {
       return [
         0,
@@ -59,29 +49,42 @@ class ClientInvoice {
         'Fixed fee'
       ];
     } else if (this.client.adminFeeType === 'scale') {
-      return [
-        getScaledFee(),
-        `Scaled fee for ${this.getNumRidesInMonth()} rides`
-      ];
+      const numRidesInMonth = this.getNumRidesInMonth();
+      if (numRidesInMonth < 30) {
+        return 50;
+      } else if (numRidesInMonth < 90) {
+        return 75;
+      } else if (numRidesInMonth < 210) {
+        return 100;
+      } else {
+        return 125;
+      }
     } else {
       throw new Error(`Don't know how to calculate admin fee for client with admin fee type "${this.adminFeeType}"`);
     }
   }
 
   getTipTotal () {
-    return _.sumBy(this.ridesInPeriod, ride => ride.tip || 0);
+    switch (this.client.paymentType) {
+    case 'invoiced': return _.sumBy(this.ridesInPeriod, ride => ride.tip || 0);
+    case 'paid': return [0, 'This is a paid client'];
+    default: throw new Error(`Don't know how to calculate tip total for client with payment type "${this.client.paymentType}"`);
+    }
   }
 
   getFeeTotal () {
-    return _.sumBy(this.ridesInPeriod, ride => ride.deliveryFee || 0);
+    switch (this.client.paymentType) {
+    case 'invoiced': return _.sumBy(this.ridesInPeriod, ride => ride.deliveryFee || 0);
+    case 'paid': return [0, 'This is a paid client'];
+    default: throw new Error(`Don't know how to calculate tip total for client with payment type "${this.client.paymentType}"`);
+    }
   }
 
   getDeliveryFeeTotal() {
-    switch (this.client.paymentType) {
-    case 'invoiced': return this.getTipTotal() + this.getFeeTotal();
-    case 'paid': return [0, 'This is a paid client'];
-    default: throw new Error(`Don't know how to calculate delivery fee total for client with payment type "${this.client.paymentType}"`);
-    }
+    return [
+      this.getTipTotal() + this.getFeeTotal(),
+      'Tips + fees'
+    ];
   }
 
   getInvoiceTotal () {
@@ -90,49 +93,73 @@ class ClientInvoice {
 
   renderPdf () {
     const title = `${this.client.name} Invoice, ${this.getDateRange()}`;
-    const { value: adminFeeAmount, reason: adminFeeReason } = this.getAdminFee({ explain: true });
-    const { value: deliveryFeeTotalAmount, reason: deliveryFeeTotalReason } = this.getDeliveryFeeTotal({ explain: true });
+    const { value: adminFee, reason: adminFeeReason } = this.getAdminFee({ explain: true });
+    const { value: tipTotal, reason: tipTotalReason } = this.getTipTotal({ explain: true });
+    const { value: feeTotal, reason: feeTotalReason } = this.getFeeTotal({ explain: true });
     const docDefinition = {
       info: {
         title,
         author: 'Cut Cats'
       },
       content: [
-        // Title
+        {
+          image: path.resolve(__dirname, './pdf/logo.png'),
+          width: 75,
+          absolutePosition: { x: 490, y: 30 }
+        },
+        'Cut Cats Courier',
+        '3521 N. Lincoln Ave.',
+        'Chicago, IL 60618',
+        '(773) 749-9084',
+        'accounting@cutcatscourier.com',
         {
           text: title,
           bold: true,
-          margin: [0, 0, 0, 10]
+          margin: [0, 20, 0, 10]
         },
         // Totals table
         {
-          margin: [0, 0, 0, 10],
+          layout: 'headerLineOnly',
           table: {
-            headerRows: 1,
-            widths: ['auto', '*', '*', '*', '*', '*', '*'],
+            headerRows: 2,
+            widths: [200, '*'],
             body: [
-              ['Total Rides This Period', 'Total Rides This Month', 'Admin Fee', 'Tip Total', 'Fee Total', 'Delivery Fee Total', 'Total Invoice'].map(text => ({ text, color: 'gray' })),
               [
-                this.getNumRidesInPeriod(),
-                this.getNumRidesInMonth(),
-                [
-                  currency(adminFeeAmount),
-                  adminFeeReason ? { text: adminFeeReason, color: 'gray', fontSize: 8 } : null
-                ],
-                currency(this.getTipTotal()),
-                currency(this.getFeeTotal()),
-                [
-                  currency(deliveryFeeTotalAmount),
-                  deliveryFeeTotalReason ? { text: deliveryFeeTotalReason, color: 'gray', fontSize: 8 } : null
-                ],
-                currency(this.getInvoiceTotal())
-              ]
-            ],
+                { text: ['Tip Total', { text: tipTotalReason ? ` (${tipTotalReason.toLowerCase()})` : '', color: 'gray' }] },
+                { text: currency(tipTotal), alignment: 'right' }
+              ],
+              [
+                { text: ['Fee Total', { text: feeTotalReason ? ` (${feeTotalReason.toLowerCase()})` : '', color: 'gray' }] },
+                { text: currency(feeTotal), alignment: 'right' }
+              ],
+              ['Delivery Total', { text: currency(this.getDeliveryFeeTotal()), alignment: 'right' }]
+            ]
           }
         },
+        {
+          layout: 'headerLineOnly',
+          margin: [0, 0, 0, 20],
+          table: {
+            headerRows: 1,
+            widths: [200, '*'],
+            body: [
+              [
+                { text: ['Admin Fee', { text: adminFeeReason ? ` (${adminFeeReason.toLowerCase()})` : '', color: 'gray' }] },
+                { text: currency(adminFee), alignment: 'right' }
+              ],
+              [
+                { text: 'Total Invoice', bold: true },
+                { text: currency(this.getInvoiceTotal()), alignment: 'right', bold: true }
+              ],
+            ]
+          }
+        },
+        `Rides this period: ${this.getNumRidesInPeriod()}`,
+        `Rides this month: ${this.getNumRidesInMonth()}`,
         // Ride breakdown table
         {
           layout: 'headerLineOnly',
+          margin: [0, 10, 0, 0],
           table: {
             headerRows: 1,
             widths: ['auto', '*', '*', 'auto', 'auto', 'auto'],
