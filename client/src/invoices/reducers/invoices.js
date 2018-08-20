@@ -81,8 +81,8 @@ export function runInvoicing(fromDate, toDate) {
 }
 
 const query = qs.parse(window.location.search.replace('?', ''));
-const urlFromDate = query.startDate ? parseInt(query.startDate) : null;
-const urlToDate = query.endDate ? parseInt(query.endDate) : null;
+const urlFromDate = query.startDate ? new Date(parseInt(query.startDate)) : null;
+const urlToDate = query.endDate ? new Date(parseInt(query.endDate)) : null;
 
 export default function invoices(state = {
   loading: null,

@@ -31,7 +31,7 @@ function getPotentialInvoices(invoices, fromDate, toDate) {
   let potentialInvoices = [];
   let periodEnd = invoices.length ?
     _.maxBy(invoices, invoice => invoice.periodEnd).periodEnd :
-    nearestHalfMonth(moment(fromDate)).subtract(1, 'day');
+    nearestHalfMonth(moment(fromDate));
   let periodStart;
   do {
     periodStart = moment(periodEnd).add(1, 'day').startOf('day');
