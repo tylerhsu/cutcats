@@ -65,6 +65,7 @@
     "pdfmake": "^0.1.37",
     "prop-types": "^15.6.2",
     "qs": "^6.5.1",
+    "querystring": "^0.2.0",
     "react": "^16.4.1",
     "react-dates": "^16.3.6",
     "react-dom": "^16.4.1",

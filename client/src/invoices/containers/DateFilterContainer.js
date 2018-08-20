@@ -3,6 +3,7 @@ import 'react-dates/lib/css/_datepicker.css';
 import React from 'react';
 import PropTypes from 'prop-types';
 import moment from 'moment';
+import qs from 'querystring';
 import { DateRangePicker } from 'react-dates';
 import { connect } from 'react-redux';
 import { fetchInvoices } from '../reducers/invoices';
@@ -19,6 +20,10 @@ export class DateFilterContainer extends React.Component {
   }
 
   onDatesChange ({ startDate, endDate }) {
+    let query = qs.parse(window.location.search.replace('?', ''));
+    query.startDate = new Date(startDate).valueOf();
+    query.endDate = new Date(endDate).valueOf();
+    window.history.replaceState({}, '', `${window.location.pathname}?${qs.stringify(query)}`);
     this.props.fetchInvoices(startDate, endDate);
   }
 

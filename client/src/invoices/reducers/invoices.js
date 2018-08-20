@@ -1,5 +1,6 @@
 import axios from 'axios';
 import moment from 'moment';
+import qs from 'querystring';
 
 export const FETCH_INVOICES_BEGIN = 'FETCH_INVOICES_BEGIN';
 export const FETCH_INVOICES_SUCCESS = 'FETCH_INVOICES_SUCCESS';
@@ -79,11 +80,15 @@ export function runInvoicing(fromDate, toDate) {
   };
 }
 
+const query = qs.parse(window.location.search.replace('?', ''));
+const urlFromDate = query.startDate ? parseInt(query.startDate) : null;
+const urlToDate = query.endDate ? parseInt(query.endDate) : null;
+
 export default function invoices(state = {
   loading: null,
   payload: [],
-  fromDate: moment().subtract(2, 'months').valueOf(),
-  toDate: moment().valueOf(),
+  fromDate: urlFromDate || moment().subtract(2, 'months').valueOf(),
+  toDate: urlToDate || moment().valueOf(),
   error: false
 }, action) {
   switch(action.type) {
