@@ -86,6 +86,7 @@ describe('invoices routes', function () {
       ];
       invoiceRoutes.serveInvoices(this.req, this.res, sinon.stub());
       return new Promise((resolve, reject) => {
+        this.res.on('data', () => {});
         this.res.on('finish', resolve);
         this.res.on('error', reject);
       });

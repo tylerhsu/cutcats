@@ -171,6 +171,17 @@ describe('ClientInvoice', function() {
     clientInvoice.getTipTotal().should.eql(5);
   });
 
+  it('this.getTipTotal() throws an error when client.paymentType is neither "paid" nor "invoiced"', function() {
+    const client = fixtureModel('Client', { paymentType: 'foo' });
+    const rides = [];
+    const periodStart = new Date('2000-1-1');
+    const periodEnd = new Date('2000-1-1');
+    (() => {
+      const clientInvoice = new ClientInvoice(client, rides, periodStart, periodEnd);
+      clientInvoice.getTipTotal();
+    }).should.throw(/don't know how to calculate tip total/i);
+  });
+
   it('this.getFeeTotal() returns sum of ride.deliveryFee for all rides in period', function() {
     const client = fixtureModel('Client');
     const rides = [
@@ -182,6 +193,17 @@ describe('ClientInvoice', function() {
     const periodEnd = new Date('2000-1-31');
     const clientInvoice = new ClientInvoice(client, rides, periodStart, periodEnd);
     clientInvoice.getFeeTotal().should.eql(11);
+  });
+
+  it('this.getFeeTotal() throws an error when client.paymentType is neither "paid" nor "invoiced"', function() {
+    const client = fixtureModel('Client', { paymentType: 'foo' });
+    const rides = [];
+    const periodStart = new Date('2000-1-1');
+    const periodEnd = new Date('2000-1-1');
+    (() => {
+      const clientInvoice = new ClientInvoice(client, rides, periodStart, periodEnd);
+      clientInvoice.getFeeTotal();
+    }).should.throw(/don't know how to calculate fee total/i);
   });
 
   describe('this.getDeliveryFeeTotal()', function() {
@@ -206,14 +228,6 @@ describe('ClientInvoice', function() {
       this.client.paymentType = 'invoiced';
       const clientInvoice = new ClientInvoice(this.client, this.rides, this.periodStart, this.periodEnd);
       clientInvoice.getDeliveryFeeTotal().should.eql(16);
-    });
-
-    it('throws an error when client.paymentType is neither "paid" nor "invoiced"', function() {
-      this.client.paymentType = 'foo';
-      (() => {
-        const clientInvoice = new ClientInvoice(this.client, this.rides, this.periodStart, this.periodEnd);
-        clientInvoice.getDeliveryFeeTotal();
-      }).should.throw(/don't know how to calculate delivery fee total/i);
     });
   });
 

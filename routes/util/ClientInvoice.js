@@ -41,7 +41,7 @@ class ClientInvoice {
     if (!this.isMonthEnd) {
       return [
         0,
-        'This is a mid-month invoice'
+        'No admin fee on mid-month invoice'
       ];
     } else if (this.client.adminFeeType === 'fixed') {
       return [
@@ -50,15 +50,21 @@ class ClientInvoice {
       ];
     } else if (this.client.adminFeeType === 'scale') {
       const numRidesInMonth = this.getNumRidesInMonth();
-      if (numRidesInMonth < 30) {
-        return 50;
-      } else if (numRidesInMonth < 90) {
-        return 75;
-      } else if (numRidesInMonth < 210) {
-        return 100;
-      } else {
-        return 125;
-      }
+      const getScaledFee = () => {
+        if (numRidesInMonth < 30) {
+          return 50;
+        } else if (numRidesInMonth < 90) {
+          return 75;
+        } else if (numRidesInMonth < 210) {
+          return 100;
+        } else {
+          return 125;
+        }
+      };
+      return [
+        getScaledFee(),
+        `${numRidesInMonth} ride${numRidesInMonth === 1 ? '' : 's'} this month`
+      ];
     } else {
       throw new Error(`Don't know how to calculate admin fee for client with admin fee type "${this.adminFeeType}"`);
     }
@@ -76,7 +82,7 @@ class ClientInvoice {
     switch (this.client.paymentType) {
     case 'invoiced': return _.sumBy(this.ridesInPeriod, ride => ride.deliveryFee || 0);
     case 'paid': return [0, 'This is a paid client'];
-    default: throw new Error(`Don't know how to calculate tip total for client with payment type "${this.client.paymentType}"`);
+    default: throw new Error(`Don't know how to calculate fee total for client with payment type "${this.client.paymentType}"`);
     }
   }
 
@@ -165,16 +171,18 @@ class ClientInvoice {
             widths: ['auto', '*', '*', 'auto', 'auto', 'auto'],
             body: [
               ['Job ID', 'Date', 'Address', 'Order Amount', 'Fee', 'Tip'].map(text => ({ text, color: 'gray' })),
-              ...this.ridesInPeriod.map(ride => (
-                [
-                  ride.jobId,
-                  moment(ride.readyTime).format('M/D/YYYY h:ma'),
-                  ride.destinationAddress1,
-                  currency(ride.orderTotal),
-                  currency(ride.deliveryFee),
-                  currency(ride.tip)
-                ]
-              ))
+              ...this.ridesInPeriod
+                .sort((ride1, ride2) => (ride1.readyTime - ride2.readyTime))
+                .map(ride => (
+                  [
+                    ride.jobId,
+                    moment(ride.readyTime).format('M/D/YYYY h:mma'),
+                    ride.destinationAddress1,
+                    currency(ride.orderTotal),
+                    currency(ride.deliveryFee),
+                    currency(ride.tip)
+                  ]
+                ))
             ],
           }
         }
