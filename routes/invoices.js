@@ -7,12 +7,13 @@ const models = require('../models');
 const reportUtils = require('./util/reportUtils');
 const getDocument = require('./middleware/getDocument');
 const ClientInvoice = require('./util/ClientInvoice');
+const QuickbooksInvoice = require('./util/QuickbooksInvoice');
 const error = require('./util/error');
 
 router.get('/', getInvoices);
 router.post('/', createInvoice);
 router.patch('/:id', getDocument(models.Invoice), editInvoice);
-router.get('/generate', generateInvoices, serveInvoices);
+router.get('/generate', generateInvoices, createInvoiceZip, serveInvoiceZip);
 /* router.get('/csv', getInvoicesCsv);*/
 
 function getInvoices (req, res, next) {
@@ -66,6 +67,8 @@ function editInvoice (req, res, next) {
 function generateInvoices (req, res, next) {
   const periodStart = reportUtils.parseDate(req.query.periodStart);
   const periodEnd = reportUtils.parseDate(req.query.periodEnd);
+  const monthStart = moment(periodStart).startOf('month').toDate();
+  const monthEnd = moment(periodEnd).endOf('month').toDate();
   
   if (isNaN(periodStart.valueOf())) {
     throw error('Start date is not a recognizable date', 400);
@@ -76,15 +79,18 @@ function generateInvoices (req, res, next) {
   }
 
   // Get rides for the entire month because some invoicing calculations need them all regardless of the period boundaries.
-  return getRidesByClient(moment(periodStart).startOf('month').toDate(), moment(periodEnd).endOf('month').toDate())
+  return getRidesByClient(monthStart, monthEnd)
     .then(ridesByClient => {
-      req.clientInvoices = ridesByClient
+      const clientInvoices = ridesByClient
         .map(rideGroup => {
           return new ClientInvoice(rideGroup._id.client, rideGroup.rides, periodStart, periodEnd);
         })
         .filter(clientInvoice => {
           return clientInvoice.getInvoiceTotal() > 0;
         });
+      const quickbooksInvoice = new QuickbooksInvoice(clientInvoices, periodStart, periodEnd, monthStart, monthEnd);
+      req.clientInvoices = clientInvoices;
+      req.quickbooksInvoice = quickbooksInvoice;
       next();
     })
     .catch(next);
@@ -116,20 +122,25 @@ function getRidesByClient(fromDate, toDate) {
     .exec();
 }
 
-function serveInvoices(req, res) {
+function createInvoiceZip(req, res, next) {
+  req.invoiceZip = new yazl.ZipFile();
+  next();
+  req.clientInvoices.forEach(clientInvoice => {
+    req.invoiceZip.addReadStream(clientInvoice.renderPdf(), `clients/${clientInvoice.getClientName()}.pdf`);
+  });
+  req.invoiceZip.addReadStream(req.quickbooksInvoice.renderCsv(), 'quickbooks.csv');
+  req.invoiceZip.end();
+}
+
+function serveInvoiceZip(req, res) {
   const periodStart = reportUtils.parseDate(req.query.periodStart);
   const periodEnd = reportUtils.parseDate(req.query.periodEnd);
   const formatDate = (date) => moment(date).format('M-D-YYYY');
-  const zipFile = new yazl.ZipFile();
   res.set({
     'Content-Type': 'application/zip',
     'Content-Disposition': `attachment; filename=invoices-${formatDate(periodStart)}-${formatDate(periodEnd)}.zip`
   });
-  zipFile.outputStream.pipe(res);
-  req.clientInvoices.forEach(clientInvoice => {
-    zipFile.addReadStream(clientInvoice.renderPdf(), `${clientInvoice.getClientName()}.pdf`);
-  });
-  zipFile.end();
+  req.invoiceZip.outputStream.pipe(res);
 }
 
 /* function getInvoicesCsv (req, res, next) {
@@ -191,4 +202,5 @@ module.exports.getInvoices = getInvoices;
 module.exports.createInvoice = createInvoice;
 module.exports.editInvoice = editInvoice;
 module.exports.generateInvoices = generateInvoices;
-module.exports.serveInvoices = serveInvoices;
+module.exports.createInvoiceZip = createInvoiceZip;
+module.exports.serveInvoiceZip = serveInvoiceZip;

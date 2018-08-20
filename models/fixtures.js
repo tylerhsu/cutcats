@@ -20,7 +20,7 @@ const FIXTURES = {
     tip: 4
   }),
   Client: () => ({
-    name: `client ${new ObjectID()}`,
+    name: `client ${new ObjectID()} name`,
     paymentType: 'invoiced',
     adminFeeType: 'scale'
   }),

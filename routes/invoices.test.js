@@ -2,8 +2,10 @@ import MockRequest from 'mock-express-request';
 import MockResponse from 'mock-express-response';
 import sinon from 'sinon';
 import models from '../models';
+import yazl from 'yazl';
 import invoiceRoutes from '../routes/invoices';
 import ClientInvoice from './util/ClientInvoice';
+import QuickbooksInvoice from './util/QuickbooksInvoice';
 import { save, getId, idsShouldBeEqual } from './util/testUtils';
 import { fixtureJson, fixtureModel, fixtureModelArray } from '../models/fixtures';
 
@@ -75,16 +77,35 @@ describe('invoices routes', function () {
     });
   });
 
-  describe('serveInvoices()', function() {
-    it('returns 200', function() {
+  describe('createInvoiceZip()', function() {
+    it('assigns req.invoiceZip and calls next()', function() {
       const client = fixtureModel('Client');
       const rides = fixtureModelArray('Ride', { client }, 3);
+      const next = sinon.stub();
       this.req.query.periodStart = new Date('2000-1-1');
       this.req.query.periodEnd = new Date('2000-1-1');
       this.req.clientInvoices = [
         new ClientInvoice(client, rides, this.req.query.periodStart, this.req.query.periodEnd)
       ];
-      invoiceRoutes.serveInvoices(this.req, this.res, sinon.stub());
+      this.req.quickbooksInvoice = new QuickbooksInvoice(this.req.clientInvoices, this.req.query.periodStart, this.req.query.periodEnd, new Date('2000-1-1'), new Date('2000-1-1'));
+      invoiceRoutes.createInvoiceZip(this.req, this.res, next);
+      next.calledOnce.should.be.true();
+      this.req.invoiceZip.should.be.ok();
+      return new Promise((resolve, reject) => {
+        this.req.invoiceZip.outputStream.on('data', () => {});
+        this.req.invoiceZip.outputStream.on('finish', resolve);
+        this.req.invoiceZip.outputStream.on('error', reject);
+      });
+    });
+  });
+
+  describe('serveInvoiceZip()', function() {
+    it('pipes req.invoiceZip into response and finishes successfully', function() {
+      this.req.query.periodStart = new Date('2000-1-1');
+      this.req.query.periodEnd = new Date('2000-1-1');
+      this.req.invoiceZip = new yazl.ZipFile();
+      invoiceRoutes.serveInvoiceZip(this.req, this.res);
+      this.req.invoiceZip.end();
       return new Promise((resolve, reject) => {
         this.res.on('data', () => {});
         this.res.on('finish', resolve);
@@ -195,6 +216,20 @@ describe('invoices routes', function () {
           this.req.clientInvoices.should.have.length(1);
           this.req.clientInvoices[0].ridesInPeriod.should.have.length(0);
           this.req.clientInvoices[0].ridesInMonth.should.have.length(3);
+        });
+    });
+
+    it('produces a QuickbooksInvoice', function() {
+      const client = fixtureModel('Client');
+      const rides = fixtureModelArray('Ride', 3);
+      this.req.query.periodStart = new Date('2000-1-15');
+      this.req.query.periodEnd = new Date('2000-1-31');
+      return save(client, rides)
+        .then(() => {
+          return invoiceRoutes.generateInvoices(this.req, this.res, sinon.stub());
+        })
+        .then(() => {
+          this.req.quickbooksInvoice.should.be.ok();
         });
     });
   });
