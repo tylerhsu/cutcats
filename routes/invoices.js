@@ -89,7 +89,7 @@ function generateInvoices (req, res, next) {
           return clientInvoice.getInvoiceTotal() > 0;
         });
       const quickbooksInvoice = new QuickbooksInvoice(clientInvoices, periodStart, periodEnd, monthStart, monthEnd);
-      req.clientInvoices = clientInvoices;
+      req.clientInvoices = clientInvoices.slice(0, 10);
       req.quickbooksInvoice = quickbooksInvoice;
       next();
     })
