@@ -7,10 +7,10 @@ deploy:
       master: cutcats-production
       develop: cutcats-staging
   - provider: script
-    script: cd pdfService && npm run deploy -- --stage dev
+    script: cd pdfService && nvm install && npm install && npm run deploy -- --stage dev
     on:
       branch: develop
   - provider: script
-    script: cd pdfService && npm run deploy -- --stage production
+    script: cd pdfService && nvm install && npm install && npm run deploy -- --stage production
     on:
       branch: master
