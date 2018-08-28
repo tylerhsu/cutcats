@@ -1,4 +1,6 @@
 language: node_js
+before_install:
+  - cd pdfService && nvm install && npm install
 deploy:
   - provider: heroku
     api_key:
@@ -7,10 +9,10 @@ deploy:
       master: cutcats-production
       develop: cutcats-staging
   - provider: script
-    script: cd pdfService && npm install && npm run deploy -- --stage dev
+    script: cd pdfService && npm run deploy -- --stage dev
     on:
       branch: develop
   - provider: script
-    script: cd pdfService && npm install && npm run deploy -- --stage production
+    script: cd pdfService && npm run deploy -- --stage production
     on:
       branch: master
