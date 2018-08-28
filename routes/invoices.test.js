@@ -82,10 +82,13 @@ describe('invoices routes', function () {
       const client = fixtureModel('Client');
       const rides = fixtureModelArray('Ride', { client }, 3);
       const next = sinon.stub();
+      const lambda = {
+        invoke: sinon.stub().callsArgWith(1, null, { Payload: '{ "data": [] }' })
+      };
       this.req.query.periodStart = new Date('2000-1-1');
       this.req.query.periodEnd = new Date('2000-1-1');
       this.req.clientInvoices = [
-        new ClientInvoice(client, rides, this.req.query.periodStart, this.req.query.periodEnd)
+        new ClientInvoice(client, rides, this.req.query.periodStart, this.req.query.periodEnd, lambda)
       ];
       this.req.quickbooksInvoice = new QuickbooksInvoice(this.req.clientInvoices, this.req.query.periodStart, this.req.query.periodEnd, new Date('2000-1-1'), new Date('2000-1-1'));
       invoiceRoutes.createInvoiceZip(this.req, this.res, next);

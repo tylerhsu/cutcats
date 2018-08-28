@@ -89,7 +89,7 @@ function generateInvoices (req, res, next) {
           return clientInvoice.getInvoiceTotal() > 0;
         });
       const quickbooksInvoice = new QuickbooksInvoice(clientInvoices, periodStart, periodEnd, monthStart, monthEnd);
-      req.clientInvoices = clientInvoices.slice(0, 10);
+      req.clientInvoices = clientInvoices;
       req.quickbooksInvoice = quickbooksInvoice;
       next();
     })
@@ -125,11 +125,16 @@ function getRidesByClient(fromDate, toDate) {
 function createInvoiceZip(req, res, next) {
   req.invoiceZip = new yazl.ZipFile();
   next();
-  req.clientInvoices.forEach(clientInvoice => {
-    req.invoiceZip.addReadStream(clientInvoice.renderPdf(), `clients/${clientInvoice.getClientName()}.pdf`);
-  });
   req.invoiceZip.addReadStream(req.quickbooksInvoice.renderCsv(), 'quickbooks.csv');
-  req.invoiceZip.end();
+  Promise.all(req.clientInvoices.map(clientInvoice => {
+    return clientInvoice.renderPdf()
+      .then(buffer => {
+        req.invoiceZip.addBuffer(buffer, `clients/${clientInvoice.getClientName()}.pdf`);
+      });
+  }))
+    .then(() => {
+      req.invoiceZip.end();
+    });
 }
 
 function serveInvoiceZip(req, res) {

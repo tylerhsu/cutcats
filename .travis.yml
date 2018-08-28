@@ -1,8 +1,16 @@
 language: node_js
 deploy:
-  provider: heroku
-  api_key:
-    secure: pk+dX4Kgbl8mOaCaWLUl2sQ6Kf8DqewXfUNfA5qAcKyrqBorGz0hVtdG/8dn17EgtocwdSBGunNhFGK3L2a8XMbnpZ36buPXhuIhTflZnM0sTw7TMJyx6U1BSEKWxkxqtKmsUBjvzJbIrFjYGDc2FS5JvQ3MV6Dt9JpfMWrBOPCEJvGGEozp8z0pog4yN6XMmnqFgDqm8iP3YXF/avgqcSswpiGRmEQYQW30RMx7lztkP+fl28jrtMcWl4eTU63BxesE6YfhmboE7ywAiq3Gqrfxrfm5On4KMAimZlSfWajgJ960ee8frfCLh6T5+aahwXRiNpeiW1auZxC0ZyGEMWRL8bIJmPq+Wh5j6C4eiG7B+IU0ymz7tWCK2CySr1uUvJfcPkIb4dxTYxU/bEVXTAZQTl5dcRrJY5jdYqZm3yI42ItK3Y/7tvW7LFJLyheSusCW1XIVGeN7mvFp0bVMwObPZfmC2zonm9obhIQqcMPzXGMG80Sb907xzrnYJFvqnvDB2omLqZPVfVZ6KWhGqrUshxZP4katqeH82Rd0sObePBsqAwB/PmKbMNkvfGMtSkqm11YoHcLPGo8KaZh/3xn+y3bgT92bC7CsLuBFXPWb2oTTm4r6J0JVy7GryN2rc0FOB9E/G3jB9nKCaCeTqgLzMiPg0EWjzUZXpGoTACs=
-  app:
-    master: cutcats-production
-    develop: cutcats-staging
+  - provider: heroku
+    api_key:
+      secure: pk+dX4Kgbl8mOaCaWLUl2sQ6Kf8DqewXfUNfA5qAcKyrqBorGz0hVtdG/8dn17EgtocwdSBGunNhFGK3L2a8XMbnpZ36buPXhuIhTflZnM0sTw7TMJyx6U1BSEKWxkxqtKmsUBjvzJbIrFjYGDc2FS5JvQ3MV6Dt9JpfMWrBOPCEJvGGEozp8z0pog4yN6XMmnqFgDqm8iP3YXF/avgqcSswpiGRmEQYQW30RMx7lztkP+fl28jrtMcWl4eTU63BxesE6YfhmboE7ywAiq3Gqrfxrfm5On4KMAimZlSfWajgJ960ee8frfCLh6T5+aahwXRiNpeiW1auZxC0ZyGEMWRL8bIJmPq+Wh5j6C4eiG7B+IU0ymz7tWCK2CySr1uUvJfcPkIb4dxTYxU/bEVXTAZQTl5dcRrJY5jdYqZm3yI42ItK3Y/7tvW7LFJLyheSusCW1XIVGeN7mvFp0bVMwObPZfmC2zonm9obhIQqcMPzXGMG80Sb907xzrnYJFvqnvDB2omLqZPVfVZ6KWhGqrUshxZP4katqeH82Rd0sObePBsqAwB/PmKbMNkvfGMtSkqm11YoHcLPGo8KaZh/3xn+y3bgT92bC7CsLuBFXPWb2oTTm4r6J0JVy7GryN2rc0FOB9E/G3jB9nKCaCeTqgLzMiPg0EWjzUZXpGoTACs=
+    app:
+      master: cutcats-production
+      develop: cutcats-staging
+  - provider: script
+    script: cd pdfService && npm run deploy -- --stage dev
+    on:
+      branch: develop
+  - provider: script
+    script: cd pdfService && npm run deploy -- --stage production
+    on:
+      branch: master

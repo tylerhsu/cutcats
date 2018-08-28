@@ -1,10 +1,12 @@
 const moment = require('moment');
 const _ = require('lodash');
-const pdf = require('./pdf');
 const path = require('path');
+const AWS = require('aws-sdk');
+const fs = require('fs');
+const logoBase64 = fs.readFileSync(path.resolve(__dirname, './pdf-logo.png')).toString('base64');
 
 class ClientInvoice {
-  constructor(client, ridesInMonth, periodStart, periodEnd) {
+  constructor(client, ridesInMonth, periodStart, periodEnd, lambda) {
     this.client = client;
     this.periodStart = new Date(periodStart),
     this.periodEnd = new Date(periodEnd);
@@ -19,6 +21,7 @@ class ClientInvoice {
     this.getTipTotal = explainable(this.getTipTotal.bind(this));
     this.getFeeTotal = explainable(this.getFeeTotal.bind(this));
     this.getDeliveryFeeTotal = explainable(this.getDeliveryFeeTotal.bind(this));
+    this.lambda = lambda || new AWS.Lambda();
   }
 
   getClientName() {
@@ -109,7 +112,7 @@ class ClientInvoice {
       },
       content: [
         {
-          image: path.resolve(__dirname, './pdf/logo.png'),
+          image: 'data:image/png;base64,' + logoBase64,
           width: 75,
           absolutePosition: { x: 490, y: 30 }
         },
@@ -188,12 +191,23 @@ class ClientInvoice {
         }
       ]
     };
-    const doc = pdf.createPdf(docDefinition);
-    doc.end();
-    return doc;
+
+    return new Promise((resolve, reject) => {
+      this.lambda.invoke({
+        FunctionName: 'cutcats-pdf-service-dev-generatePdf',
+        InvocationType: 'RequestResponse',
+        Payload: JSON.stringify(docDefinition)
+      }, (err, response) => {
+        if (err) {
+          reject(new Error(err));
+        } else {
+          resolve(new Buffer(JSON.parse(response.Payload).data));
+        }
+      });
+    });
   }
 }
-
+  
 function currency(num) {
   return `$${(num || 0).toFixed(2)}`;
 }
