@@ -14,9 +14,11 @@ deploy:
       develop: cutcats-staging
   - provider: script
     script: cd pdfService && npm run deploy -- --stage dev
+    skip_cleanup: true
     on:
       branch: develop
   - provider: script
     script: cd pdfService && npm run deploy -- --stage production
+    skip_cleanup: true
     on:
       branch: master
