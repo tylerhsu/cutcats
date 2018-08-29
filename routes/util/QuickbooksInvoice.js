@@ -87,15 +87,22 @@ class QuickbooksInvoice {
   }
 
   renderCsv() {
-    const doc = csv.stringify({ header: true });
+    const rows = [];
     this.clientInvoices.forEach((clientInvoice, n) => {
-      doc.write(this.getDeliveryFeeRow(clientInvoice, n));
+      rows.push(this.getDeliveryFeeRow(clientInvoice, n));
       if (clientInvoice.isMonthEnd) {
-        doc.write(this.getAdminFeeRow(clientInvoice, n));
+        rows.push(this.getAdminFeeRow(clientInvoice, n));
       }
     });
-    doc.end();
-    return doc;
+    return new Promise((resolve, reject) => {
+      csv.stringify(rows, { header: true }, (err, data) => {
+        if (err) {
+          reject(new Error(err));
+        } else {
+          resolve(data);
+        }
+      });
+    });
   }
 }
 

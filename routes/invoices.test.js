@@ -100,6 +100,26 @@ describe('invoices routes', function () {
         this.req.invoiceZip.outputStream.on('error', reject);
       });
     });
+
+    it('assigns req.invoiceZipSize a promise that resolves with a number', function() {
+      const client = fixtureModel('Client');
+      const rides = fixtureModelArray('Ride', { client }, 3);
+      const next = sinon.stub();
+      const lambda = {
+        invoke: sinon.stub().callsArgWith(1, null, { Payload: '{ "data": [] }' })
+      };
+      this.req.query.periodStart = new Date('2000-1-1');
+      this.req.query.periodEnd = new Date('2000-1-1');
+      this.req.clientInvoices = [
+        new ClientInvoice(client, rides, this.req.query.periodStart, this.req.query.periodEnd, lambda)
+      ];
+      this.req.quickbooksInvoice = new QuickbooksInvoice(this.req.clientInvoices, this.req.query.periodStart, this.req.query.periodEnd, new Date('2000-1-1'), new Date('2000-1-1'));
+      invoiceRoutes.createInvoiceZip(this.req, this.res, next);
+      this.req.invoiceZipSize.should.be.ok();
+      return this.req.invoiceZipSize.then(result => {
+        result.should.be.a.Number();
+      });
+    });
   });
 
   describe('serveInvoiceZip()', function() {
@@ -114,6 +134,29 @@ describe('invoices routes', function () {
         this.res.on('finish', resolve);
         this.res.on('error', reject);
       });
+    });
+  });
+
+  describe('saveInvoiceZip()', function() {
+    it('calls s3.putObject() and saves an Invoice to the db', function() {
+      this.req.query.periodStart = new Date('2000-1-1');
+      this.req.query.periodEnd = new Date('2000-1-1');
+      this.req.invoiceZip = new yazl.ZipFile();
+      this.req.invoiceZipSize = new Promise(resolve => resolve(1));
+      const s3 = {
+        putObject: sinon.stub().callsArgWith(1, null, { foo: 'bar' })
+      };
+      return invoiceRoutes.saveInvoiceZip(this.req, this.res, sinon.stub(), s3)
+        .then(() => {
+          s3.putObject.calledOnce.should.be.true();
+          this.res.json.firstCall.args[0].should.be.an.Object();
+          return models.Invoice.find().exec();
+        })
+        .then(invoices => {
+          invoices.should.have.length(1);
+          invoices[0].periodStart.should.eql(this.req.query.periodStart);
+          invoices[0].periodEnd.should.eql(this.req.query.periodEnd);
+        });
     });
   });
 

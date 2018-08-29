@@ -194,7 +194,7 @@ class ClientInvoice {
 
     return new Promise((resolve, reject) => {
       this.lambda.invoke({
-        FunctionName: 'cutcats-pdf-service-dev-generatePdf',
+        FunctionName: process.env.PDF_SERVICE,
         InvocationType: 'RequestResponse',
         Payload: JSON.stringify(docDefinition)
       }, (err, response) => {
