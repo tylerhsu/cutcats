@@ -24,8 +24,8 @@ export const fetchInvoicesError = (err, fromDate, toDate) => ({
   toDate
 });
 export function fetchInvoices(fromDate, toDate) {
-  fromDate = new Date(fromDate).valueOf();
-  toDate = new Date(toDate).valueOf();
+  fromDate = moment(fromDate).startOf('day').valueOf();
+  toDate = moment(toDate).endOf('day').valueOf();
   return dispatch => {
     dispatch(fetchInvoicesBegin(fromDate, toDate));
     axios.get('/api/invoices', {
