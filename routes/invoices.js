@@ -1,5 +1,6 @@
 const express = require('express');
 const _ = require('lodash');
+const path = require('path');
 const yazl = require('yazl');
 const moment = require('moment');
 const router = express.Router();
@@ -14,8 +15,9 @@ const AWS = require('aws-sdk');
 router.get('/', getInvoices);
 router.post('/', createInvoice);
 router.patch('/:id', getDocument(models.Invoice), editInvoice);
+router.get('/:id/download', getDocument(models.Invoice), downloadInvoice(new AWS.S3()));
 router.get('/generate', generateInvoices, createInvoiceZip, serveInvoiceZip);
-router.post('/generate', generateInvoices, createInvoiceZip, saveInvoiceZip);
+router.post('/generate', generateInvoices, createInvoiceZip, saveInvoiceZip(new AWS.S3()));
 
 function getInvoices (req, res, next) {
   let query = _getInvoicesQuery(req);
@@ -63,6 +65,21 @@ function editInvoice (req, res, next) {
       res.json(invoice);
     })
     .catch(next);
+}
+
+function downloadInvoice(s3) {
+  return (req, res) => {
+    res.set({
+      'Content-Type': 'application/zip',
+      'Content-Disposition': `attachment; filename=${path.basename(req.invoice.filePath)}`
+    });
+    s3.getObject({
+      Bucket: process.env.S3_BUCKET,
+      Key: req.invoice.filePath
+    })
+      .createReadStream()
+      .pipe(res);
+  };
 }
 
 function generateInvoices (req, res, next) {
@@ -164,41 +181,42 @@ function serveInvoiceZip(req, res) {
   req.invoiceZip.outputStream.pipe(res);
 }
 
-function saveInvoiceZip(req, res, next, s3) {
-  s3 = s3 || new AWS.S3();
-  const periodStart = reportUtils.parseDate(req.query.periodStart);
-  const periodEnd = reportUtils.parseDate(req.query.periodEnd);
-  const formatDate = (date) => moment(date).format('M-D-YYYY');
-  const filename = `invoices-${formatDate(periodStart)}-${formatDate(periodEnd)}.zip`;
-  return req.invoiceZipSize
-    .then(zipSize => {
-      return new Promise((resolve, reject) => {
-        s3.putObject({
-          Bucket: process.env.S3_BUCKET,
-          Key: filename,
-          ACL: 'private',
-          Body: req.invoiceZip.outputStream,
-          ContentLength: zipSize
-        }, (err, data) => {
-          if (err) {
-            reject(new Error(err));
-          } else {
-            resolve(data);
-          }
+function saveInvoiceZip(s3) {
+  return (req, res, next) => {
+    const periodStart = reportUtils.parseDate(req.query.periodStart);
+    const periodEnd = reportUtils.parseDate(req.query.periodEnd);
+    const formatDate = (date) => moment(date).format('M-D-YYYY');
+    const filename = `invoices-${formatDate(periodStart)}-${formatDate(periodEnd)}.zip`;
+    return req.invoiceZipSize
+      .then(zipSize => {
+        return new Promise((resolve, reject) => {
+          s3.putObject({
+            Bucket: process.env.S3_BUCKET,
+            Key: filename,
+            ACL: 'private',
+            Body: req.invoiceZip.outputStream,
+            ContentLength: zipSize
+          }, (err, data) => {
+            if (err) {
+              reject(new Error(err));
+            } else {
+              resolve(data);
+            }
+          });
         });
-      });
-    })
-    .then(() => {
-      return new models.Invoice({
-        periodStart,
-        periodEnd,
-        filePath: filename
-      }).save();
-    })
-    .then(invoice => {
-      res.json(invoice);
-    })
-    .catch(next);
+      })
+      .then(() => {
+        return new models.Invoice({
+          periodStart,
+          periodEnd,
+          filePath: filename
+        }).save();
+      })
+      .then(invoice => {
+        res.json(invoice);
+      })
+      .catch(next);
+  };
 }
 
 function _getInvoicesQuery (req) {
@@ -229,6 +247,7 @@ module.exports = router;
 module.exports.getInvoices = getInvoices;
 module.exports.createInvoice = createInvoice;
 module.exports.editInvoice = editInvoice;
+module.exports.downloadInvoice = downloadInvoice;
 module.exports.generateInvoices = generateInvoices;
 module.exports.createInvoiceZip = createInvoiceZip;
 module.exports.serveInvoiceZip = serveInvoiceZip;

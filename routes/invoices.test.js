@@ -146,7 +146,7 @@ describe('invoices routes', function () {
       const s3 = {
         putObject: sinon.stub().callsArgWith(1, null, { foo: 'bar' })
       };
-      return invoiceRoutes.saveInvoiceZip(this.req, this.res, sinon.stub(), s3)
+      return invoiceRoutes.saveInvoiceZip(s3)(this.req, this.res, sinon.stub())
         .then(() => {
           s3.putObject.calledOnce.should.be.true();
           this.res.json.firstCall.args[0].should.be.an.Object();
