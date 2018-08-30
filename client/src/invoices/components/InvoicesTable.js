@@ -9,7 +9,7 @@ export class InvoicesTable extends React.Component {
   }
 
   renderTable () {
-    if (this.props.invoices.length || this.props.potentialInvoices.length) {
+    if (this.props.invoices.length) {
       return (
         <table className="table">
           <thead>
@@ -19,22 +19,8 @@ export class InvoicesTable extends React.Component {
             </tr>
           </thead>
           <tbody>
-            {this.props.potentialInvoices.map((potentialInvoice, index) => (
-              <InvoiceRow
-                key={index}
-                periodStart={potentialInvoice.periodStart}
-                periodEnd={potentialInvoice.periodEnd}
-                showRunInvoicing={true}
-              />
-            ))}
-            {this.props.invoices.map(invoice => (
-              <InvoiceRow
-                key={invoice._id}
-                periodStart={invoice.periodStart}
-                periodEnd={invoice.periodEnd}
-                showRunInvoicing={false}
-                downloadUrl={`/api/invoices/${invoice._id}/download`}
-              />
+            {this.props.invoices.map((invoice, index) => (
+              invoice._id ? this.renderInvoiceRow(invoice) : this.renderPotentialInvoiceRow(invoice, index)
             ))}
           </tbody>
         </table>
@@ -44,6 +30,29 @@ export class InvoicesTable extends React.Component {
         <div>No results</div>
       );
     }
+  }
+
+  renderInvoiceRow(invoice) {
+    return (
+      <InvoiceRow
+        key={invoice._id}
+        periodStart={invoice.periodStart}
+        periodEnd={invoice.periodEnd}
+        showRunInvoicing={false}
+        downloadUrl={`/api/invoices/${invoice._id}/download`}
+      />
+    );
+  }
+
+  renderPotentialInvoiceRow(potentialInvoice, index) {
+    return (
+      <InvoiceRow
+        key={index}
+        periodStart={potentialInvoice.periodStart}
+        periodEnd={potentialInvoice.periodEnd}
+        showRunInvoicing={true}
+      />
+    );
   }
 
   render () {
@@ -66,8 +75,7 @@ export class InvoicesTable extends React.Component {
 }
 
 InvoicesTable.propTypes = {
-  invoices: PropTypes.arrayOf(PropTypes.object).isRequired,
-  potentialInvoices: PropTypes.arrayOf(PropTypes.object).isRequired
+  invoices: PropTypes.arrayOf(PropTypes.object).isRequired
 };
 
 export default InvoicesTable;

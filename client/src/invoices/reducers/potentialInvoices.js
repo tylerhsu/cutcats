@@ -28,31 +28,60 @@ export default function potentialInvoices(state = {
 }
 
 function getPotentialInvoices(invoices, fromDate, toDate) {
-  let potentialInvoices = [];
-  let periodEnd = invoices.length ?
-    _.maxBy(invoices, invoice => invoice.periodEnd).periodEnd :
-    nearestHalfMonth(moment(fromDate));
-  let periodStart;
-  do {
-    periodStart = moment(periodEnd).add(1, 'day').startOf('day');
-    periodEnd = nearestHalfMonth(moment(periodStart).add(15, 'days'));
-    if (periodStart.valueOf() <= toDate) {
-      potentialInvoices.unshift({
-        periodStart: periodStart.toDate(),
-        periodEnd: periodEnd.toDate()
-      });
-    }
-  } while (periodStart.valueOf() <= toDate);
-  return potentialInvoices;
+  return _.chain(getGaps(invoices, nearestPeriodStartRoundedDown(fromDate), nearestPeriodEndRoundedUp(toDate)))
+    .map(gap => {
+      return partitionIntoPeriods(gap[0], gap[1]);
+    })
+    .flatten()
+    .map(period => ({
+      periodStart: period[0],
+      periodEnd: period[1]
+    }))
+    .value();
 }
 
-function nearestHalfMonth(momentDate) {
-  const calendarDate = momentDate.date();
-  if (calendarDate < 8) {
-    return moment(momentDate).date(1).endOf('day');
-  } else if (calendarDate > 22) {
-    return moment(momentDate).endOf('month').endOf('day');
+function getGaps(invoices, startDate, endDate) {
+  let gaps = [];
+  const sortedInvoices = invoices.sort((a, b) => (new Date(a.periodStart) - new Date(b.periodStart)));
+  for (let n = 0; n <= sortedInvoices.length; n++) {
+    let gapStart = n === 0 ?
+      new Date(startDate) :
+      moment(sortedInvoices[n - 1].periodEnd).add(1, 'day').startOf('day').toDate();
+    let gapEnd = n === sortedInvoices.length ?
+      new Date(endDate) :
+      moment(sortedInvoices[n].periodStart).subtract(1, 'day').endOf('day').toDate();
+    if (gapEnd - gapStart > 1) {
+      gaps.push([gapStart, gapEnd]);
+    }
+  }
+  return gaps;
+}
+
+function partitionIntoPeriods(startDate, endDate) {
+  let periods = [];
+  let periodStart = new Date(startDate);
+  let periodEnd = nearestPeriodEndRoundedUp(periodStart);
+  while (periodEnd < endDate) {
+    periods.push([periodStart, periodEnd]);
+    periodStart = moment(periodEnd).add(1, 'day').startOf('day').toDate();
+    periodEnd = nearestPeriodEndRoundedUp(periodStart);
+  }
+  if (periodStart < endDate) {
+    periods.push([periodStart, endDate]);
+  }
+  return periods;
+}
+
+function nearestPeriodStartRoundedDown(date) {
+  const calendarDate = moment(date).date();
+  return moment(date).date(calendarDate < 16 ? 1 : 16).startOf('day').toDate();
+}
+
+function nearestPeriodEndRoundedUp(date) {
+  const calendarDate = moment(date).date();
+  if (calendarDate < 16) {
+    return moment(date).date(15).endOf('day').toDate();
   } else {
-    return moment(momentDate).date(15).endOf('day');
+    return moment(date).endOf('month').toDate();
   }
 }

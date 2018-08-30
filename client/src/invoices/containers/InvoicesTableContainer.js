@@ -20,7 +20,6 @@ export class InvoicesTableContainer extends React.Component {
       return (
         <InvoicesTable
           invoices={this.props.invoices}
-          potentialInvoices={this.props.potentialInvoices}
         />
       );
     }
@@ -37,11 +36,13 @@ InvoicesTableContainer.propTypes = {
 };
 
 function mapStateToProps(state) {
+  const invoices = (state.invoices.payload || []).concat(state.potentialInvoices.payload || []).sort((a, b) => {
+    return new Date(b.periodStart) - new Date(a.periodStart);
+  });
   return {
+    invoices,
     fromDate: state.invoices.fromDate,
     toDate: state.invoices.toDate,
-    invoices: state.invoices.payload,
-    potentialInvoices: state.potentialInvoices.payload,
     loading: state.invoices.loading
   };
 }
