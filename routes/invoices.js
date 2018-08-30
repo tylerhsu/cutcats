@@ -16,7 +16,6 @@ router.post('/', createInvoice);
 router.patch('/:id', getDocument(models.Invoice), editInvoice);
 router.get('/generate', generateInvoices, createInvoiceZip, serveInvoiceZip);
 router.post('/generate', generateInvoices, createInvoiceZip, saveInvoiceZip);
-/* router.get('/csv', getInvoicesCsv);*/
 
 function getInvoices (req, res, next) {
   let query = _getInvoicesQuery(req);
@@ -201,36 +200,6 @@ function saveInvoiceZip(req, res, next, s3) {
     })
     .catch(next);
 }
-
-/* function getInvoicesCsv (req, res, next) {
- *   const { fromDate, toDate } = reportUtils.parseDates(req.query);
- *   const filename = reportUtils.getFilename('invoices', fromDate, toDate);
- *   res.set({
- *     'Content-Type': 'text/plain',
- *     'Content-Disposition': 'attachment; filename=' + filename
- *   });
- * 
- *   return _getInvoicesQuery(req)
- *     .cursor()
- *     .exec()
- *     .on('error', next)
- *     .pipe(csv.transform(transform))
- *     .on('error', next)
- *     .pipe(csv.stringify({
- *       header: true
- *     }))
- *     .on('error', next)
- *     .pipe(res)
- *     .on('error', next);
- * 
- *   function transform (ridesByClient, callback) {
- *     callback(null, {
- *       'Client name': ridesByClient._id.client.name,
- *       'Rides completed': ridesByClient.rideCount,
- *       'Billable total': reportUtils.precisionRound(ridesByClient.balance, 2)
- *     });
- *   }
- * }*/
 
 function _getInvoicesQuery (req) {
   const fromDate = reportUtils.parseDate(req.query.from);
