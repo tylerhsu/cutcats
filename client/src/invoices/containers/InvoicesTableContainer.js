@@ -31,16 +31,16 @@ InvoicesTableContainer.propTypes = {
   fromDate: PropTypes.number.isRequired,
   toDate: PropTypes.number.isRequired,
   invoices: PropTypes.arrayOf(PropTypes.object),
-  potentialInvoices: PropTypes.arrayOf(PropTypes.object),
   loading: PropTypes.bool
 };
 
 function mapStateToProps(state) {
-  const invoices = (state.invoices.payload || []).concat(state.potentialInvoices.payload || []).sort((a, b) => {
-    return new Date(b.periodStart) - new Date(a.periodStart);
-  });
+  const invoices = state.invoices.payload;
+  const potentialInvoices = state.invoices.potentialInvoices;
   return {
-    invoices,
+    invoices: invoices.concat(potentialInvoices).sort((a, b) => {
+      return new Date(b.periodStart) - new Date(a.periodStart);
+    }),
     fromDate: state.invoices.fromDate,
     toDate: state.invoices.toDate,
     loading: state.invoices.loading

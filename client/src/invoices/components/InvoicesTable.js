@@ -2,6 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import DateFilterContainer from '../containers/DateFilterContainer';
 import InvoiceRow from './InvoiceRow';
+import styles from './InvoicesTable.module.scss';
 
 export class InvoicesTable extends React.Component {
   constructor (props) {
@@ -15,7 +16,7 @@ export class InvoicesTable extends React.Component {
           <thead>
             <tr>
               <th>Period</th>
-              <th>Actions</th>
+              <th className={`${styles.actionsColumn}`}>Actions</th>
             </tr>
           </thead>
           <tbody>
