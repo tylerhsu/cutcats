@@ -6,24 +6,24 @@ const router = express.Router();
 const models = require('../models');
 const boilerplate = require('./boilerplate');
 const reportUtils = require('./util/reportUtils');
-const ClientInvoice = require('./util/ClientInvoice');
-const QuickbooksInvoice = require('./util/QuickbooksInvoice');
+const CourierPaystub = require('./util/CourierPaystub');
+const QuickbooksPayroll = require('./util/QuickbooksPayroll');
 const error = require('./util/error');
 const AWS = require('aws-sdk');
 
-router.get('/', getInvoices);
-router.post('/', boilerplate.create(models.Invoice));
-router.get('/generate', generateInvoices, createInvoiceZip, serveInvoiceZip);
-router.post('/generate', generateInvoices, createInvoiceZip, saveInvoiceZip(new AWS.S3()));
-router.get('/:id', boilerplate.getOne(models.Invoice));
-router.patch('/:id', boilerplate.update(models.Invoice));
-router.delete('/:id', boilerplate.destroy(models.Invoice));
-router.get('/:id/download', downloadInvoice(new AWS.S3()));
+router.get('/', getPayrolls);
+router.post('/', boilerplate.create(models.Payroll));
+router.get('/generate', generatePaystubs, createPayrollZip, servePayrollZip);
+router.post('/generate', generatePaystubs, createPayrollZip, savePayrollZip(new AWS.S3()));
+router.get('/:id', boilerplate.getOne(models.Payroll));
+router.patch('/:id', boilerplate.update(models.Payroll));
+router.delete('/:id', boilerplate.destroy(models.Payroll));
+router.get('/:id/download', downloadPayroll(new AWS.S3()));
 
-function getInvoices (req, res, next) {
+function getPayrolls (req, res, next) {
   const fromDate = reportUtils.parseDate(req.query.from);
   const toDate = reportUtils.parseDate(req.query.to);
-  const query = boilerplate.list.getQuery(models.Invoice, req);
+  const query = boilerplate.list.getQuery(models.Payroll, req);
 
   if (fromDate) {
     query.where({ periodEnd: { $gte: fromDate } });
@@ -36,17 +36,17 @@ function getInvoices (req, res, next) {
   return boilerplate.list.respond(query, req, res, next);
 }
 
-function downloadInvoice(s3) {
+function downloadPayroll(s3) {
   return (req, res, next) => {
-    return boilerplate.getOne.getQuery(models.Invoice, req)
-      .then(invoice => {
+    return boilerplate.getOne.getQuery(models.Payroll, req)
+      .then(payroll => {
         res.set({
           'Content-Type': 'application/zip',
-          'Content-Disposition': `attachment; filename=${path.basename(invoice.filePath)}`
+          'Content-Disposition': `attachment; filename=${path.basename(payroll.filePath)}`
         });
         s3.getObject({
           Bucket: process.env.S3_BUCKET,
-          Key: invoice.filePath
+          Key: payroll.filePath
         })
           .createReadStream()
           .pipe(res);
@@ -55,7 +55,7 @@ function downloadInvoice(s3) {
   };
 }
 
-function generateInvoices (req, res, next) {
+function generatePaystubs (req, res, next) {
   const periodStart = reportUtils.parseDate(req.query.periodStart);
   const periodEnd = reportUtils.parseDate(req.query.periodEnd);
   const monthStart = moment(periodStart).startOf('month').toDate();
@@ -70,24 +70,24 @@ function generateInvoices (req, res, next) {
   }
 
   // Get rides for the entire month because some invoicing calculations need them all regardless of the period boundaries.
-  return getRidesByClient(monthStart, monthEnd)
-    .then(ridesByClient => {
-      const clientInvoices = ridesByClient
+  return getRidesByCourier(monthStart, monthEnd)
+    .then(ridesByCourier => {
+      const courierPaystubs = ridesByCourier
         .map(rideGroup => {
-          return new ClientInvoice(rideGroup._id.client, rideGroup.rides, periodStart, periodEnd);
+          return new CourierPaystub(rideGroup._id.courier, rideGroup.rides, periodStart, periodEnd);
         })
-        .filter(clientInvoice => {
-          return clientInvoice.getInvoiceTotal() > 0;
+        .filter(courierPaystub => {
+          return courierPaystub.getPaystubTotal() > 0;
         });
-      const quickbooksInvoice = new QuickbooksInvoice(clientInvoices, periodStart, periodEnd, monthStart, monthEnd);
-      req.clientInvoices = clientInvoices;
-      req.quickbooksInvoice = quickbooksInvoice;
+      const quickbooksPayroll = new QuickbooksPayroll(courierPaystubs, periodStart, periodEnd, monthStart, monthEnd);
+      req.courierPaystubs = courierPaystubs;
+      req.quickbooksPayroll = quickbooksPayroll;
       next();
     })
     .catch(next);
 }
 
-function getRidesByClient(fromDate, toDate) {
+function getRidesByCourier(fromDate, toDate) {
   return models.Ride.aggregate()
     .match({
       readyTime: {
@@ -97,36 +97,36 @@ function getRidesByClient(fromDate, toDate) {
       deliveryStatus: 'complete'
     })
     .lookup({
-      from: 'clients',
-      localField: 'client',
+      from: 'couriers',
+      localField: 'courier',
       foreignField: '_id',
-      as: 'client'
+      as: 'courier'
     })
-    // lookup stage always gives an array. Un-arrayify the client field.
+    // lookup stage always gives an array. Un-arrayify the courier field.
     .addFields({
-      client: { $arrayElemAt: ['$client', 0] }
+      courier: { $arrayElemAt: ['$courier', 0] }
     })
     .group({
-      _id: { client: '$client' },
+      _id: { courier: '$courier' },
       rides: { $push: '$$ROOT' }
     })
     .exec();
 }
 
-function createInvoiceZip(req, res, next) {
-  req.invoiceZip = new yazl.ZipFile();
-  req.invoiceZipSize = addFilesToZip();
+function createPayrollZip(req, res, next) {
+  req.payrollZip = new yazl.ZipFile();
+  req.payrollZipSize = addFilesToZip();
   next();
   
   function addFilesToZip() {
-    const addQuickbooksCsv = req.quickbooksInvoice.renderCsv()
+    const addQuickbooksCsv = req.quickbooksPayroll.renderCsv()
       .then(csvString => {
-        req.invoiceZip.addBuffer(new Buffer(csvString), 'quickbooks.csv', { compress: false });
+        req.payrollZip.addBuffer(new Buffer(csvString), 'quickbooks.csv', { compress: false });
       });
-    const addPdfs = req.clientInvoices.map(clientInvoice => {
-      return clientInvoice.renderPdf()
+    const addPdfs = req.courierPaystubs.map(courierPaystub => {
+      return courierPaystub.renderPdf()
         .then(buffer => {
-          req.invoiceZip.addBuffer(buffer, `clients/${clientInvoice.getClientName()}.pdf`, { compress: false });
+          req.payrollZip.addBuffer(buffer, `couriers/${courierPaystub.getCourierName()}.pdf`, { compress: false });
         });
     });
     return Promise.all([
@@ -135,7 +135,7 @@ function createInvoiceZip(req, res, next) {
     ])
       .then(() => {
         return new Promise(resolve => {
-          req.invoiceZip.end(finalSize => {
+          req.payrollZip.end(finalSize => {
             resolve(finalSize);
           });
         });
@@ -143,31 +143,31 @@ function createInvoiceZip(req, res, next) {
   }
 }
 
-function serveInvoiceZip(req, res) {
+function servePayrollZip(req, res) {
   const periodStart = reportUtils.parseDate(req.query.periodStart);
   const periodEnd = reportUtils.parseDate(req.query.periodEnd);
   const formatDate = (date) => moment(date).format('M-D-YYYY');
   res.set({
     'Content-Type': 'application/zip',
-    'Content-Disposition': `attachment; filename=invoices-${formatDate(periodStart)}-${formatDate(periodEnd)}.zip`
+    'Content-Disposition': `attachment; filename=paystubs-${formatDate(periodStart)}-${formatDate(periodEnd)}.zip`
   });
-  req.invoiceZip.outputStream.pipe(res);
+  req.payrollZip.outputStream.pipe(res);
 }
 
-function saveInvoiceZip(s3) {
+function savePayrollZip(s3) {
   return (req, res, next) => {
     const periodStart = reportUtils.parseDate(req.query.periodStart);
     const periodEnd = reportUtils.parseDate(req.query.periodEnd);
     const formatDate = (date) => moment(date).format('M-D-YYYY');
-    const filename = `invoices-${formatDate(periodStart)}-${formatDate(periodEnd)}.zip`;
-    return req.invoiceZipSize
+    const filename = `paystubs-${formatDate(periodStart)}-${formatDate(periodEnd)}.zip`;
+    return req.payrollZipSize
       .then(zipSize => {
         return new Promise((resolve, reject) => {
           s3.putObject({
             Bucket: process.env.S3_BUCKET,
             Key: filename,
             ACL: 'private',
-            Body: req.invoiceZip.outputStream,
+            Body: req.payrollZip.outputStream,
             ContentLength: zipSize
           }, (err, data) => {
             if (err) {
@@ -179,23 +179,23 @@ function saveInvoiceZip(s3) {
         });
       })
       .then(() => {
-        return new models.Invoice({
+        return new models.Payroll({
           periodStart,
           periodEnd,
           filePath: filename
         }).save();
       })
-      .then(invoice => {
-        res.json(invoice);
+      .then(payroll => {
+        res.json(payroll);
       })
       .catch(next);
   };
 }
 
 module.exports = router;
-module.exports.getInvoices = getInvoices;
-module.exports.downloadInvoice = downloadInvoice;
-module.exports.generateInvoices = generateInvoices;
-module.exports.createInvoiceZip = createInvoiceZip;
-module.exports.serveInvoiceZip = serveInvoiceZip;
-module.exports.saveInvoiceZip = saveInvoiceZip;
+module.exports.getPayrolls = getPayrolls;
+module.exports.downloadPayroll = downloadPayroll;
+module.exports.generatePaystubs = generatePaystubs;
+module.exports.createPayrollZip = createPayrollZip;
+module.exports.servePayrollZip = servePayrollZip;
+module.exports.savePayrollZip = savePayrollZip;

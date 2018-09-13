@@ -1,14 +1,13 @@
 const moment = require('moment');
-const _ = require('lodash');
 const path = require('path');
 const AWS = require('aws-sdk');
 const fs = require('fs');
 const logoBase64 = fs.readFileSync(path.resolve(__dirname, './pdf-logo.png')).toString('base64');
 const explainable = require('./explainable');
 
-class ClientInvoice {
-  constructor(client, ridesInMonth, periodStart, periodEnd, lambda) {
-    this.client = client;
+class CourierPaystub {
+  constructor(courier, ridesInMonth, periodStart, periodEnd, lambda) {
+    this.courier = courier;
     this.periodStart = new Date(periodStart),
     this.periodEnd = new Date(periodEnd);
     this.ridesInMonth = ridesInMonth;
@@ -25,8 +24,8 @@ class ClientInvoice {
     this.lambda = lambda || new AWS.Lambda();
   }
 
-  getClientName() {
-    return this.client.name;
+  getCourierName() {
+    return this.courier.name;
   }
 
   getDateRange() {
@@ -42,67 +41,27 @@ class ClientInvoice {
   }
 
   getAdminFee() {
-    if (!this.isMonthEnd) {
-      return [
-        0,
-        'No admin fee on mid-month invoice'
-      ];
-    } else if (this.client.adminFeeType === 'fixed') {
-      return [
-        this.client.fixedAdminFee,
-        'Fixed fee'
-      ];
-    } else if (this.client.adminFeeType === 'scale') {
-      const numRidesInMonth = this.getNumRidesInMonth();
-      const getScaledFee = () => {
-        if (numRidesInMonth < 30) {
-          return 50;
-        } else if (numRidesInMonth < 90) {
-          return 75;
-        } else if (numRidesInMonth < 210) {
-          return 100;
-        } else {
-          return 125;
-        }
-      };
-      return [
-        getScaledFee(),
-        `${numRidesInMonth} ride${numRidesInMonth === 1 ? '' : 's'} this month`
-      ];
-    } else {
-      throw new Error(`Don't know how to calculate admin fee for client with admin fee type "${this.adminFeeType}"`);
-    }
+    return [1, 'test admin fee'];
   }
 
   getTipTotal () {
-    switch (this.client.paymentType) {
-    case 'invoiced': return _.sumBy(this.ridesInPeriod, ride => ride.tip || 0);
-    case 'paid': return [0, 'This is a paid client'];
-    default: throw new Error(`Don't know how to calculate tip total for client with payment type "${this.client.paymentType}"`);
-    }
+    return [2, 'test tip total'];
   }
 
   getFeeTotal () {
-    switch (this.client.paymentType) {
-    case 'invoiced': return _.sumBy(this.ridesInPeriod, ride => ride.deliveryFee || 0);
-    case 'paid': return [0, 'This is a paid client'];
-    default: throw new Error(`Don't know how to calculate fee total for client with payment type "${this.client.paymentType}"`);
-    }
+    return [3, 'test fee total'];
   }
 
   getDeliveryFeeTotal() {
-    return [
-      this.getTipTotal() + this.getFeeTotal(),
-      'Tips + fees'
-    ];
+    return [4, 'Tips + fees'];
   }
 
-  getInvoiceTotal () {
+  getPaystubTotal () {
     return this.getAdminFee() + this.getDeliveryFeeTotal();
   }
 
   renderPdf () {
-    const title = `${this.client.name} Invoice, ${this.getDateRange()}`;
+    const title = `${this.courier.name} Paystub, ${this.getDateRange()}`;
     const { value: adminFee, reason: adminFeeReason } = this.getAdminFee({ explain: true });
     const { value: tipTotal, reason: tipTotalReason } = this.getTipTotal({ explain: true });
     const { value: feeTotal, reason: feeTotalReason } = this.getFeeTotal({ explain: true });
@@ -158,8 +117,8 @@ class ClientInvoice {
                 { text: currency(adminFee), alignment: 'right' }
               ],
               [
-                { text: 'Total Invoice', bold: true },
-                { text: currency(this.getInvoiceTotal()), alignment: 'right', bold: true }
+                { text: 'Total Paystub', bold: true },
+                { text: currency(this.getPaystubTotal()), alignment: 'right', bold: true }
               ],
             ]
           }
@@ -213,4 +172,4 @@ function currency(num) {
   return `$${(num || 0).toFixed(2)}`;
 }
 
-module.exports = ClientInvoice;
+module.exports = CourierPaystub;

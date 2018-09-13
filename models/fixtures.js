@@ -8,6 +8,11 @@ const FIXTURES = {
     periodEnd: new Date('2000-01-15'),
     filePath: '/test.zip'
   }),
+  Payroll: () => ({
+    periodStart: new Date('2000-01-01'),
+    periodEnd: new Date('2000-01-15'),
+    filePath: '/test.zip'
+  }),
   Ride: () => ({
     jobId:  new ObjectID().toString(),
     client: new ObjectID(),

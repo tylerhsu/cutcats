@@ -1,13 +1,16 @@
 import React from 'react';
+import { Provider } from 'react-redux';
 import ReactDOM from 'react-dom';
-import App from './App';
+import AppContainer from './containers/AppContainer';
+import configureStore from '../global/store/configureStore';
+import reducer from './reducers';
 import '../global/global';
 
-import { configureUrlQuery } from 'react-url-query';
-import history from '../global/history';
-configureUrlQuery({ history });
+const store = configureStore(reducer);
 
 ReactDOM.render(
-  <App />,
+  <Provider store={store}>
+    <AppContainer />
+  </Provider>,
   document.getElementById('root')
 );
