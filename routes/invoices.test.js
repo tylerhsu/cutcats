@@ -3,11 +3,11 @@ import MockResponse from 'mock-express-response';
 import sinon from 'sinon';
 import models from '../models';
 import yazl from 'yazl';
-import invoiceRoutes from '../routes/invoices';
+import invoiceRoutes from './invoices';
 import ClientInvoice from './util/ClientInvoice';
 import QuickbooksInvoice from './util/QuickbooksInvoice';
 import { save, getId, idsShouldBeEqual } from './util/testUtils';
-import { fixtureJson, fixtureModel, fixtureModelArray } from '../models/fixtures';
+import { fixtureModel, fixtureModelArray } from '../models/fixtures';
 
 describe('invoices routes', function () {
   beforeEach(function () {
@@ -16,20 +16,7 @@ describe('invoices routes', function () {
     sinon.spy(this.res, 'json');
   });
 
-  describe('GET /api/invoices', function () {
-    it('returns a list of invoices', function() {
-      const invoices = fixtureModelArray('Invoice', 3);
-      return save(invoices)
-        .then(() => {
-          return invoiceRoutes.getInvoices(this.req, this.res);
-        })
-        .then(() => {
-          this.res.statusCode.should.eql(200);
-          const jsonResponse = this.res.json.firstCall.args[0];
-          jsonResponse.should.have.length(3);
-        });
-    });
-    
+  describe('getInvoices()', function () {
     it('respects ?from and ?to', function () {
       const invoices = [
         fixtureModel('Invoice', { periodStart: new Date('2000-1-1'), periodEnd: new Date('2000-1-15') }),
@@ -47,32 +34,6 @@ describe('invoices routes', function () {
           const jsonResponse = this.res.json.firstCall.args[0];
           jsonResponse.should.have.length(1);
           idsShouldBeEqual(jsonResponse[0], invoices[1]);
-        });
-    });
-  });
-
-  describe('POST /api/invoices', function () {
-    it('creates a new Invoice', function () {
-      this.req.body = fixtureJson('Invoice', { filePath: 'testCreate' });
-      return invoiceRoutes.createInvoice(this.req, this.res)
-        .then(() => {
-          this.res.statusCode.should.eql(201);
-          const jsonResponse = this.res.json.firstCall.args[0];
-          jsonResponse.filePath.should.eql(this.req.body.filePath);
-        });
-    });
-  });
-
-  describe('PATCH /api/invoices/:id', function () {
-    it('edits an existing Invoice', function () {
-      this.req.invoice = fixtureModel('Invoice', { filePath: 'old' });
-      this.req.body = { filePath: 'updated' };
-      return invoiceRoutes.editInvoice(this.req, this.res)
-        .then(() => {
-          this.res.statusCode.should.eql(200);
-          const jsonResponse = this.res.json.firstCall.args[0];
-          idsShouldBeEqual(jsonResponse, this.req.invoice);
-          jsonResponse.filePath.should.eql(this.req.body.filePath);
         });
     });
   });

@@ -8,6 +8,7 @@ const transform = require('stream-transform');
 const moment = require('moment');
 const reportUtils = require('./util/reportUtils');
 const error = require('./util/error');
+const boilerplate = require('./boilerplate');
 
 router.get('/', getRides);
 router.get('/csv', getRidesCsv);
@@ -15,25 +16,7 @@ router.post('/import', importRides);
 
 function getRides (req, res, next) {
   let query = _getRidesQuery(req);
-  const page = parseInt(req.query.page) || 1;
-  const resultsPerPage = parseInt(req.query.resultsPerPage) || 100;
-  const count = ['true', '1'].indexOf(req.query.count) > -1;
-
-  if (count) {
-    query.count();
-  } else {
-    query.skip((page - 1) * resultsPerPage).limit(resultsPerPage);
-  }
-
-  return query.exec()
-    .then(rides => {
-      if (count) {
-        res.json({ count: rides });
-      } else {
-        res.json(rides);
-      }
-    })
-    .catch(next);
+  return boilerplate.list.respond(query, req, res, next);
 }
 
 function getRidesCsv (req, res, next) {
@@ -73,7 +56,7 @@ function getRidesCsv (req, res, next) {
 function _getRidesQuery (req) {
   const fromDate = reportUtils.parseDate(req.query.from);
   const toDate = reportUtils.parseDate(req.query.to);
-  let query = models.Ride.find();
+  let query = boilerplate.list.getQuery(models.Ride, req);
 
   if (req.query.q) {
     query.find({ $text: { $search: req.query.q } });
@@ -85,14 +68,6 @@ function _getRidesQuery (req) {
 
   if (toDate) {
     query.where({ createdAt: { $lte: toDate } });
-  }
-
-  if (req.query.populate) {
-    query.populate(req.query.populate);
-  }
-
-  if (req.query.sort) {
-    query.sort(req.query.sort);
   }
 
   return query;

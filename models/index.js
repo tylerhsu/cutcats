@@ -5,5 +5,6 @@ module.exports = {
   Ride: require('./Ride'),
   Zone: require('./Zone'),
   Shift: require('./Shift'),
-  Invoice: require('./Invoice')
+  Invoice: require('./Invoice'),
+  Payroll: require('./Payroll')
 };
