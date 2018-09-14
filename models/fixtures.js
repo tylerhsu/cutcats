@@ -19,6 +19,7 @@ const FIXTURES = {
     courier: new ObjectID(),
     destinationAddress1: 'destination address 1',
     deliveryStatus: 'complete',
+    isPaid: true,
     orderTotal: 1,
     billableTotal: 2,
     deliveryFee: 3,

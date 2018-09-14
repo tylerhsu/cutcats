@@ -1,71 +1,85 @@
 const moment = require('moment');
+const _ = require('lodash');
 const path = require('path');
-const AWS = require('aws-sdk');
 const fs = require('fs');
 const logoBase64 = fs.readFileSync(path.resolve(__dirname, './pdf-logo.png')).toString('base64');
 const explainable = require('./explainable');
+const AccountingPeriod = require('./AccountingPeriod');
 
-class CourierPaystub {
+class CourierPaystub extends AccountingPeriod {
   constructor(courier, ridesInMonth, periodStart, periodEnd, lambda) {
+    super(ridesInMonth, periodStart, periodEnd, lambda);
     this.courier = courier;
-    this.periodStart = new Date(periodStart),
-    this.periodEnd = new Date(periodEnd);
-    this.ridesInMonth = ridesInMonth;
-    this.ridesInPeriod = ridesInMonth.filter(ride => {
-      const readyTime = new Date(ride.readyTime);
-      return readyTime >= this.periodStart && readyTime < this.periodEnd;
-    });
-    this.isMonthEnd = moment(periodEnd).date() === moment(periodEnd).endOf('month').date();
-
-    this.getAdminFee = explainable(this.getAdminFee.bind(this));
     this.getTipTotal = explainable(this.getTipTotal.bind(this));
     this.getFeeTotal = explainable(this.getFeeTotal.bind(this));
     this.getDeliveryFeeTotal = explainable(this.getDeliveryFeeTotal.bind(this));
-    this.lambda = lambda || new AWS.Lambda();
   }
 
   getCourierName() {
     return this.courier.name;
   }
 
-  getDateRange() {
-    return `${moment(this.periodStart).format('MMM Do, YYYY')} - ${moment(this.periodEnd).format('MMM Do, YYYY')}`;
+  getTipsCollectedByRider () {
+    return _.chain(this.ridesInPeriod)
+      .filter(ride => ride.isPaid === true)
+      .sumBy(this.ridesInPeriod, ride => ride.tip || 0)
+      .value();
   }
 
-  getNumRidesInPeriod() {
-    return this.ridesInPeriod.length;
+  getTipsOwedToRider () {
+    return _.chain(this.ridesInPeriod)
+      .filter(ride => ride.isPaid === false)
+      .sumBy(this.ridesInPeriod, ride => ride.tip || 0)
+      .value();
   }
 
-  getNumRidesInMonth() {
-    return this.ridesInMonth.length;
+  getTipTotal() {
+    return _.sumBy(this.ridesInPeriod, ride => ride.tip || 0);
   }
 
-  getAdminFee() {
-    return [1, 'test admin fee'];
+  getFeesCollectedByRider () {
+    return _.chain(this.ridesInPeriod)
+      .filter(ride => ride.isPaid === true)
+      .sumBy(this.ridesInPeriod, ride => ride.deliveryFee || 0)
+      .value();
   }
 
-  getTipTotal () {
-    return [2, 'test tip total'];
+  getFeesOwedToRider () {
+    return _.chain(this.ridesInPeriod)
+      .filter(ride => ride.isPaid === false)
+      .sumBy(this.ridesInPeriod, ride => ride.deliveryFee || 0)
+      .value();
   }
 
-  getFeeTotal () {
-    return [3, 'test fee total'];
+  getFeeTotal() {
+    return _.sumBy(this.ridesInPeriod, ride => ride.deliveryFee || 0);
+  }
+
+  getDeliveryFeeCollectedByRider() {
+    return this.getTipsCollectedByRider() + this.getFeesCollectedByRider();
+  }
+
+  getDeliveryFeeOwedToRider() {
+    return this.getTipsOwedToRider() + this.getFeesOwedToRider();
   }
 
   getDeliveryFeeTotal() {
-    return [4, 'Tips + fees'];
+    return [
+      this.getTipTotal() + this.getFeeTotal(),
+      'Tips + fees'
+    ];
   }
 
   getPaystubTotal () {
-    return this.getAdminFee() + this.getDeliveryFeeTotal();
+    return 1;
   }
 
-  renderPdf () {
+  getPdfDocDefinition () {
     const title = `${this.courier.name} Paystub, ${this.getDateRange()}`;
     const { value: adminFee, reason: adminFeeReason } = this.getAdminFee({ explain: true });
     const { value: tipTotal, reason: tipTotalReason } = this.getTipTotal({ explain: true });
     const { value: feeTotal, reason: feeTotalReason } = this.getFeeTotal({ explain: true });
-    const docDefinition = {
+    return {
       info: {
         title,
         author: 'Cut Cats'
@@ -151,20 +165,6 @@ class CourierPaystub {
         }
       ]
     };
-
-    return new Promise((resolve, reject) => {
-      this.lambda.invoke({
-        FunctionName: process.env.PDF_SERVICE,
-        InvocationType: 'RequestResponse',
-        Payload: JSON.stringify(docDefinition)
-      }, (err, response) => {
-        if (err) {
-          reject(new Error(err));
-        } else {
-          resolve(new Buffer(JSON.parse(response.Payload).data));
-        }
-      });
-    });
   }
 }
   
