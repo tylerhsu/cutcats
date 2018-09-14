@@ -9,6 +9,11 @@ const AccountingPeriod = require('./AccountingPeriod');
 class CourierPaystub extends AccountingPeriod {
   constructor(courier, ridesInMonth, periodStart, periodEnd, lambda) {
     super(ridesInMonth, periodStart, periodEnd, lambda);
+    this.ridesInMonth.forEach(ride => {
+      if (!(ride.client && ride.client.paymentType)) {
+        throw new Error(`Ride ${ride._id} has prevented paystub generation because its client's payment type could not be determined`);
+      }
+    });
     this.courier = courier;
     this.getTipTotal = explainable(this.getTipTotal.bind(this));
     this.getFeeTotal = explainable(this.getFeeTotal.bind(this));
@@ -21,14 +26,14 @@ class CourierPaystub extends AccountingPeriod {
 
   getTipsCollectedByRider () {
     return _.chain(this.ridesInPeriod)
-      .filter(ride => ride.isPaid === true)
+      .filter(ride => ride.client.paymentType === 'paid')
       .sumBy(this.ridesInPeriod, ride => ride.tip || 0)
       .value();
   }
 
   getTipsOwedToRider () {
     return _.chain(this.ridesInPeriod)
-      .filter(ride => ride.isPaid === false)
+      .filter(ride => ride.client.paymentType === 'invoiced')
       .sumBy(this.ridesInPeriod, ride => ride.tip || 0)
       .value();
   }
@@ -39,14 +44,14 @@ class CourierPaystub extends AccountingPeriod {
 
   getFeesCollectedByRider () {
     return _.chain(this.ridesInPeriod)
-      .filter(ride => ride.isPaid === true)
+      .filter(ride => ride.client.paymentType === 'paid')
       .sumBy(this.ridesInPeriod, ride => ride.deliveryFee || 0)
       .value();
   }
 
   getFeesOwedToRider () {
     return _.chain(this.ridesInPeriod)
-      .filter(ride => ride.isPaid === false)
+      .filter(ride => ride.client.paymentType === 'invoiced')
       .sumBy(this.ridesInPeriod, ride => ride.deliveryFee || 0)
       .value();
   }

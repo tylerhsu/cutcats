@@ -1,5 +1,6 @@
 import MockRequest from 'mock-express-request';
 import MockResponse from 'mock-express-response';
+import should from 'should';
 import sinon from 'sinon';
 import models from '../models';
 import yazl from 'yazl';
@@ -40,8 +41,9 @@ describe('payrolls routes', function () {
 
   describe('createPayrollZip()', function() {
     it('assigns req.payrollZip and calls next()', function() {
+      const client = fixtureModel('Client');
       const courier = fixtureModel('Courier');
-      const rides = fixtureModelArray('Ride', { courier }, 3);
+      const rides = fixtureModelArray('Ride', { courier, client }, 3);
       const next = sinon.stub();
       const lambda = {
         invoke: sinon.stub().callsArgWith(1, null, { Payload: '{ "data": [] }' })
@@ -63,8 +65,9 @@ describe('payrolls routes', function () {
     });
 
     it('assigns req.payrollZipSize a promise that resolves with a number', function() {
+      const client = fixtureModel('Client');
       const courier = fixtureModel('Courier');
-      const rides = fixtureModelArray('Ride', { courier }, 3);
+      const rides = fixtureModelArray('Ride', { courier, client }, 3);
       const next = sinon.stub();
       const lambda = {
         invoke: sinon.stub().callsArgWith(1, null, { Payload: '{ "data": [] }' })
@@ -123,29 +126,33 @@ describe('payrolls routes', function () {
 
   describe('generatePaystubs()', function () {
     it('produces a list of CourierPaystubs, one for each Courier', function () {
+      const client = fixtureModel('Client');
       const couriers = fixtureModelArray('Courier', 2);
-      const commonRideAttrs = { readyTime: new Date('2000-1-2'), deliveryStatus: 'complete' };
+      const commonRideAttrs = { readyTime: new Date('2000-1-2'), deliveryStatus: 'complete', client };
       const rides = [
         fixtureModel('Ride', { ...commonRideAttrs, courier: couriers[0] }),
         fixtureModel('Ride', { ...commonRideAttrs, courier: couriers[1] })
       ];
       this.req.query.periodStart = new Date('2000-1-1');
       this.req.query.periodEnd = new Date('2000-1-3');
-      return save(couriers, rides)
+      return save(client, couriers, rides)
         .then(() => {
-          return payrollRoutes.generatePaystubs(this.req, this.res, sinon.stub());
+          return new Promise(resolve => payrollRoutes.generatePaystubs(this.req, this.res, resolve));
         })
-        .then(() => {
+        .then(err => {
+          if (err) throw err;
           this.req.courierPaystubs.should.have.length(2);
           this.req.courierPaystubs.forEach(courierPaystub => {
+            should(courierPaystub.courier.name).be.ok();
             couriers.map(getId).should.containEql(getId(courierPaystub.courier));
           });
         });
     });
 
-    it('each CourierPaystub contains a list of rides belonging to that courier', function () {
+    it('each CourierPaystub contains a list of rides belonging to that courier and each ride has the client field populated', function () {
+      const client = fixtureModel('Client');
       const couriers = fixtureModelArray('Courier', 2);
-      const commonRideAttrs = { readyTime: new Date('2000-1-2'), deliveryStatus: 'complete' };
+      const commonRideAttrs = { readyTime: new Date('2000-1-2'), deliveryStatus: 'complete', client };
       const rides = [
         fixtureModel('Ride', { ...commonRideAttrs, courier: couriers[0] }),
         fixtureModel('Ride', { ...commonRideAttrs, courier: couriers[1] }),
@@ -153,23 +160,28 @@ describe('payrolls routes', function () {
       ];
       this.req.query.periodStart = new Date('2000-1-1');
       this.req.query.periodEnd = new Date('2000-1-3');
-      return save(couriers, rides)
+      return save(client, couriers, rides)
         .then(() => {
-          return payrollRoutes.generatePaystubs(this.req, this.res, sinon.stub());
+          return new Promise(resolve => payrollRoutes.generatePaystubs(this.req, this.res, resolve));
         })
-        .then(() => {
+        .then(err => {
+          if (err) throw err;
           const courier0Payroll = this.req.courierPaystubs.find(courierPaystub => getId(courierPaystub.courier) === getId(couriers[0]));
           const courier1Payroll = this.req.courierPaystubs.find(courierPaystub => getId(courierPaystub.courier) === getId(couriers[1]));
           courier0Payroll.ridesInPeriod.should.have.length(1);
           courier0Payroll.ridesInPeriod.forEach(ride => idsShouldBeEqual(ride.courier, couriers[0]));
           courier1Payroll.ridesInPeriod.should.have.length(2);
           courier1Payroll.ridesInPeriod.forEach(ride => idsShouldBeEqual(ride.courier, couriers[1]));
+          courier0Payroll.ridesInPeriod.concat(courier1Payroll.ridesInPeriod).forEach(ride => {
+            should.ok(ride.client.paymentType, 'Expected client field to be populated');
+          });
         });
     });
 
     it('respects ?periodStart and ?periodEnd dates', function () {
+      const client = fixtureModel('Client');
       const courier = fixtureModel('Courier');
-      const commonRideAttrs = { deliveryStatus: 'complete', courier };
+      const commonRideAttrs = { deliveryStatus: 'complete', courier, client };
       const rides = [
         fixtureModel('Ride', { ...commonRideAttrs, readyTime: new Date('2000-1-1') }),
         fixtureModel('Ride', { ...commonRideAttrs, readyTime: new Date('2000-2-1') }),
@@ -177,11 +189,12 @@ describe('payrolls routes', function () {
       ];
       this.req.query.periodStart = new Date('2000-1-20');
       this.req.query.periodEnd = new Date('2000-2-20');
-      return save(courier, rides)
+      return save(client, courier, rides)
         .then(() => {
-          return payrollRoutes.generatePaystubs(this.req, this.res, sinon.stub());
+          return new Promise(resolve => payrollRoutes.generatePaystubs(this.req, this.res, resolve));
         })
-        .then(() => {
+        .then(err => {
+          if (err) throw err;
           this.req.courierPaystubs.should.have.length(1);
           this.req.courierPaystubs[0].ridesInPeriod.should.have.length(1);
           idsShouldBeEqual(this.req.courierPaystubs[0].ridesInPeriod[0], rides[1]);
@@ -191,14 +204,15 @@ describe('payrolls routes', function () {
     });
 
     it('only includes rides with deliveryStatus == "complete"', function() {
+      const client = fixtureModel('Client');
       const courier = fixtureModel('Courier');
-      const commonRideAttrs = { readyTime: new Date('2000-1-2'), courier };
+      const commonRideAttrs = { readyTime: new Date('2000-1-2'), courier, client };
       const rides = models.Ride.schema.paths.deliveryStatus.enumValues.map(deliveryStatus => {
         return fixtureModel('Ride', { ...commonRideAttrs, deliveryStatus });
       });
       this.req.query.periodStart = new Date('2000-1-1');
       this.req.query.periodEnd = new Date('2000-1-3');
-      return save(courier, rides)
+      return save(client, courier, rides)
         .then(() => {
           return payrollRoutes.generatePaystubs(this.req, this.res, sinon.stub());
         })
@@ -210,12 +224,13 @@ describe('payrolls routes', function () {
     });
 
     it('each courier payroll contains a count of that courier\'s rides for the entire month', function() {
+      const client = fixtureModel('Client');
       const courier = fixtureModel('Courier');
-      const commonRideAttrs = { readyTime: new Date('2000-1-1'), deliveryStatus: 'complete', courier };
+      const commonRideAttrs = { readyTime: new Date('2000-1-1'), deliveryStatus: 'complete', courier, client };
       const rides = fixtureModelArray('Ride', commonRideAttrs, 3);
       this.req.query.periodStart = new Date('2000-1-15');
       this.req.query.periodEnd = new Date('2000-1-31');
-      return save(courier, rides)
+      return save(client, courier, rides)
         .then(() => {
           return payrollRoutes.generatePaystubs(this.req, this.res, sinon.stub());
         })

@@ -31,7 +31,7 @@ const rideSchema = new mongoose.Schema({
   jobType: { type: Number },
   service: { type: String },
   rate: { type: String },
-  isPaid: { type: Boolean, required: true },
+  isPaid: { type: Boolean },
   paymentMethod: { type: String },
   orderTotal: { type: Number, required: true },
   billableTotal: { type: Number, required: true },

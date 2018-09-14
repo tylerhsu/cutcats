@@ -3,6 +3,7 @@ import MockResponse from 'mock-express-response';
 import sinon from 'sinon';
 import models from '../models';
 import yazl from 'yazl';
+import should from 'should';
 import invoiceRoutes from './invoices';
 import ClientInvoice from './util/ClientInvoice';
 import QuickbooksInvoice from './util/QuickbooksInvoice';
@@ -138,6 +139,7 @@ describe('invoices routes', function () {
         .then(() => {
           this.req.clientInvoices.should.have.length(2);
           this.req.clientInvoices.forEach(clientInvoice => {
+            should(clientInvoice.client.name).be.ok();
             clients.map(getId).should.containEql(getId(clientInvoice.client));
           });
         });

@@ -12,11 +12,12 @@ describe('CourierPaystub', function() {
   });
 
   it('this.getTipTotal() returns sum of ride.tip for all rides in period', function() {
+    const client = fixtureModel('Client');
     const courier = fixtureModel('Courier');
     const rides = [
-      fixtureModel('Ride', { readyTime: new Date('2000-1-1'), tip: 1 }),
-      fixtureModel('Ride', { readyTime: new Date('2000-1-20'), tip: 2 }),
-      fixtureModel('Ride', { readyTime: new Date('2000-1-20'), tip: 3 })
+      fixtureModel('Ride', { client, readyTime: new Date('2000-1-1'), tip: 1 }),
+      fixtureModel('Ride', { client, readyTime: new Date('2000-1-20'), tip: 2 }),
+      fixtureModel('Ride', { client, readyTime: new Date('2000-1-20'), tip: 3 })
     ];
     const periodStart = new Date('2000-1-15');
     const periodEnd = new Date('2000-1-31');
@@ -25,11 +26,12 @@ describe('CourierPaystub', function() {
   });
 
   it('this.getFeeTotal() returns sum of ride.deliveryFee for all rides in period', function() {
+    const client = fixtureModel('Client');
     const courier = fixtureModel('Courier');
     const rides = [
-      fixtureModel('Ride', { readyTime: new Date('2000-1-1'), deliveryFee: 4 }),
-      fixtureModel('Ride', { readyTime: new Date('2000-1-20'), deliveryFee: 5 }),
-      fixtureModel('Ride', { readyTime: new Date('2000-1-20'), deliveryFee: 6 })
+      fixtureModel('Ride', { client, readyTime: new Date('2000-1-1'), deliveryFee: 4 }),
+      fixtureModel('Ride', { client, readyTime: new Date('2000-1-20'), deliveryFee: 5 }),
+      fixtureModel('Ride', { client, readyTime: new Date('2000-1-20'), deliveryFee: 6 })
     ];
     const periodStart = new Date('2000-1-15');
     const periodEnd = new Date('2000-1-31');
@@ -38,11 +40,12 @@ describe('CourierPaystub', function() {
   });
 
   it('this.getDeliveryFeeTotal() returns sum of tips and delivery fees between periodEnd and periodStart', function() {
+    const client = fixtureModel('Client');
     const courier = fixtureModel('Courier');
     const rides = [
-      fixtureModel('Ride', { readyTime: new Date('2000-1-1'), tip: 1, deliveryFee: 4 }),
-      fixtureModel('Ride', { readyTime: new Date('2000-1-20'), tip: 2, deliveryFee: 5 }),
-      fixtureModel('Ride', { readyTime: new Date('2000-1-20'), tip: 3, deliveryFee: 6 })
+      fixtureModel('Ride', { client, readyTime: new Date('2000-1-1'), tip: 1, deliveryFee: 4 }),
+      fixtureModel('Ride', { client, readyTime: new Date('2000-1-20'), tip: 2, deliveryFee: 5 }),
+      fixtureModel('Ride', { client, readyTime: new Date('2000-1-20'), tip: 3, deliveryFee: 6 })
     ];
     const periodStart = new Date('2000-1-15');
     const periodEnd = new Date('2000-1-31');

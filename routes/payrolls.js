@@ -74,7 +74,7 @@ function generatePaystubs (req, res, next) {
     .then(ridesByCourier => {
       const courierPaystubs = ridesByCourier
         .map(rideGroup => {
-          return new CourierPaystub(rideGroup._id.courier, rideGroup.rides, periodStart, periodEnd);
+          return new CourierPaystub(rideGroup.courier, rideGroup.rides, periodStart, periodEnd);
         })
         .filter(courierPaystub => {
           return courierPaystub.getPaystubTotal() > 0;
@@ -97,18 +97,28 @@ function getRidesByCourier(fromDate, toDate) {
       deliveryStatus: 'complete'
     })
     .lookup({
+      from: 'clients',
+      localField: 'client',
+      foreignField: '_id',
+      as: 'client'
+    })
+    // lookup stage always gives an array. Un-arrayify the client field.
+    .addFields({
+      client: { $arrayElemAt: ['$client', 0] }
+    })
+    .group({
+      _id: { courier: '$courier' },
+      rides: { $push: '$$ROOT' }
+    })
+    .lookup({
       from: 'couriers',
-      localField: 'courier',
+      localField: '_id.courier',
       foreignField: '_id',
       as: 'courier'
     })
     // lookup stage always gives an array. Un-arrayify the courier field.
     .addFields({
       courier: { $arrayElemAt: ['$courier', 0] }
-    })
-    .group({
-      _id: { courier: '$courier' },
-      rides: { $push: '$$ROOT' }
     })
     .exec();
 }

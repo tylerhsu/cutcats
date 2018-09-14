@@ -74,7 +74,7 @@ function generateInvoices (req, res, next) {
     .then(ridesByClient => {
       const clientInvoices = ridesByClient
         .map(rideGroup => {
-          return new ClientInvoice(rideGroup._id.client, rideGroup.rides, periodStart, periodEnd);
+          return new ClientInvoice(rideGroup.client, rideGroup.rides, periodStart, periodEnd);
         })
         .filter(clientInvoice => {
           return clientInvoice.getInvoiceTotal() > 0;
@@ -96,19 +96,19 @@ function getRidesByClient(fromDate, toDate) {
       },
       deliveryStatus: 'complete'
     })
+    .group({
+      _id: { client: '$client' },
+      rides: { $push: '$$ROOT' }
+    })
     .lookup({
       from: 'clients',
-      localField: 'client',
+      localField: '_id.client',
       foreignField: '_id',
       as: 'client'
     })
     // lookup stage always gives an array. Un-arrayify the client field.
     .addFields({
       client: { $arrayElemAt: ['$client', 0] }
-    })
-    .group({
-      _id: { client: '$client' },
-      rides: { $push: '$$ROOT' }
     })
     .exec();
 }
