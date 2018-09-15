@@ -12,12 +12,12 @@ describe('AccountingPeriod', function() {
     accountingPeriod.periodStart.should.eql(periodStart);
     accountingPeriod.periodEnd.should.be.a.Date();
     accountingPeriod.periodEnd.should.eql(periodEnd);
+    accountingPeriod.rides.should.be.an.Array();
     accountingPeriod.ridesInPeriod.should.be.an.Array();
-    accountingPeriod.ridesInMonth.should.be.an.Array();
     accountingPeriod.isMonthEnd.should.be.a.Boolean();
   });
 
-  it('this.ridesInPeriod and this.ridesInMonth get set correctly', function() {
+  it('this.ridesInPeriod gets set correctly', function() {
     const rides = [
       fixtureModel('Ride', { readyTime: new Date('2000-1-1') }),
       fixtureModel('Ride', { readyTime: new Date('2000-1-5') }),
@@ -27,7 +27,7 @@ describe('AccountingPeriod', function() {
     const periodEnd = new Date('2000-1-6');
     const accountingPeriod = new AccountingPeriod(rides, periodStart, periodEnd);
     accountingPeriod.ridesInPeriod.should.have.length(2);
-    accountingPeriod.ridesInMonth.should.have.length(3);
+    accountingPeriod.rides.should.have.length(3);
     accountingPeriod.ridesInPeriod.map(getId).should.containEql(getId(rides[0]));
     accountingPeriod.ridesInPeriod.map(getId).should.containEql(getId(rides[1]));
   });
@@ -69,17 +69,5 @@ describe('AccountingPeriod', function() {
     const periodEnd = new Date('2000-1-6');
     const accountingPeriod = new AccountingPeriod(rides, periodStart, periodEnd);
     accountingPeriod.getNumRidesInPeriod().should.eql(2);
-  });
-
-  it('this.getNumRidesInMonth() returns the number of rides that were passed to the constructor, irrespective of periodStart and periodEnd', function() {
-    const rides = [
-      fixtureModel('Ride', { readyTime: new Date('2000-1-1') }),
-      fixtureModel('Ride', { readyTime: new Date('2000-1-5') }),
-      fixtureModel('Ride', { readyTime: new Date('2000-1-10') })
-    ];
-    const periodStart = new Date('2000-1-1');
-    const periodEnd = new Date('2000-1-6');
-    const accountingPeriod = new AccountingPeriod(rides, periodStart, periodEnd);
-    accountingPeriod.getNumRidesInMonth().should.eql(3);
   });
 });

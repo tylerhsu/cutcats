@@ -2,11 +2,11 @@ const moment = require('moment');
 const AWS = require('aws-sdk');
 
 class AccountingPeriod {
-  constructor(ridesInMonth, periodStart, periodEnd, lambda) {
+  constructor(rides, periodStart, periodEnd, lambda) {
     this.periodStart = new Date(periodStart);
     this.periodEnd = new Date(periodEnd);
-    this.ridesInMonth = ridesInMonth;
-    this.ridesInPeriod = ridesInMonth.filter(ride => {
+    this.rides = rides;
+    this.ridesInPeriod = rides.filter(ride => {
       const readyTime = new Date(ride.readyTime);
       return readyTime >= this.periodStart && readyTime < this.periodEnd;
     });
@@ -22,10 +22,6 @@ class AccountingPeriod {
     return this.ridesInPeriod.length;
   }
 
-  getNumRidesInMonth() {
-    return this.ridesInMonth.length;
-  }
-
   getPdfDocDefinition() {
     return {};
   }
@@ -35,7 +31,7 @@ class AccountingPeriod {
       this.lambda.invoke({
         FunctionName: process.env.PDF_SERVICE,
         InvocationType: 'RequestResponse',
-        Payload: JSON.stringify(this.getPdfDocDefinition)
+        Payload: JSON.stringify(this.getPdfDocDefinition())
       }, (err, response) => {
         if (err) {
           reject(new Error(err));

@@ -2,6 +2,15 @@ import ClientInvoice from './ClientInvoice';
 import { fixtureModel, fixtureModelArray } from '../../models/fixtures';
 
 describe('ClientInvoice', function() {
+  it('constructor assigns the expected member variables', function() {
+    const client = fixtureModel('Client');
+    const rides = fixtureModelArray('Ride', 3);
+    const periodStart = new Date('2000-1-1');
+    const periodEnd = new Date('2000-1-2');
+    const clientInvoice = new ClientInvoice(client, rides, periodStart, periodEnd);
+    clientInvoice.ridesInMonth.should.be.an.Array();
+  });
+  
   it('this.getClientName() returns a string', function() {
     const client = fixtureModel('Client');
     const rides = [];
@@ -9,6 +18,19 @@ describe('ClientInvoice', function() {
     const periodEnd = new Date('2000-1-1');
     const clientInvoice = new ClientInvoice(client, rides, periodStart, periodEnd);
     clientInvoice.getClientName().should.be.a.String();
+  });
+
+  it('this.getNumRidesInMonth() returns the number of rides that were passed to the constructor, irrespective of periodStart and periodEnd', function() {
+    const client = fixtureModel('Client');
+    const rides = [
+      fixtureModel('Ride', { readyTime: new Date('2000-1-1') }),
+      fixtureModel('Ride', { readyTime: new Date('2000-1-5') }),
+      fixtureModel('Ride', { readyTime: new Date('2000-1-10') })
+    ];
+    const periodStart = new Date('2000-1-1');
+    const periodEnd = new Date('2000-1-6');
+    const clientInvoice = new ClientInvoice(client, rides, periodStart, periodEnd);
+    clientInvoice.getNumRidesInMonth().should.eql(3);
   });
 
   describe('this.getAdminFee() ', function() {
@@ -170,6 +192,8 @@ describe('ClientInvoice', function() {
     const periodStart = new Date('2000-1-16');
     const periodEnd = new Date('2000-1-31');
     const clientInvoice = new ClientInvoice(client, rides, periodStart, periodEnd);
-    clientInvoice.getPdfDocDefinition().should.be.an.Object();
+    const docDefinition = clientInvoice.getPdfDocDefinition();
+    docDefinition.should.be.an.Object();
+    docDefinition.should.have.keys('info', 'content');
   });
 });

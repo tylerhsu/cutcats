@@ -10,6 +10,7 @@ class ClientInvoice extends AccountingPeriod {
   constructor(client, ridesInMonth, periodStart, periodEnd, lambda) {
     super(ridesInMonth, periodStart, periodEnd, lambda);
     this.client = client;
+    this.ridesInMonth = this.rides;
     this.getAdminFee = explainable(this.getAdminFee.bind(this));
     this.getTipTotal = explainable(this.getTipTotal.bind(this));
     this.getFeeTotal = explainable(this.getFeeTotal.bind(this));
@@ -18,6 +19,10 @@ class ClientInvoice extends AccountingPeriod {
 
   getClientName() {
     return this.client.name;
+  }
+
+  getNumRidesInMonth() {
+    return this.ridesInMonth.length;
   }
 
   getAdminFee() {

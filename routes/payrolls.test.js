@@ -223,24 +223,6 @@ describe('payrolls routes', function () {
         });
     });
 
-    it('each courier payroll contains a count of that courier\'s rides for the entire month', function() {
-      const client = fixtureModel('Client');
-      const courier = fixtureModel('Courier');
-      const commonRideAttrs = { readyTime: new Date('2000-1-1'), deliveryStatus: 'complete', courier, client };
-      const rides = fixtureModelArray('Ride', commonRideAttrs, 3);
-      this.req.query.periodStart = new Date('2000-1-15');
-      this.req.query.periodEnd = new Date('2000-1-31');
-      return save(client, courier, rides)
-        .then(() => {
-          return payrollRoutes.generatePaystubs(this.req, this.res, sinon.stub());
-        })
-        .then(() => {
-          this.req.courierPaystubs.should.have.length(1);
-          this.req.courierPaystubs[0].ridesInPeriod.should.have.length(0);
-          this.req.courierPaystubs[0].ridesInMonth.should.have.length(3);
-        });
-    });
-
     it('produces a QuickbooksPayroll', function() {
       const courier = fixtureModel('Courier');
       const rides = fixtureModelArray('Ride', 3);

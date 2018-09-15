@@ -58,8 +58,6 @@ function downloadPayroll(s3) {
 function generatePaystubs (req, res, next) {
   const periodStart = reportUtils.parseDate(req.query.periodStart);
   const periodEnd = reportUtils.parseDate(req.query.periodEnd);
-  const monthStart = moment(periodStart).startOf('month').toDate();
-  const monthEnd = moment(periodEnd).endOf('month').toDate();
   
   if (isNaN(periodStart.valueOf())) {
     throw error('Start date is not a recognizable date', 400);
@@ -69,8 +67,7 @@ function generatePaystubs (req, res, next) {
     throw error('End date is not a recognizable date', 400);
   }
 
-  // Get rides for the entire month because some invoicing calculations need them all regardless of the period boundaries.
-  return getRidesByCourier(monthStart, monthEnd)
+  return getRidesByCourier(periodStart, periodEnd)
     .then(ridesByCourier => {
       const courierPaystubs = ridesByCourier
         .map(rideGroup => {
@@ -79,7 +76,7 @@ function generatePaystubs (req, res, next) {
         .filter(courierPaystub => {
           return courierPaystub.getPaystubTotal() > 0;
         });
-      const quickbooksPayroll = new QuickbooksPayroll(courierPaystubs, periodStart, periodEnd, monthStart, monthEnd);
+      const quickbooksPayroll = new QuickbooksPayroll(courierPaystubs, periodStart, periodEnd);
       req.courierPaystubs = courierPaystubs;
       req.quickbooksPayroll = quickbooksPayroll;
       next();

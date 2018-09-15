@@ -14,12 +14,10 @@ const PRICE = 'Price';
 const TO_BE_EMAILED = 'To Be E-Mailed';
 
 class QuickbooksPayroll {
-  constructor(courierPaystubs, periodStart, periodEnd, monthStart, monthEnd) {
+  constructor(courierPaystubs, periodStart, periodEnd) {
     this.courierPaystubs = courierPaystubs;
     this.periodStart = new Date(periodStart);
     this.periodEnd = new Date(periodEnd);
-    this.monthStart = new Date(monthStart);
-    this.monthEnd = new Date(monthEnd);
   }
 
   getOrderedFields() {
@@ -64,16 +62,6 @@ class QuickbooksPayroll {
     });
   }
 
-  getAdminFeeRow(courierPaystub, refNumber) {
-    return this.orderFields({
-      ...this.getCommonFields(courierPaystub, refNumber),
-      [MEMO]: `Administrative Fees ${moment(this.monthStart).format('MM/DD/YYYY')}-${moment(this.monthEnd).format('MM/DD/YYYY')}`,
-      [ITEM]: `Monthly Admin Fee:$${courierPaystub.getAdminFee()} Monthly Fee`,
-      [DESCRIPTION]: `${moment(this.monthStart).format('MM/DD/YYYY')}-${moment(this.monthEnd).format('MM/DD/YYYY')}`,
-      [PRICE]: courierPaystub.getAdminFee(),
-    });
-  }
-
   orderFields(row) {
     const numFieldsInRow = Object.keys(row).length;
     const numFieldsExpected = Object.keys(this.getOrderedFields()).length;
@@ -88,12 +76,12 @@ class QuickbooksPayroll {
 
   renderCsv() {
     const rows = [];
-    this.courierPaystubs.forEach((courierPaystub, n) => {
-      rows.push(this.getDeliveryFeeRow(courierPaystub, n));
-      if (courierPaystub.isMonthEnd) {
-        rows.push(this.getAdminFeeRow(courierPaystub, n));
-      }
-    });
+    /* this.courierPaystubs.forEach((courierPaystub, n) => {
+     *   rows.push(this.getDeliveryFeeRow(courierPaystub, n));
+     *   if (courierPaystub.isMonthEnd) {
+     *     rows.push(this.getAdminFeeRow(courierPaystub, n));
+     *   }
+     * });*/
     return new Promise((resolve, reject) => {
       csv.stringify(rows, { header: true }, (err, data) => {
         if (err) {
