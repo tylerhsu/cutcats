@@ -15,57 +15,44 @@ class CourierPaystub extends AccountingPeriod {
       }
     });
     this.courier = courier;
+    this.paidRidesInPeriod = this.ridesInPeriod.filter(ride => ride.paymentType === 'paid');
+    this.invoicedRidesInPeriod = this.ridesInPeriod.filter(ride => ride.paymentType === 'invoiced');
+    // totals
     this.getTipTotal = explainable(this.getTipTotal.bind(this));
     this.getFeeTotal = explainable(this.getFeeTotal.bind(this));
     this.getDeliveryFeeTotal = explainable(this.getDeliveryFeeTotal.bind(this));
+    // collected by rider
+    this.getTipsCollectedByRider = explainable(this.getTipsCollectedByRider.bind(this));
+    this.getFeesCollectedByRider = explainable(this.getFeesCollectedByRider.bind(this));
+    this.getDeliveryFeeCollectedByRider = explainable(this.getDeliveryFeeCollectedByRider.bind(this));
+    // owed to rider
+    this.getTipsOwedToRider = explainable(this.getTipsOwedToRider.bind(this));
+    this.getFeesOwedToRider = explainable(this.getFeesOwedToRider.bind(this));
+    this.getDeliveryFeeOwedToRider = explainable(this.getDeliveryFeeOwedToRider.bind(this));
+    
+    this.getToCC = explainable(this.getToCC.bind(this));
+    this.getToCCTotal = explainable(this.getToCCTotal.bind(this));
+    this.getRadioFee = explainable(this.getRadioFee.bind(this));
   }
 
   getCourierName() {
     return this.courier.name;
   }
 
-  getTipsCollectedByRider () {
-    return _.chain(this.ridesInPeriod)
-      .filter(ride => ride.client.paymentType === 'paid')
-      .sumBy(this.ridesInPeriod, ride => ride.tip || 0)
-      .value();
+  getTipTotal(rides) {
+    rides = rides || this.ridesInPeriod;
+    return [
+      _.sumBy(rides, ride => ride.tip || 0),
+      `Tips from ${rides.length} rides`
+    ];
   }
 
-  getTipsOwedToRider () {
-    return _.chain(this.ridesInPeriod)
-      .filter(ride => ride.client.paymentType === 'invoiced')
-      .sumBy(this.ridesInPeriod, ride => ride.tip || 0)
-      .value();
-  }
-
-  getTipTotal() {
-    return _.sumBy(this.ridesInPeriod, ride => ride.tip || 0);
-  }
-
-  getFeesCollectedByRider () {
-    return _.chain(this.ridesInPeriod)
-      .filter(ride => ride.client.paymentType === 'paid')
-      .sumBy(this.ridesInPeriod, ride => ride.deliveryFee || 0)
-      .value();
-  }
-
-  getFeesOwedToRider () {
-    return _.chain(this.ridesInPeriod)
-      .filter(ride => ride.client.paymentType === 'invoiced')
-      .sumBy(this.ridesInPeriod, ride => ride.deliveryFee || 0)
-      .value();
-  }
-
-  getFeeTotal() {
-    return _.sumBy(this.ridesInPeriod, ride => ride.deliveryFee || 0);
-  }
-
-  getDeliveryFeeCollectedByRider() {
-    return this.getTipsCollectedByRider() + this.getFeesCollectedByRider();
-  }
-
-  getDeliveryFeeOwedToRider() {
-    return this.getTipsOwedToRider() + this.getFeesOwedToRider();
+  getFeeTotal(rides) {
+    rides = rides || this.ridesInPeriod;
+    return [
+      _.sumBy(rides, ride => ride.deliveryFee || 0),
+      `Delivery fees from ${rides} rides`
+    ];
   }
 
   getDeliveryFeeTotal() {
@@ -75,15 +62,82 @@ class CourierPaystub extends AccountingPeriod {
     ];
   }
 
+  getTipsCollectedByRider () {
+    return [
+      this.getTipTotal(this.paidRidesInPeriod),
+      `Tips from ${this.paidRidesInPeriod.length} paid rides`
+    ];
+  }
+
+  getFeesCollectedByRider () {
+    return [
+      this.getFeeTotal(this.paidRidesInPeriod),
+      `Delivery fees from ${this.paidRidesInPeriod} paid rides`
+    ];
+  }
+
+  getDeliveryFeeCollectedByRider () {
+    return [
+      this.getTipsCollectedByRider() + this.getFeesCollectedByRider(),
+      'Tips + fees from paid rides'
+    ];
+  }
+
+  getTipsOwedToRider () {
+    return this.getTipTotal() - this.getTipsCollectedByRider();
+  }
+
+  getFeesOwedToRider () {
+    return this.getFeeTotal() - this.getFeesCollectedByRider();
+  }
+
+  getDeliveryFeeOwedToRider() {
+    return this.getTipsOwedToRider() + this.getFeesOwedToRider();
+  }
+
+  getToCC(ride) {
+    switch(ride.client.deliveryFeeStructure) {
+    case 'on demand food':
+      // falls through
+    case 'legacy on demand food':
+      // falls through
+    case 'catering food':
+      return [
+        Math.floor(ride.fee * .25),
+        `25% of $${currency(ride.fee)} fee rounded down`
+      ];
+    case 'cargo/wholesale/commissary':
+      return [
+        Math.floor(ride.fee * .12),
+        `12% of $${currency(ride.fee)} fee rounded down`
+      ];
+    default:
+      throw new Error(`Don't know how to calculate toCC for a ride whose client's delivery fee structure is "${ride.client.deliveryFeeStructure}"`);
+    }
+  }
+
+  getToCCTotal() {
+    return _.sumBy(this.ridesInPeriod, ride => this.getToCC(ride));
+  }
+
+  getRadioFee() {
+    if (this.courier.monthlyRadioRental && this.isMonthEnd) {
+      return 20;
+    } else {
+      return [0, this.courier.monthlyRadioRental ? 'No radio fee on mid-month paystub' : ''];
+    }
+  }
+
   getPaystubTotal () {
-    return 1;
+    return this.getDeliveryFeeOwedToRider() - this.getToCCTotal() - this.getRadioFee();
   }
 
   getPdfDocDefinition () {
     const title = `${this.courier.name} Paystub, ${this.getDateRange()}`;
-    const { value: adminFee, reason: adminFeeReason } = this.getAdminFee({ explain: true });
     const { value: tipTotal, reason: tipTotalReason } = this.getTipTotal({ explain: true });
     const { value: feeTotal, reason: feeTotalReason } = this.getFeeTotal({ explain: true });
+    const { value: deliveryFeeCollectedByRider, reason: deliveryFeeCollectedByRiderReason } = this.getDeliveryFeeCollectedByRider({ explain: true });
+    const { value: radioFee, reason: radioFeeReason } = this.getRadioFee({ explain: true });
     return {
       info: {
         title,
@@ -132,18 +186,39 @@ class CourierPaystub extends AccountingPeriod {
             widths: [200, '*'],
             body: [
               [
-                { text: ['Admin Fee', { text: adminFeeReason ? ` (${adminFeeReason.toLowerCase()})` : '', color: 'gray' }] },
-                { text: currency(adminFee), alignment: 'right' }
+                { text: ['Delivery Total Collected By Rider', { text: deliveryFeeCollectedByRiderReason ? ` (${deliveryFeeCollectedByRiderReason.toLowerCase()})` : '', color: 'gray' }] },
+                { text: `(${currency(deliveryFeeCollectedByRider)})`, alignment: 'right' }
               ],
               [
-                { text: 'Total Paystub', bold: true },
+                { text: 'Delivery Total Owed To Rider', bold: true },
+                { text: currency(this.getDeliveryFeeOwedToRider()), alignment: 'right', bold: true }
+              ],
+            ]
+          }
+        },
+        {
+          layout: 'headerLineOnly',
+          margin: [0, 0, 0, 20],
+          table: {
+            headerRows: 2,
+            widths: [200, '*'],
+            body: [
+              [
+                { text: 'To Cut Cats' },
+                { text: `(${currency(this.getToCCTotal())})`, alignment: 'right' }
+              ],
+              [
+                { text: ['Radio Fee', { text: radioFeeReason ? ` (${radioFeeReason.toLowerCase()})` : '', color: 'gray' }] },
+                { text: `(${currency(radioFee)})`, alignment: 'right' }
+              ],
+              [
+                { text: 'Total Rider Payout', bold: true },
                 { text: currency(this.getPaystubTotal()), alignment: 'right', bold: true }
               ],
             ]
           }
         },
         `Rides this period: ${this.getNumRidesInPeriod()}`,
-        `Rides this month: ${this.getNumRidesInMonth()}`,
         // Ride breakdown table
         {
           layout: 'headerLineOnly',

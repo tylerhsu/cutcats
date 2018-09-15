@@ -5,7 +5,8 @@ const courierSchema = new mongoose.Schema({
   phone: { type: String },
   email: { type: String, index: true },
   status: { type: String, enum: ['member', 'guest'], lowercase: true },
-  startDate: { type: Date }
+  startDate: { type: Date },
+  monthlyRadioRental: { type: Boolean, required: true, default: true }
 }, {
   timestamps: true
 });

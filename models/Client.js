@@ -13,6 +13,7 @@ const clientSchema = new mongoose.Schema({
       'fixedAdminFee is required when adminFeeType is "fixed".'
     ]
   },
+  deliveryFeeStructure: { type: String, enum: ['on demand food', 'legacy on demand food', 'catering food', 'cargo/wholesale/commissary'], required: true },
   billingEmail: { type: String }
 }, {
   timestamps: true

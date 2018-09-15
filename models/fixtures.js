@@ -27,7 +27,8 @@ const FIXTURES = {
   Client: () => ({
     name: `client ${new ObjectID()} name`,
     paymentType: 'invoiced',
-    adminFeeType: 'scale'
+    adminFeeType: 'scale',
+    deliveryFeeStructure: 'on demand food'
   }),
   Courier: () => ({
     name: 'fixture courier',
