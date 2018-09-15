@@ -7,7 +7,9 @@ const models = require('../models');
 const boilerplate = require('./boilerplate');
 const reportUtils = require('./util/reportUtils');
 const CourierPaystub = require('./util/CourierPaystub');
-const QuickbooksPayroll = require('./util/QuickbooksPayroll');
+const QuickbooksPayrollCredits = require('./util/QuickbooksPayrollCredits');
+const QuickbooksPayrollDebits = require('./util/QuickbooksPayrollDebits');
+const QuickbooksPayrollNonInvoicedIncome = require('./util/QuickbooksPayrollNonInvoicedIncome');
 const error = require('./util/error');
 const AWS = require('aws-sdk');
 
@@ -76,9 +78,13 @@ function generatePaystubs (req, res, next) {
         .filter(courierPaystub => {
           return courierPaystub.getPaystubTotal() > 0;
         });
-      const quickbooksPayroll = new QuickbooksPayroll(courierPaystubs, periodStart, periodEnd);
+      const quickbooksPayrollCredits = new QuickbooksPayrollCredits(courierPaystubs, periodStart, periodEnd);
+      const quickbooksPayrollDebits = new QuickbooksPayrollDebits(courierPaystubs, periodStart, periodEnd);
+      const quickbooksPayrollNonInvoicedIncome = new QuickbooksPayrollNonInvoicedIncome(courierPaystubs, periodStart, periodEnd);
       req.courierPaystubs = courierPaystubs;
-      req.quickbooksPayroll = quickbooksPayroll;
+      req.quickbooksPayrollCredits = quickbooksPayrollCredits;
+      req.quickbooksPayrollDebits = quickbooksPayrollDebits;
+      req.quickbooksPayrollNonInvoicedIncome = quickbooksPayrollNonInvoicedIncome;
       next();
     })
     .catch(next);
@@ -122,13 +128,25 @@ function getRidesByCourier(fromDate, toDate) {
 
 function createPayrollZip(req, res, next) {
   req.payrollZip = new yazl.ZipFile();
-  req.payrollZipSize = addFilesToZip();
-  next();
+  addFilesToZip()
+    .then(zipSize => {
+      req.payrollZipSize = zipSize;
+      next();
+    })
+    .catch(next);
   
   function addFilesToZip() {
-    const addQuickbooksCsv = req.quickbooksPayroll.renderCsv()
+    const addQuickbooksCreditsCsv = req.quickbooksPayrollCredits.renderCsv()
       .then(csvString => {
-        req.payrollZip.addBuffer(new Buffer(csvString), 'quickbooks.csv', { compress: false });
+        req.payrollZip.addBuffer(new Buffer(csvString), 'Quickbooks - Credits.csv', { compress: false });
+      });
+    const addQuickbooksDebitsCsv = req.quickbooksPayrollDebits.renderCsv()
+      .then(csvString => {
+        req.payrollZip.addBuffer(new Buffer(csvString), 'Quickbooks - Debits.csv', { compress: false });
+      });
+    const addQuickbooksNonInvoicedIncomeCsv = req.quickbooksPayrollNonInvoicedIncome.renderCsv()
+      .then(csvString => {
+        req.payrollZip.addBuffer(new Buffer(csvString), 'Quickbooks - Non-Invoiced Income.csv', { compress: false });
       });
     const addPdfs = req.courierPaystubs.map(courierPaystub => {
       return courierPaystub.renderPdf()
@@ -137,7 +155,9 @@ function createPayrollZip(req, res, next) {
         });
     });
     return Promise.all([
-      addQuickbooksCsv,
+      addQuickbooksCreditsCsv,
+      addQuickbooksDebitsCsv,
+      addQuickbooksNonInvoicedIncomeCsv,
       ...addPdfs
     ])
       .then(() => {
@@ -167,24 +187,21 @@ function savePayrollZip(s3) {
     const periodEnd = reportUtils.parseDate(req.query.periodEnd);
     const formatDate = (date) => moment(date).format('M-D-YYYY');
     const filename = `paystubs-${formatDate(periodStart)}-${formatDate(periodEnd)}.zip`;
-    return req.payrollZipSize
-      .then(zipSize => {
-        return new Promise((resolve, reject) => {
-          s3.putObject({
-            Bucket: process.env.S3_BUCKET,
-            Key: filename,
-            ACL: 'private',
-            Body: req.payrollZip.outputStream,
-            ContentLength: zipSize
-          }, (err, data) => {
-            if (err) {
-              reject(new Error(err));
-            } else {
-              resolve(data);
-            }
-          });
-        });
-      })
+    return new Promise((resolve, reject) => {
+      s3.putObject({
+        Bucket: process.env.S3_BUCKET,
+        Key: filename,
+        ACL: 'private',
+        Body: req.payrollZip.outputStream,
+        ContentLength: req.payrollZipSize
+      }, (err, data) => {
+        if (err) {
+          reject(new Error(err));
+        } else {
+          resolve(data);
+        }
+      });
+    })
       .then(() => {
         return new models.Payroll({
           periodStart,

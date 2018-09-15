@@ -6,7 +6,9 @@ import models from '../models';
 import yazl from 'yazl';
 import payrollRoutes from './payrolls';
 import CourierPaystub from './util/CourierPaystub';
-import QuickbooksPayroll from './util/QuickbooksPayroll';
+import QuickbooksPayrollCredits from './util/QuickbooksPayrollCredits';
+import QuickbooksPayrollDebits from './util/QuickbooksPayrollDebits';
+import QuickbooksPayrollNonInvoicedIncome from './util/QuickbooksPayrollNonInvoicedIncome';
 import { save, getId, idsShouldBeEqual } from './util/testUtils';
 import { fixtureModel, fixtureModelArray } from '../models/fixtures';
 
@@ -44,7 +46,6 @@ describe('payrolls routes', function () {
       const client = fixtureModel('Client');
       const courier = fixtureModel('Courier');
       const rides = fixtureModelArray('Ride', { courier, client }, 3);
-      const next = sinon.stub();
       const lambda = {
         invoke: sinon.stub().callsArgWith(1, null, { Payload: '{ "data": [] }' })
       };
@@ -53,22 +54,25 @@ describe('payrolls routes', function () {
       this.req.courierPaystubs = [
         new CourierPaystub(courier, rides, this.req.query.periodStart, this.req.query.periodEnd, lambda)
       ];
-      this.req.quickbooksPayroll = new QuickbooksPayroll(this.req.courierPaystubs, this.req.query.periodStart, this.req.query.periodEnd, new Date('2000-1-1'), new Date('2000-1-1'));
-      payrollRoutes.createPayrollZip(this.req, this.res, next);
-      next.calledOnce.should.be.true();
-      this.req.payrollZip.should.be.ok();
-      return new Promise((resolve, reject) => {
-        this.req.payrollZip.outputStream.on('data', () => {});
-        this.req.payrollZip.outputStream.on('finish', resolve);
-        this.req.payrollZip.outputStream.on('error', reject);
-      });
+      this.req.quickbooksPayrollCredits = new QuickbooksPayrollCredits(this.req.courierPaystubs, this.req.query.periodStart, this.req.query.periodEnd);
+      this.req.quickbooksPayrollDebits = new QuickbooksPayrollDebits(this.req.courierPaystubs, this.req.query.periodStart, this.req.query.periodEnd);
+      this.req.quickbooksPayrollNonInvoicedIncome = new QuickbooksPayrollNonInvoicedIncome(this.req.courierPaystubs, this.req.query.periodStart, this.req.query.periodEnd);
+      return new Promise(resolve => payrollRoutes.createPayrollZip(this.req, this.res, resolve))
+        .then(err => {
+          if (err) throw err;
+          this.req.payrollZip.should.be.ok();
+          return new Promise((resolve, reject) => {
+            this.req.payrollZip.outputStream.on('data', () => {});
+            this.req.payrollZip.outputStream.on('finish', resolve);
+            this.req.payrollZip.outputStream.on('error', reject);
+          });
+        });
     });
 
     it('assigns req.payrollZipSize a promise that resolves with a number', function() {
       const client = fixtureModel('Client');
       const courier = fixtureModel('Courier');
       const rides = fixtureModelArray('Ride', { courier, client }, 3);
-      const next = sinon.stub();
       const lambda = {
         invoke: sinon.stub().callsArgWith(1, null, { Payload: '{ "data": [] }' })
       };
@@ -77,12 +81,14 @@ describe('payrolls routes', function () {
       this.req.courierPaystubs = [
         new CourierPaystub(courier, rides, this.req.query.periodStart, this.req.query.periodEnd, lambda)
       ];
-      this.req.quickbooksPayroll = new QuickbooksPayroll(this.req.courierPaystubs, this.req.query.periodStart, this.req.query.periodEnd, new Date('2000-1-1'), new Date('2000-1-1'));
-      payrollRoutes.createPayrollZip(this.req, this.res, next);
-      this.req.payrollZipSize.should.be.ok();
-      return this.req.payrollZipSize.then(result => {
-        result.should.be.a.Number();
-      });
+      this.req.quickbooksPayrollCredits = new QuickbooksPayrollCredits(this.req.courierPaystubs, this.req.query.periodStart, this.req.query.periodEnd);
+      this.req.quickbooksPayrollDebits = new QuickbooksPayrollDebits(this.req.courierPaystubs, this.req.query.periodStart, this.req.query.periodEnd);
+      this.req.quickbooksPayrollNonInvoicedIncome = new QuickbooksPayrollNonInvoicedIncome(this.req.courierPaystubs, this.req.query.periodStart, this.req.query.periodEnd);
+      return new Promise(resolve => payrollRoutes.createPayrollZip(this.req, this.res, resolve))
+        .then(err => {
+          if (err) throw err;
+          this.req.payrollZipSize.should.be.a.Number();
+        });
     });
   });
 
@@ -223,7 +229,7 @@ describe('payrolls routes', function () {
         });
     });
 
-    it('produces a QuickbooksPayroll', function() {
+    it('produces a QuickbooksPayrollCredits, QuickbooksPayrollDebits, and QuickbooksPayrollNonInvoicedIncome', function() {
       const courier = fixtureModel('Courier');
       const rides = fixtureModelArray('Ride', 3);
       this.req.query.periodStart = new Date('2000-1-15');
@@ -233,7 +239,9 @@ describe('payrolls routes', function () {
           return payrollRoutes.generatePaystubs(this.req, this.res, sinon.stub());
         })
         .then(() => {
-          this.req.quickbooksPayroll.should.be.ok();
+          this.req.quickbooksPayrollCredits.should.be.ok();
+          this.req.quickbooksPayrollDebits.should.be.ok();
+          this.req.quickbooksPayrollNonInvoicedIncome.should.be.ok();
         });
     });
   });

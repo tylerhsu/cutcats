@@ -1,5 +1,5 @@
-const csv = require('csv');
 const moment = require('moment');
+const QuickbooksExport = require('./QuickbooksExport');
 
 const CUSTOMER = 'Customer';
 const TRANSACTION_DATE = 'Transaction Date';
@@ -13,11 +13,10 @@ const DESCRIPTION = 'Description';
 const PRICE = 'Price';
 const TO_BE_EMAILED = 'To Be E-Mailed';
 
-class QuickbooksInvoice {
+class QuickbooksInvoice extends QuickbooksExport {
   constructor(clientInvoices, periodStart, periodEnd, monthStart, monthEnd) {
+    super(periodStart, periodEnd);
     this.clientInvoices = clientInvoices;
-    this.periodStart = new Date(periodStart);
-    this.periodEnd = new Date(periodEnd);
     this.monthStart = new Date(monthStart);
     this.monthEnd = new Date(monthEnd);
   }
@@ -74,19 +73,7 @@ class QuickbooksInvoice {
     });
   }
 
-  orderFields(row) {
-    const numFieldsInRow = Object.keys(row).length;
-    const numFieldsExpected = Object.keys(this.getOrderedFields()).length;
-    if (numFieldsInRow !== numFieldsExpected) {
-      throw new Error(`Expected ${numFieldsExpected} but got ${numFieldsInRow}`);
-    }
-    return this.getOrderedFields().reduce((memo, fieldName) => {
-      memo[fieldName] = row[fieldName];
-      return memo;
-    }, {});
-  }
-
-  renderCsv() {
+  getCsvRows() {
     const rows = [];
     this.clientInvoices.forEach((clientInvoice, n) => {
       rows.push(this.getDeliveryFeeRow(clientInvoice, n));
@@ -94,15 +81,7 @@ class QuickbooksInvoice {
         rows.push(this.getAdminFeeRow(clientInvoice, n));
       }
     });
-    return new Promise((resolve, reject) => {
-      csv.stringify(rows, { header: true }, (err, data) => {
-        if (err) {
-          reject(new Error(err));
-        } else {
-          resolve(data);
-        }
-      });
-    });
+    return rows;
   }
 }
 

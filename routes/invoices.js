@@ -115,8 +115,12 @@ function getRidesByClient(fromDate, toDate) {
 
 function createInvoiceZip(req, res, next) {
   req.invoiceZip = new yazl.ZipFile();
-  req.invoiceZipSize = addFilesToZip();
-  next();
+  addFilesToZip()
+    .then(zipSize => {
+      req.invoiceZipSize = zipSize;
+      next();
+    })
+    .catch(next);
   
   function addFilesToZip() {
     const addQuickbooksCsv = req.quickbooksInvoice.renderCsv()
@@ -160,24 +164,21 @@ function saveInvoiceZip(s3) {
     const periodEnd = reportUtils.parseDate(req.query.periodEnd);
     const formatDate = (date) => moment(date).format('M-D-YYYY');
     const filename = `invoices-${formatDate(periodStart)}-${formatDate(periodEnd)}.zip`;
-    return req.invoiceZipSize
-      .then(zipSize => {
-        return new Promise((resolve, reject) => {
-          s3.putObject({
-            Bucket: process.env.S3_BUCKET,
-            Key: filename,
-            ACL: 'private',
-            Body: req.invoiceZip.outputStream,
-            ContentLength: zipSize
-          }, (err, data) => {
-            if (err) {
-              reject(new Error(err));
-            } else {
-              resolve(data);
-            }
-          });
-        });
-      })
+    return new Promise((resolve, reject) => {
+      s3.putObject({
+        Bucket: process.env.S3_BUCKET,
+        Key: filename,
+        ACL: 'private',
+        Body: req.invoiceZip.outputStream,
+        ContentLength: req.invoiceZipSize
+      }, (err, data) => {
+        if (err) {
+          reject(new Error(err));
+        } else {
+          resolve(data);
+        }
+      });
+    })
       .then(() => {
         return new models.Invoice({
           periodStart,

@@ -43,7 +43,6 @@ describe('invoices routes', function () {
     it('assigns req.invoiceZip and calls next()', function() {
       const client = fixtureModel('Client');
       const rides = fixtureModelArray('Ride', { client }, 3);
-      const next = sinon.stub();
       const lambda = {
         invoke: sinon.stub().callsArgWith(1, null, { Payload: '{ "data": [] }' })
       };
@@ -53,20 +52,21 @@ describe('invoices routes', function () {
         new ClientInvoice(client, rides, this.req.query.periodStart, this.req.query.periodEnd, lambda)
       ];
       this.req.quickbooksInvoice = new QuickbooksInvoice(this.req.clientInvoices, this.req.query.periodStart, this.req.query.periodEnd, new Date('2000-1-1'), new Date('2000-1-1'));
-      invoiceRoutes.createInvoiceZip(this.req, this.res, next);
-      next.calledOnce.should.be.true();
-      this.req.invoiceZip.should.be.ok();
-      return new Promise((resolve, reject) => {
-        this.req.invoiceZip.outputStream.on('data', () => {});
-        this.req.invoiceZip.outputStream.on('finish', resolve);
-        this.req.invoiceZip.outputStream.on('error', reject);
-      });
+      return new Promise(resolve => invoiceRoutes.createInvoiceZip(this.req, this.res, resolve))
+        .then(err => {
+          if (err) throw err;
+          this.req.invoiceZip.should.be.ok();
+          return new Promise((resolve, reject) => {
+            this.req.invoiceZip.outputStream.on('data', () => {});
+            this.req.invoiceZip.outputStream.on('finish', resolve);
+            this.req.invoiceZip.outputStream.on('error', reject);
+          });
+        });
     });
 
-    it('assigns req.invoiceZipSize a promise that resolves with a number', function() {
+    it('assigns req.invoiceZipSize a number', function() {
       const client = fixtureModel('Client');
       const rides = fixtureModelArray('Ride', { client }, 3);
-      const next = sinon.stub();
       const lambda = {
         invoke: sinon.stub().callsArgWith(1, null, { Payload: '{ "data": [] }' })
       };
@@ -76,11 +76,11 @@ describe('invoices routes', function () {
         new ClientInvoice(client, rides, this.req.query.periodStart, this.req.query.periodEnd, lambda)
       ];
       this.req.quickbooksInvoice = new QuickbooksInvoice(this.req.clientInvoices, this.req.query.periodStart, this.req.query.periodEnd, new Date('2000-1-1'), new Date('2000-1-1'));
-      invoiceRoutes.createInvoiceZip(this.req, this.res, next);
-      this.req.invoiceZipSize.should.be.ok();
-      return this.req.invoiceZipSize.then(result => {
-        result.should.be.a.Number();
-      });
+      return new Promise(resolve => invoiceRoutes.createInvoiceZip(this.req, this.res, resolve))
+        .then(err => {
+          if (err) throw err;
+          this.req.invoiceZipSize.should.be.a.Number();
+        });
     });
   });
 
