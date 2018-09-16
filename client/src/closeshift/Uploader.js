@@ -55,7 +55,7 @@ export default class Uploader extends React.Component {
         {!this.props.file && (
           <DropZone
             multiple={false}
-            style={{ height: '5rem', border: '2px dashed lightgray', cursor: 'pointer' }}
+            style={{ height: '8rem', border: '2px dashed lightgray', cursor: 'pointer' }}
             className='d-flex w-100 justify-content-center align-items-center'
             activeClassName='bg-light'
             onDrop={this.handleDrop}
@@ -65,7 +65,7 @@ export default class Uploader extends React.Component {
               {this.state.loading ? (
                 <span>Validating...</span>
               ) : (
-                <span>Drag file here or click to browse</span>
+                <span>Drag TwinJet file here or click to browse</span>
               )}
             </div>
           </DropZone>

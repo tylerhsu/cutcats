@@ -8,7 +8,6 @@ const Busboy = require('busboy');
 const transform = require('stream-transform');
 const moment = require('moment');
 const reportUtils = require('./util/reportUtils');
-const error = require('./util/error');
 const boilerplate = require('./boilerplate');
 
 router.get('/', getRides);
@@ -75,29 +74,16 @@ function _getRidesQuery (req) {
   return query;
 }
 
-function importRides (req, res, next) {
-  let save = ['true', '1'].includes((req.query.save || '').toLowerCase());
-  let shiftId = req.query.shiftId;
-  if (save && !shiftId) {
-    return next(error('shiftId is required'));
-  }
-  let rideImporter = new RideImporter({
-    save,
-    fieldsForAll: { shift: shiftId }
-  });
-  const csvParser = csv.parse({
-    columns: true
-  });
-
-  const busboy = new Busboy({
-    headers: req.headers
-  });
+function importRides (req, res) {
+  const save = ['true', '1'].includes((req.query.save || '').toLowerCase());
+  const rideImporter = new RideImporter({ save });
+  const busboy = new Busboy({ headers: req.headers });
 
   req
     .pipe(busboy)
     .on('file', (fieldName, file) => {
       file
-        .pipe(csvParser)
+        .pipe(csv.parse({ columns: true }))
         .on('end', () => {
           rideImporter.markEnd();
         })
@@ -156,19 +142,10 @@ class RideImporter extends EventEmitter {
         callback();
       })
       .catch(err => {
-        const message = `Problem on row ${row + 1}: ${friendly(err.message)}\n`;
+        const message = `Problem on row ${row + 1}: ${err.message}\n`;
         this.emit('error', message);
         callback(null, message);
       });
-  }
-}
-
-function friendly (error) {
-  if (error.match(/duplicate key/)) {
-    const jobId = error.match(/"(.*)"/);
-    return `A record with job ID ${jobId[1]} has already been imported`;
-  } else {
-    return error;
   }
 }
 

@@ -8,6 +8,5 @@ router.use('/payrolls', require('./payrolls'));
 router.use('/invoices', require('./invoices'));
 router.use('/clients', require('./clients'));
 router.use('/zones', require('./zones'));
-router.use('/shifts', require('./shifts'));
 
 module.exports = router;

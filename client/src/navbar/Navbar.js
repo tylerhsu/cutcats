@@ -36,7 +36,7 @@ export default class Navbar extends React.Component {
           <Collapse isOpen={this.state.isOpen} navbar>
             <Nav navbar className="ml-auto text-center">
               <NavItem active={window.location.pathname === '/closeshift'}>
-                <NavLink href="/closeshift">Close Shift</NavLink>
+                <NavLink href="/closeshift">Import Rides</NavLink>
               </NavItem>
               <NavItem active={window.location.pathname === '/invoices'}>
                 <NavLink href="/invoices">Invoices</NavLink>

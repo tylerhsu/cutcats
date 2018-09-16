@@ -34,11 +34,6 @@ const FIXTURES = {
     name: 'fixture courier',
     radioCallNumber: 1,
     status: 'member'
-  }),
-  Shift: () => ({
-    amDispatcher: new ObjectID(),
-    pmDispatcher: new ObjectID(),
-    date: new Date('2000-01-01')
   })
 };
 
