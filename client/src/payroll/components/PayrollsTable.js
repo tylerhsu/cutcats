@@ -67,6 +67,9 @@ export class PayrollsTable extends React.Component {
         </div>
         <div className="row">
           <div className="col">
+            { this.props.error && (
+              <div className="text-danger">{this.props.error}</div>
+            )}
             { this.renderTable() }
           </div>
         </div>
@@ -76,7 +79,8 @@ export class PayrollsTable extends React.Component {
 }
 
 PayrollsTable.propTypes = {
-  payrolls: PropTypes.arrayOf(PropTypes.object).isRequired
+  payrolls: PropTypes.arrayOf(PropTypes.object).isRequired,
+  error: PropTypes.string
 };
 
 export default PayrollsTable;

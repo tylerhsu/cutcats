@@ -30,8 +30,8 @@ export class DateFilterContainer extends React.Component {
   render () {
     return (
       <DateRangePicker
-        startDate={moment(this.props.fromDate)}
-        endDate={moment(this.props.toDate)}
+        startDate={this.props.fromDate ? moment(this.props.fromDate) : null}
+        endDate={this.props.toDate ? moment(this.props.toDate) : null}
         startDateId="fromDate"
         endDateId="toDate"
         onDatesChange={this.onDatesChange}
@@ -46,8 +46,8 @@ export class DateFilterContainer extends React.Component {
 }
 
 DateFilterContainer.propTypes = {
-  fromDate: PropTypes.number.isRequired,
-  toDate: PropTypes.number.isRequired,
+  fromDate: PropTypes.number,
+  toDate: PropTypes.number,
   fetchPayrolls: PropTypes.func.isRequired
 };
 
