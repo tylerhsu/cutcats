@@ -23,9 +23,14 @@ describe('QuickbooksPayrollDebits', function() {
     beforeEach(function() {
       this.courier = fixtureModel('Courier');
       this.client = fixtureModel('Client');
-      this.rides = fixtureModelArray('Ride', { courier: this.courier, client: this.client }, 3);
+      this.rides = fixtureModelArray('Ride', {
+        courier: this.courier,
+        client: this.client,
+        readyTime: new Date('2000-1-2'),
+        deliveryFee: 4
+      }, 3);
       this.periodStart = new Date('2000-1-1');
-      this.periodEnd = new Date('2000-1-2');
+      this.periodEnd = new Date('2000-1-3');
     });
     
     it('returns an array', function() {

@@ -49,20 +49,25 @@ class QuickbooksPayrollNonInvoicedIncome extends QuickbooksExport {
   }
 
   getCsvRows() {
+    const rows = this.courierPaystubs
+      .map(courierPaystub => {
+        return this.getRow(courierPaystub);
+      })
+      .filter(row => {
+        return row[AMOUNT] !== 0;
+      });
     const topRow = this.orderFields({
       [NUM]: 1,
       [NAME]: '',
       [DATE]: moment(this.periodEnd).format('MM/DD/YYYY'),
       [MEMO]: 'Cash Rides',
       [ACCOUNT]: 'Sales Income:Delivery Fee Income',
-      [AMOUNT]: _.sumBy(this.courierPaystubs, courierPaystub => courierPaystub.getFeesCollectedByRider()) * -1,
+      [AMOUNT]: _.sumBy(rows, row => row[AMOUNT]) * -1,
       [CLASS]: 'CutCats'
     });
     return [
       topRow,
-      ...this.courierPaystubs.map(courierPaystub => {
-        return this.getRow(courierPaystub);
-      })
+      ...rows
     ];
   }
 }

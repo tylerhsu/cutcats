@@ -106,7 +106,7 @@ export default class ClientForm extends React.Component {
               <Label for='fixedAdminFee'>Fixed Admin Fee</Label>
               <InputGroup>
                 <InputGroupAddon addonType='prepend'>$</InputGroupAddon>
-                <Input id='fixedAdminFee' type='text' name='fixedAdminFee' value={this.state.client.fixedAdminFee || ''} onChange={this.handleChange} />
+                <Input id='fixedAdminFee' type='text' name='fixedAdminFee' value={this.state.client.fixedAdminFee} onChange={this.handleChange} />
               </InputGroup>
             </FormGroup>
           )}

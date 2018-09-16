@@ -55,9 +55,13 @@ class QuickbooksPayrollCredits extends QuickbooksExport {
   }
 
   getCsvRows() {
-    return this.courierPaystubs.map((courierPaystub, n) => {
-      return this.getRow(courierPaystub, n);
-    });
+    return this.courierPaystubs
+      .map((courierPaystub, n) => {
+        return this.getRow(courierPaystub, n);
+      })
+      .filter(row => {
+        return row[EXPENSE_AMOUNT] !== 0;
+      });
   }
 }
 

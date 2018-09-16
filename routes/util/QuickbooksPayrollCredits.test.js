@@ -22,9 +22,9 @@ describe('QuickbooksPayrollCredits', function() {
   it('this.getCsvRows() returns an array', function() {
     const client = fixtureModel('Client');
     const courier = fixtureModel('Courier');
-    const rides = fixtureModelArray('Ride', { courier, client }, 3);
+    const rides = fixtureModelArray('Ride', { courier, client, readyTime: new Date('2000-1-10') }, 3);
     const periodStart = new Date('2000-1-1');
-    const periodEnd = new Date('2000-1-2');
+    const periodEnd = new Date('2000-1-31');
     const courierPaystubs = [new CourierPaystub(courier, rides, periodStart, periodEnd)];
     const quickbooksPayrollCredits = new QuickbooksPayrollCredits(courierPaystubs, periodStart, periodEnd);
     const rows = quickbooksPayrollCredits.getCsvRows();

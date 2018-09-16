@@ -20,11 +20,11 @@ describe('QuickbooksPayrollNonInvoicedIncome', function() {
   });
 
   it('this.getCsvRows() returns an array', function() {
-    const client = fixtureModel('Client');
+    const client = fixtureModel('Client', { paymentType: 'paid' });
     const courier = fixtureModel('Courier');
-    const rides = fixtureModelArray('Ride', { courier, client }, 3);
+    const rides = fixtureModelArray('Ride', { courier, client, readyTime: new Date('2000-1-2') }, 3);
     const periodStart = new Date('2000-1-1');
-    const periodEnd = new Date('2000-1-2');
+    const periodEnd = new Date('2000-1-3');
     const courierPaystubs = [new CourierPaystub(courier, rides, periodStart, periodEnd)];
     const quickbooksPayrollNonInvoicedIncome = new QuickbooksPayrollNonInvoicedIncome(courierPaystubs, periodStart, periodEnd);
     const rows = quickbooksPayrollNonInvoicedIncome.getCsvRows();

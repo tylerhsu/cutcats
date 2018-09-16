@@ -81,7 +81,9 @@ class QuickbooksInvoice extends QuickbooksExport {
         rows.push(this.getAdminFeeRow(clientInvoice, n));
       }
     });
-    return rows;
+    return rows.filter(row => {
+      return row[PRICE] !== 0;
+    });
   }
 }
 

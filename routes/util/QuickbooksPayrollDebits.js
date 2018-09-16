@@ -65,12 +65,12 @@ class QuickbooksPayrollDebits extends QuickbooksExport {
     const deliveryFeeRows = this.courierPaystubs.map((courierPaystub, n) => {
       return this.getDeliveryFeeRow(courierPaystub, n);
     });
-    const radioFeeRows = this.courierPaystubs
-      .filter(courierPaystub => courierPaystub.getRadioFee() > 0)
-      .map((courierPaystub, n) => {
-        return this.getRadioFeeRow(courierPaystub, n + deliveryFeeRows.length);
-      });
-    return deliveryFeeRows.concat(radioFeeRows);
+    const radioFeeRows = this.courierPaystubs.map((courierPaystub, n) => {
+      return this.getRadioFeeRow(courierPaystub, n + deliveryFeeRows.length);
+    });
+    return deliveryFeeRows.concat(radioFeeRows).filter(row => {
+      return row[EXPENSE_AMOUNT] !== 0;
+    });
   }
 }
 
