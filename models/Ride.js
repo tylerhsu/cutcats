@@ -52,9 +52,6 @@ const rideSchema = new mongoose.Schema({
 
 rideSchema.index({
   jobId: 'text',
-  externalId: 'text',
-  billingReference: 'text',
-  orderPlacer: 'text',
   originName: 'text'
 });
 

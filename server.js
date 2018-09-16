@@ -41,6 +41,8 @@ app.use((err, req, res, next) => {
     }
   }
   if (req.accepts(['html', 'json']) === 'json') {
+    /* eslint-disable no-console */
+    console.error(err);
     res.json(err);
   } else {
     return next(err);

@@ -14,16 +14,27 @@ function parseDate (dateString) {
 }
 
 function getFilename (prefix, fromDate, toDate) {
+  const dateRange = getDateRangeString(fromDate, toDate);
+  return dateRange ?
+    [prefix, dateRange].join('_') + '.csv' :
+    prefix + '.csv';
+}
+
+function getDateRangeString(fromDate, toDate) {
   const dateFormat = 'M-D-YYYY';
-  const fromString = moment(fromDate).format(dateFormat);
-  const toString = moment(toDate).format(dateFormat);
-  return [
-    prefix,
-    (fromDate.getDate() === toDate.getDate()
-      ? fromString
-      : [fromString, toString].join('_')
-    )
-  ].join('_') + '.csv';
+  const fromString = fromDate ? moment(fromDate).format(dateFormat) : '';
+  const toString = toDate ? moment(toDate).format(dateFormat) : '';
+  if (fromDate && toDate) {
+    return fromDate.getDate() === toDate.getDate() ?
+      fromString :
+      [fromString, toString].join('_');
+  } else if (fromDate) {
+    return fromString;
+  } else if (toDate) {
+    return toString;
+  } else {
+    return '';
+  }
 }
 
 module.exports = {

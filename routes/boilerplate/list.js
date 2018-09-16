@@ -11,9 +11,7 @@ function getQuery(model, req) {
     query.sort(req.query.sort);
   }
 
-  if (isCount(req)) {
-    query.countDocuments();
-  } else {
+  if (!isCount(req)) {
     query.skip((page - 1) * resultsPerPage).limit(resultsPerPage);
   }
 
@@ -21,7 +19,7 @@ function getQuery(model, req) {
 }
 
 function respond (query, req, res, next) {
-  return query.exec()
+  return (isCount(req) ? query.countDocuments() : query.exec())
     .then(results => {
       if (isCount(req)) {
         res.json({ count: results });

@@ -1,6 +1,20 @@
 import React from 'react';
 import axios from 'axios';
 import moment from 'moment';
+import 'react-dates/initialize';
+import 'react-dates/lib/css/_datepicker.css';
+import { DateRangePicker } from 'react-dates';
+import qs from 'querystring';
+import {
+  Button,
+  Label,
+  FormGroup,
+  Input,
+  InputGroup,
+  InputGroupText,
+  InputGroupAddon
+} from 'reactstrap';
+import { getErrorMessage } from '../global/misc';
 
 const RESULTS_PER_PAGE = 100;
 
@@ -11,16 +25,18 @@ export default class RidesTable extends React.Component {
     this.state = {
       rides: [],
       freetext: '',
+      fromDate: new Date(),
+      toDate: new Date(),
       loading: true,
-      page: 1
+      page: 1,
+      error: null
     };
 
     this.handleFreetextChange = this.handleFreetextChange.bind(this);
+    this.handleDatesChange = this.handleDatesChange.bind(this);
   }
 
-  fetchRides () {
-    let url = '/api/rides';
-
+  getFetchParams() {
     let params = {
       populate: 'client courier',
       sort: '-updatedAt',
@@ -31,6 +47,21 @@ export default class RidesTable extends React.Component {
     if (this.state.freetext) {
       params.q = this.state.freetext;
     }
+
+    if (this.state.fromDate) {
+      params.from = moment(this.state.fromDate).startOf('day').valueOf();
+    }
+
+    if (this.state.toDate) {
+      params.to = moment(this.state.toDate).endOf('day').valueOf();
+    }
+
+    return params;
+  }
+
+  fetchRides () {
+    let url = '/api/rides';
+    let params = this.getFetchParams();
 
     this.setState({ loading: true });
 
@@ -43,6 +74,9 @@ export default class RidesTable extends React.Component {
           rides: responses[0].data,
           count: responses[1].data.count
         });
+      })
+      .catch(err => {
+        this.setState({ error: getErrorMessage(err) });
       })
       .finally(() => {
         this.setState({ loading: false });
@@ -61,12 +95,19 @@ export default class RidesTable extends React.Component {
     });
   }
 
+  handleDatesChange ({ startDate, endDate }) {
+    this.setState({
+      fromDate: startDate,
+      toDate: endDate
+    }, () => {
+      this.fetchRides();
+    });
+  }
+
   renderTable () {
     if (this.state.loading) {
       return (
-        <div>
-          <i className='fa fa-spin fa-spinner' />
-        </div>
+        <em className='text-secondary'>Loading... </em>
       );
     } else if (this.state.rides.length) {
       const rides = this.state.rides.map(ride => {
@@ -105,8 +146,10 @@ export default class RidesTable extends React.Component {
         </React.Fragment>
       );
     } else {
+      let matching = this.state.freetext ? `matching "${this.state.freetext}"` : '';
+      let between = this.state.fromDate && this.state.toDate ? `between ${moment(this.state.fromDate).format('M/D/YYYY')} and ${moment(this.state.toDate).format('M/D/YYYY')}` : '';
       return (
-        <div>No results matching &quot;{this.state.freetext}&quot;</div>
+        <div>{`No rides ${matching} ${between}`}</div>
       );
     }
   }
@@ -116,19 +159,51 @@ export default class RidesTable extends React.Component {
       <div className="container">
         <div className="row mb-4">
           <div className="col-lg-4">
-            <div className="input-group">
-              <div className="input-group-prepend">
-                <span className="input-group-text">
-                  <i className="fa fa-search"></i>
-                </span>
+            <FormGroup>
+              <Label>Ready time</Label>
+              <div>
+                <DateRangePicker
+                  startDate={this.state.fromDate ? moment(this.state.fromDate) : null}
+                  endDate={this.state.toDate ? moment(this.state.toDate) : null}
+                  startDateId="fromDate"
+                  endDateId="toDate"
+                  onDatesChange={this.handleDatesChange}
+                  focusedInput={this.state.focusedInput}
+                  onFocusChange={focusedInput => this.setState({ focusedInput })}
+                  minimumNights={0}
+                  isOutsideRange={() => false}
+                  showDefaultInputIcon
+                  showClearDates
+                  small
+                />
               </div>
-              <input id="freetext" className="form-control" name="freetext" type="text" value={this.state.freetext} onChange={this.handleFreetextChange} placeholder="Search by ride id" />
-            </div>
+            </FormGroup>
+          </div>
+          <div className="col-lg-4">
+            <FormGroup>
+              <Label>Search</Label>
+              <InputGroup>
+                <InputGroupAddon addonType='prepend'><InputGroupText><i className="fa fa-search" /></InputGroupText></InputGroupAddon>
+                <Input id="freetext" name="freetext" type="text" value={this.state.freetext} onChange={this.handleFreetextChange} placeholder="Search by job ID or origin name" />
+              </InputGroup>
+            </FormGroup>
+          </div>
+          <div className="col-lg-4" style={{paddingTop: '2rem'}}>
+            <a href={`/api/rides/csv?${qs.stringify(this.getFetchParams())}`} target="_blank" rel="noopener noreferrer">
+              <Button color='primary'>
+                <i className='fa fa-download' />
+                &nbsp;&nbsp;Download CSV
+              </Button>
+            </a>
           </div>
         </div>
         <div className="row">
           <div className="col">
-            { this.renderTable() }
+            {this.state.error ? (
+              <div className="text-danger">{this.state.error}</div>
+            ) :
+              this.renderTable()
+            }
           </div>
         </div>
       </div>

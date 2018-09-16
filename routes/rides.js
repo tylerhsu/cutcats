@@ -1,4 +1,5 @@
 const express = require('express');
+const _ = require('lodash');
 const EventEmitter = require('events').EventEmitter;
 const router = express.Router();
 const models = require('../models');
@@ -27,29 +28,30 @@ function getRidesCsv (req, res, next) {
     'Content-Type': 'text/plain',
     'Content-Disposition': 'attachment; filename=' + filename
   });
+  let query = _getRidesQuery(req)
+    .populate('client courier')
+    .skip(0)
+    .limit(10000)
+    .lean();
 
-  req.query.populate = 'client courier';
-
-  return _getRidesQuery(req)
+  return query
     .cursor()
     .pipe(csv.transform(transform))
-    .on('error', next)
     .pipe(csv.stringify({
       header: true
     }))
-    .on('error', next)
     .pipe(res)
     .on('error', next);
 
   function transform (ride, callback) {
-    callback(null, {
-      'Job ID': ride.jobId,
-      'Client': ride.client.name,
-      'Courier': ride.courier.name,
-      'Origin address': ride.originAddress,
-      'Destination address': ride.destinationAddress1,
+    const row = _.chain({
+      ...ride,
+      'client': ride.client.name,
+      'courier': ride.courier.name,
       'Imported on': moment(ride.createdAt).format('MM/DD/YYYY')
-    });
+    })
+      .value();
+    callback(null, row);
   }
 }
 
@@ -63,11 +65,11 @@ function _getRidesQuery (req) {
   }
 
   if (fromDate) {
-    query.where({ createdAt: { $gte: fromDate } });
+    query.where({ readyTime: { $gte: fromDate } });
   }
 
   if (toDate) {
-    query.where({ createdAt: { $lte: toDate } });
+    query.where({ readyTime: { $lte: toDate } });
   }
 
   return query;
