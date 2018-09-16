@@ -27,6 +27,20 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 app.use('/', routes);
+app.use((err, req, res, next) => {
+  if (res.headersSent) {
+    return next(err);
+  }
+  // mongoose validation error
+  if (err.errors) {
+    res.status(400);
+  }
+  if (req.accepts(['html', 'json']) === 'json') {
+    res.json(err);
+  } else {
+    return next(err);
+  }
+});
 
 app.listen(port, () => {
   if (process.env.NODE_ENV !== 'production') {

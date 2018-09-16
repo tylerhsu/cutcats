@@ -2,6 +2,7 @@ import React from 'react';
 import axios from 'axios';
 import ClientForm from './ClientForm';
 import { Modal } from 'reactstrap';
+import { getErrorMessage } from '../global/misc';
 
 export default class ClientsTable extends React.Component {
   constructor (props) {
@@ -106,7 +107,7 @@ export default class ClientsTable extends React.Component {
         this.closeModal();
       })
       .catch(err => {
-        this.setState({ formErrorMessage: err.message });
+        this.setState({ formErrorMessage: getErrorMessage(err) });
       });
   }
 

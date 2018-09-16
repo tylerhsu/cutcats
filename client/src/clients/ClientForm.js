@@ -54,14 +54,6 @@ export default class ClientForm extends React.Component {
             <Input id='name' type='text' name='name' value={this.state.client.name || ''} onChange={this.handleChange} autoFocus />
           </FormGroup>
           <FormGroup>
-            <Label for='paymentType'>Payment Type</Label>
-            <Input id='paymentType' type='select' name='paymentType' value={this.state.client.paymentType} onChange={this.handleChange}>
-              <option value='invoiced' >Invoiced</option>
-              <option value='paid'>Paid</option>
-              <option value='legacy'>Legacy</option>
-            </Input>
-          </FormGroup>
-          <FormGroup>
             <Label for='address'>Address</Label>
             <Input id='address' type='text' name='address' value={this.state.client.address || ''} onChange={this.handleChange} />
           </FormGroup>
@@ -74,16 +66,50 @@ export default class ClientForm extends React.Component {
             <Input id='email' type='text' name='email' value={this.state.client.email || ''} onChange={this.handleChange} />
           </FormGroup>
           <FormGroup>
-            <Label for='fixedAdminFee'>Fixed Admin Fee</Label>
-            <InputGroup>
-              <InputGroupAddon addonType='prepend'>$</InputGroupAddon>
-              <Input id='fixedAdminFee' type='text' name='fixedAdminFee' value={this.state.client.fixedAdminFee || ''} onChange={this.handleChange} />
-            </InputGroup>
-          </FormGroup>
-          <FormGroup>
             <Label for='billingEmail'>Billing Email</Label>
             <Input id='billingEmail' type='text' name='billingEmail' value={this.state.client.billingEmail || ''} onChange={this.handleChange} />
           </FormGroup>
+          <FormGroup>
+            <Label for='paymentType'>Payment Type</Label>
+            <Input id='paymentType' type='select' name='paymentType' value={this.state.client.paymentType} onChange={this.handleChange}>
+              <option value='invoiced' >Invoiced</option>
+              <option value='paid'>Paid</option>
+              <option value='legacy'>Legacy</option>
+            </Input>
+          </FormGroup>
+          <FormGroup>
+            <Label for='deliveryFeeStructure'>Delivery Fee Structure</Label>
+            <Input id='deliveryFeeStructure' type='select' name='deliveryFeeStructure' value={this.state.client.deliveryFeeStructure} onChange={this.handleChange}>
+              <option value='on demand food' >On-demand food</option>
+              <option value='legacy on demand food'>Legacy on-demand food</option>
+              <option value='catering food'>Catering Food</option>
+              <option value='cargo/wholesale/commissary'>Cargo/wholesale/commissary</option>
+            </Input>
+          </FormGroup>
+          <FormGroup>
+            <Label>Admin Fee Type</Label>
+            <FormGroup check>
+              <Label check>
+                <Input type='radio' name='adminFeeType' value='scale' checked={this.state.client.adminFeeType === 'scale'} onChange={this.handleChange} />
+                Scale
+              </Label>
+            </FormGroup>
+            <FormGroup check>
+              <Label check>
+                <Input type='radio' name='adminFeeType' value='fixed' checked={this.state.client.adminFeeType === 'fixed'} onChange={this.handleChange} />
+                Fixed
+              </Label>
+            </FormGroup>
+          </FormGroup>
+          {this.state.client.adminFeeType === 'fixed' && (
+            <FormGroup>
+              <Label for='fixedAdminFee'>Fixed Admin Fee</Label>
+              <InputGroup>
+                <InputGroupAddon addonType='prepend'>$</InputGroupAddon>
+                <Input id='fixedAdminFee' type='text' name='fixedAdminFee' value={this.state.client.fixedAdminFee || ''} onChange={this.handleChange} />
+              </InputGroup>
+            </FormGroup>
+          )}
         </ModalBody>
         <ModalFooter>
           {this.props.errorMessage &&

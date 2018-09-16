@@ -25,4 +25,10 @@ clientSchema.index({
   company: 'text'
 });
 
+clientSchema.pre('save', function() {
+  if (this.adminFeeType === 'scale') {
+    this.fixedAdminFee = undefined;
+  }
+});
+
 module.exports = mongoose.model('Client', clientSchema);
