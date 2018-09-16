@@ -31,9 +31,14 @@ app.use((err, req, res, next) => {
   if (res.headersSent) {
     return next(err);
   }
-  // mongoose validation error
-  if (err.errors) {
-    res.status(400);
+
+  if (res.statusCode === 200) {
+    // mongoose validation error
+    if (err.errors) {
+      res.status(400);
+    } else {
+      res.status(500);
+    }
   }
   if (req.accepts(['html', 'json']) === 'json') {
     res.json(err);
