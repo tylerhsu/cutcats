@@ -35,10 +35,16 @@ describe('QuickbooksPayrollCredits', function() {
   describe('this.getRow()', function() {
     beforeEach(function() {
       this.courier = fixtureModel('Courier');
-      this.client = fixtureModel('Client');
-      this.rides = fixtureModelArray('Ride', { courier: this.courier, client: this.client }, 3);
+      this.client = fixtureModel('Client', { paymentType: 'invoiced' });
+      this.rides = fixtureModelArray('Ride', {
+        courier: this.courier,
+        client: this.client,
+        readyTime: new Date('2000-1-10'),
+        tip: 1,
+        deliveryFee: 2
+      }, 3);
       this.periodStart = new Date('2000-1-1');
-      this.periodEnd = new Date('2000-1-2');
+      this.periodEnd = new Date('2000-1-31');
       this.courierPaystubs = [new CourierPaystub(this.courier, this.rides, this.periodStart, this.periodEnd)];
       this.quickbooksPayrollCredits = new QuickbooksPayrollCredits(this.courierPaystubs, this.periodStart, this.periodEnd);
     });
@@ -48,10 +54,10 @@ describe('QuickbooksPayrollCredits', function() {
       row.should.eql({
         'RefNumber': 1,
         'CutCat Name': 'fixture courier',
-        'Date': '01/02/2000',
+        'Date': '01/31/2000',
         'Expense Account': 'Guaranteed Pay to Partners:Delivery Fee Payout',
-        'Expense Amount': 0,
-        'Expense Description': 'Invoiced Rides Payout pay period 01/01/2000-01/02/2000',
+        'Expense Amount': 9,
+        'Expense Description': 'Invoiced Rides Payout pay period 01/01/2000-01/31/2000',
         'Expense Class': 'CutCats',
         'AP Account': 'Accounts Payable'
       });

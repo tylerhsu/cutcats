@@ -60,7 +60,8 @@ describe('QuickbooksPayrollNonInvoicedIncome', function() {
       this.rides = fixtureModelArray('Ride', {
         courier: this.courier,
         client: this.client,
-        deliveryFee: 1,
+        tip: 1,
+        deliveryFee: 2,
         readyTime: new Date('2000-1-10')
       }, 3);
       this.periodStart = new Date('2000-1-1');
@@ -77,7 +78,7 @@ describe('QuickbooksPayrollNonInvoicedIncome', function() {
         Date: '01/31/2000',
         Memo: 'Cash Rides Payout',
         Account: 'Guaranteed Pay to Partners:Delivery Fee Payout',
-        Amount: 3,
+        Amount: 9,
         Class: 'CutCats'
       });
     });

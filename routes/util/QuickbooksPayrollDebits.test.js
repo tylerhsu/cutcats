@@ -62,9 +62,14 @@ describe('QuickbooksPayrollDebits', function() {
     beforeEach(function() {
       this.courier = fixtureModel('Courier');
       this.client = fixtureModel('Client');
-      this.rides = fixtureModelArray('Ride', { courier: this.courier, client: this.client }, 3);
+      this.rides = fixtureModelArray('Ride', {
+        courier: this.courier,
+        client: this.client,
+        readyTime: new Date('2000-1-10'),
+        deliveryFee: 4
+      }, 3);
       this.periodStart = new Date('2000-1-1');
-      this.periodEnd = new Date('2000-1-2');
+      this.periodEnd = new Date('2000-1-31');
       this.courierPaystubs = [new CourierPaystub(this.courier, this.rides, this.periodStart, this.periodEnd)];
       this.quickbooksPayrollDebits = new QuickbooksPayrollDebits(this.courierPaystubs, this.periodStart, this.periodEnd);
     });
@@ -74,10 +79,10 @@ describe('QuickbooksPayrollDebits', function() {
       row.should.eql({
         'RefNumber': 1,
         'CutCat Name': 'fixture courier',
-        'Date': '01/02/2000',
+        'Date': '01/31/2000',
         'Expense Account': 'Sales Income:Delivery Fee Income',
-        'Expense Amount': 0,
-        'Expense Memo': 'Slush owed pay period 01/01/2000-01/02/2000',
+        'Expense Amount': 3,
+        'Expense Memo': 'Slush owed pay period 01/01/2000-01/31/2000',
         'Expense Class': 'CutCats',
         'AP Account': 'Accounts Payable'
       });

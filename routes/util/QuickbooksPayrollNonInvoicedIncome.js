@@ -35,7 +35,7 @@ class QuickbooksPayrollNonInvoicedIncome extends QuickbooksExport {
       [DATE]: moment(this.periodEnd).format('MM/DD/YYYY'),
       [MEMO]: 'Cash Rides Payout',
       [ACCOUNT]: this.getAccount(courierPaystub),
-      [AMOUNT]: courierPaystub.getFeesCollectedByRider(),
+      [AMOUNT]: courierPaystub.getDeliveryFeeCollectedByRider(),
       [CLASS]: 'CutCats'
     });
   }
