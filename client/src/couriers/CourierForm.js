@@ -10,6 +10,7 @@ import {
   ModalBody,
   ModalFooter
 } from 'reactstrap';
+import moment from 'moment';
 
 export default class CourierForm extends React.Component {
   constructor (props) {
@@ -26,6 +27,12 @@ export default class CourierForm extends React.Component {
   handleChange (e) {
     let fieldName = e.target.name;
     let fieldValue = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
+
+    if (fieldValue === 'true') {
+      fieldValue = true;
+    } else if (fieldValue === 'false') {
+      fieldValue = false;
+    }
 
     this.setState({
       courier: {
@@ -70,6 +77,25 @@ export default class CourierForm extends React.Component {
               <option value='member' >Member</option>
               <option value='guest'>Guest</option>
             </Input>
+          </FormGroup>
+          <FormGroup>
+            <Label for='startDate'>Start Date</Label>
+            <Input id='startDate' type='text' name='startDate' value={this.state.courier.startDate ? moment(this.state.courier.startDate).format('M/D/YYYY') : ''} onChange={this.handleChange} />
+          </FormGroup>
+          <FormGroup>
+            <Label>Monthly Radio Rental?</Label>
+            <FormGroup check>
+              <Label check>
+                <Input type='radio' name='monthlyRadioRental' value={true} checked={!!this.state.courier.monthlyRadioRental} onChange={this.handleChange} />
+                Yes
+              </Label>
+            </FormGroup>
+            <FormGroup check>
+              <Label check>
+                <Input type='radio' name='monthlyRadioRental' value={false} checked={!this.state.courier.monthlyRadioRental} onChange={this.handleChange} />
+                No
+              </Label>
+            </FormGroup>
           </FormGroup>
         </ModalBody>
         <ModalFooter>

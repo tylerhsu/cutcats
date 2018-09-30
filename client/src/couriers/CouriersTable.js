@@ -2,6 +2,7 @@ import React from 'react';
 import axios from 'axios';
 import CourierForm from './CourierForm';
 import { Modal } from 'reactstrap';
+import moment from 'moment';
 
 export default class CouriersTable extends React.Component {
   constructor (props) {
@@ -113,6 +114,9 @@ export default class CouriersTable extends React.Component {
               <th>Call Number</th>
               <th>Phone</th>
               <th>Email</th>
+              <th>Status</th>
+              <th>Start Date</th>
+              <th>Monthly Radio Rental?</th>
               <th></th>
             </tr>
           </thead>
@@ -121,8 +125,11 @@ export default class CouriersTable extends React.Component {
               <tr key={courier._id}>
                 <td>{courier.name}</td>
                 <td>{courier.radioCallNumber}</td>
-                <td>{courier.phone}</td>
+                <td style={{whiteSpace: 'nowrap'}}>{courier.phone || <None />}</td>
                 <td>{courier.email}</td>
+                <td>{courier.status}</td>
+                <td>{courier.startDate ? moment(courier.startDate).format('M/D/YYYY') : <None />}</td>
+                <td>{courier.monthlyRadioRental ? 'Yes' : 'No'}</td>
                 <td>
                   <button onClick={() => this.openModal(courier)} className="btn btn-link">
                               Edit
@@ -178,4 +185,8 @@ export default class CouriersTable extends React.Component {
       </React.Fragment>
     );
   }
+}
+
+function None () {
+  return <em className='text-secondary'>None</em>;
 }

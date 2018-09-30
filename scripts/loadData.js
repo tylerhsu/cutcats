@@ -31,23 +31,37 @@ function getCouriers () {
     columns: true
   });
 
-  return couriersCsv.map(row => {
+  return couriersCsv.map((row, n) => {
     return {
       name: row['Rider Name'],
       radioCallNumber: row['Radio Call Number'],
       phone: row['Phone Number'],
-      email: row['Rider E-mail'],
-      status: mapCourierStatus(row['status']),
-      startDate: row['Timestamp'] === 'moonlighter' ? undefined : row['Timestamp']
+      email: row['Rider Email'],
+      status: row['Membership'].toLowerCase(),
+      startDate: mapStartDate(row['Start Date'], n),
+      monthlyRadioRental: mapMonthlyRadioRental(row['Monthly Radio Rental'], n)
     };
   });
 }
 
-function mapCourierStatus (csvStatus) {
-  switch (csvStatus) {
-  case 'Non-Partner Rider Payouts': return 'guest';
-  case 'Guaranteed Pay to Partners': return 'member';
-  default:
+function mapStartDate (csvValue, n) {
+  const date = new Date(csvValue);
+  if (csvValue === '#N/A' || csvValue === '') {
+    return undefined;
+  } else if (isNaN(date.valueOf())) {
+    throw new Error(`Could not parse date "${csvValue}" in "Start Date" column on row ${n}`);
+  }
+  return date;
+}
+
+function mapMonthlyRadioRental (csvValue, n) {
+  csvValue = csvValue.toLowerCase();
+  if (csvValue === 'yes') {
+    return true;
+  } else if (csvValue === 'no') {
+    return false;
+  } else {
+    throw new Error(`Unrecognized value ${csvValue} in 'Monthly Radio Rental' column on row ${n}`);
   }
 }
 
@@ -59,12 +73,13 @@ function getClients () {
   return clientsCsv.map(row => {
     return {
       name: row['Client Name'],
-      paymentType: row['invoiced'],
+      paymentType: row['Payment Type'],
       address: row['Address'],
-      phone: row['Restaurant Phone'],
+      phone: row['Phone'],
       email: row['Email'],
-      adminFeeType: row['Admin Fee'].toLowerCase() === 'scale' ? 'scale' : 'fixed',
-      fixedAdminFee: !isNaN(parseInt(row['Admin Fee'])) ? row['Admin Fee'] : undefined,
+      adminFeeType: row['Admin Fee Structure'].toLowerCase() === 'scale' ? 'scale' : 'fixed',
+      fixedAdminFee: !isNaN(parseInt(row['Admin Fee Structure'])) ? row['Admin Fee Structure'] : undefined,
+      deliveryFeeStructure: row['Delivery Fee Structure'].toLowerCase(),
       billingEmail: row['Billing Email']
     };
   });

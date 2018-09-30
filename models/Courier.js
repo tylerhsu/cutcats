@@ -13,7 +13,6 @@ const courierSchema = new mongoose.Schema({
 
 courierSchema.index({
   name: 'text',
-  qbName: 'text',
   radioCallNumber: 'text',
   email: 'text'
 });

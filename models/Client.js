@@ -20,9 +20,7 @@ const clientSchema = new mongoose.Schema({
 });
 
 clientSchema.index({
-  name: 'text',
-  qbName: 'text',
-  company: 'text'
+  name: 'text'
 });
 
 clientSchema.pre('save', function() {
