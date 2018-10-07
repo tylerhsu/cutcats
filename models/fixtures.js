@@ -19,10 +19,10 @@ const FIXTURES = {
     courier: new ObjectID(),
     destinationAddress1: 'destination address 1',
     deliveryStatus: 'complete',
-    orderTotal: 1,
-    billableTotal: 2,
-    deliveryFee: 3,
-    tip: 4
+    orderTotal: 100,
+    billableTotal: 200,
+    deliveryFee: 300,
+    tip: 400
   }),
   Client: () => ({
     name: `client ${new ObjectID()} name`,

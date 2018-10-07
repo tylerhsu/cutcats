@@ -125,10 +125,10 @@ class CourierPaystub extends AccountingPeriod {
   }
 
   getRadioFee() {
-    if (this.courier.monthlyRadioRental && this.isMonthEnd) {
+    if (this.courier.monthlyRadioRental) {
       return 20;
     } else {
-      return [0, this.courier.monthlyRadioRental ? 'No radio fee on mid-month paystub' : ''];
+      return 0;
     }
   }
 

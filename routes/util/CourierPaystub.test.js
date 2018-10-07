@@ -269,13 +269,13 @@ describe('CourierPaystub', function() {
   });
 
   describe('this.getRadioFee()', function() {
-    it('returns 0 when rider has a radio checked out but paystub is mid-month', function() {
+    it('returns 20 when rider has a radio checked out and paystub is mid-month', function() {
       const courier = fixtureModel('Courier', { monthlyRadioRental: true });
       const rides = [];
       const periodStart = new Date('2000-1-1');
       const periodEnd = new Date('2000-1-1');
       const courierPaystub = new CourierPaystub(courier, rides, periodStart, periodEnd);
-      courierPaystub.getRadioFee().should.eql(0);
+      courierPaystub.getRadioFee().should.eql(20);
     });
 
     it('returns 20 when paystub is end-of-month and rider has a radio checked out', function() {
