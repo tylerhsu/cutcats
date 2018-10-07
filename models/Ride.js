@@ -15,7 +15,7 @@ const rideSchema = new mongoose.Schema({
   originPostalCode: { type: String },
   originZone: { type: String },
   destinationName: { type: String },
-  destinationAddress1: { type: String, required: true },
+  destinationAddress1: { type: String, required: [rideIsComplete, rideIsCompleteMessage('destinationAddress1')] },
   destinationAddress2: { type: String },
   destinationPostalCode: { type: String },
   destinationZone: { String },
@@ -33,11 +33,11 @@ const rideSchema = new mongoose.Schema({
   rate: { type: String },
   isPaid: { type: Boolean },
   paymentMethod: { type: String },
-  orderTotal: { type: Number, required: true },
-  billableTotal: { type: Number, required: true },
+  orderTotal: { type: Number, required: [rideIsComplete, rideIsCompleteMessage('orderTotal')] },
+  billableTotal: { type: Number, required: [rideIsComplete, rideIsCompleteMessage('billableTotal')] },
   breakdown: { type: String },
-  tip: { type: Number, required: true },
-  deliveryFee: { type: Number, required: true },
+  tip: { type: Number, required: [rideIsComplete, rideIsCompleteMessage('tip')] },
+  deliveryFee: { type: Number, required: [rideIsComplete, rideIsCompleteMessage('deliveryFee')] },
   extras: { type: String },
   items: { type: String },
   deliveryNotes: { type: String },
@@ -48,6 +48,14 @@ const rideSchema = new mongoose.Schema({
 }, {
   timestamps: true
 });
+
+function rideIsComplete() {
+  return this.deliveryStatus === 'complete';
+}
+
+function rideIsCompleteMessage(field) {
+  return `${field} is required when deliveryStatus is "complete"`;
+}
 
 rideSchema.index({
   jobId: 'text',
