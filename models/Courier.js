@@ -1,9 +1,9 @@
 const mongoose = require('mongoose');
 const courierSchema = new mongoose.Schema({
   name: { type: String, required: true },
-  radioCallNumber: { type: Number, index: true, required: true },
+  radioCallNumber: { type: Number, index: true, unique: true, required: true },
   phone: { type: String },
-  email: { type: String, index: true },
+  email: { type: String, index: true, unique: true, sparse: true },
   status: { type: String, enum: ['member', 'guest'], lowercase: true, required: true },
   startDate: { type: Date },
   monthlyRadioRental: { type: Boolean, required: true, default: true }

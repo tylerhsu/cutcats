@@ -3,6 +3,7 @@ import axios from 'axios';
 import CourierForm from './CourierForm';
 import { Modal } from 'reactstrap';
 import moment from 'moment';
+import { getErrorMessage } from '../global/misc';
 
 export default class CouriersTable extends React.Component {
   constructor (props) {
@@ -96,7 +97,7 @@ export default class CouriersTable extends React.Component {
         this.closeModal();
       })
       .catch(err => {
-        this.setState({ formErrorMessage: err.message });
+        this.setState({ formErrorMessage: getErrorMessage(err) });
       });
   }
 

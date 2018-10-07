@@ -32,6 +32,16 @@ app.use((err, req, res, next) => {
     return next(err);
   }
 
+  // mongo duplicate key error
+  if (err.code === 11000) {
+    res.status(400);
+    const fieldName = err.message.match(/\$(.+)_/);
+    const value = err.message.match(/\{ : (.+) \}/);
+    if (fieldName && value) {
+      err.message = `${fieldName[1]} ${value[1]} is already taken`;
+    }
+  }
+
   if (res.statusCode === 200) {
     // mongoose validation error
     if (err.errors) {
