@@ -12,6 +12,7 @@ const QuickbooksPayrollDebits = require('./util/QuickbooksPayrollDebits');
 const QuickbooksPayrollNonInvoicedIncome = require('./util/QuickbooksPayrollNonInvoicedIncome');
 const error = require('./util/error');
 const AWS = require('aws-sdk');
+const formatDate = (date) => moment(date).format('M-D-YYYY');
 
 router.get('/', getPayrolls);
 router.post('/', boilerplate.create(models.Payroll));
@@ -136,22 +137,27 @@ function createPayrollZip(req, res, next) {
     .catch(next);
   
   function addFilesToZip() {
+    // file naming per https://3.basecamp.com/3688031/buckets/6435030/todos/1331720820
     const addQuickbooksCreditsCsv = req.quickbooksPayrollCredits.renderCsv()
       .then(csvString => {
-        req.payrollZip.addBuffer(new Buffer(csvString), 'Quickbooks - Credits.csv', { compress: false });
+        const filename = `${formatDate(req.quickbooksPayrollCredits.periodEnd)} QB Payroll Bills - Import A.csv`;
+        req.payrollZip.addBuffer(new Buffer(csvString), filename, { compress: false });
       });
     const addQuickbooksDebitsCsv = req.quickbooksPayrollDebits.renderCsv()
       .then(csvString => {
-        req.payrollZip.addBuffer(new Buffer(csvString), 'Quickbooks - Debits.csv', { compress: false });
+        const filename = `${formatDate(req.quickbooksPayrollDebits.periodEnd)} QB Payroll Deductions - Import B.csv`;
+        req.payrollZip.addBuffer(new Buffer(csvString), filename, { compress: false });
       });
     const addQuickbooksNonInvoicedIncomeCsv = req.quickbooksPayrollNonInvoicedIncome.renderCsv()
       .then(csvString => {
-        req.payrollZip.addBuffer(new Buffer(csvString), 'Quickbooks - Non-Invoiced Income.csv', { compress: false });
+        const filename = `${formatDate(req.quickbooksPayrollNonInvoicedIncome.periodEnd)} QB Non-Invoiced Income - Import D.csv`;
+        req.payrollZip.addBuffer(new Buffer(csvString), filename, { compress: false });
       });
     const addPdfs = req.courierPaystubs.map(courierPaystub => {
       return courierPaystub.renderPdf()
         .then(buffer => {
-          req.payrollZip.addBuffer(buffer, `couriers/${courierPaystub.getCourierName()}.pdf`, { compress: false });
+          const filename = `couriers/${formatDate(courierPaystub.periodEnd)} Payroll Invoice - ${courierPaystub.getCourierCallNumber()} ${courierPaystub.getCourierName()}.pdf`;
+          req.payrollZip.addBuffer(buffer, filename, { compress: false });
         });
     });
     return Promise.all([
@@ -173,7 +179,6 @@ function createPayrollZip(req, res, next) {
 function servePayrollZip(req, res) {
   const periodStart = reportUtils.parseDate(req.query.periodStart);
   const periodEnd = reportUtils.parseDate(req.query.periodEnd);
-  const formatDate = (date) => moment(date).format('M-D-YYYY');
   res.set({
     'Content-Type': 'application/zip',
     'Content-Disposition': `attachment; filename=paystubs-${formatDate(periodStart)}-${formatDate(periodEnd)}.zip`

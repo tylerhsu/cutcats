@@ -10,6 +10,7 @@ const ClientInvoice = require('./util/ClientInvoice');
 const QuickbooksInvoice = require('./util/QuickbooksInvoice');
 const error = require('./util/error');
 const AWS = require('aws-sdk');
+const formatDate = (date) => moment(date).format('M-D-YYYY');
 
 router.get('/', getInvoices);
 router.post('/', boilerplate.create(models.Invoice));
@@ -123,14 +124,17 @@ function createInvoiceZip(req, res, next) {
     .catch(next);
   
   function addFilesToZip() {
+    // file naming per https://3.basecamp.com/3688031/buckets/6435030/todos/1331720820
     const addQuickbooksCsv = req.quickbooksInvoice.renderCsv()
       .then(csvString => {
-        req.invoiceZip.addBuffer(new Buffer(csvString), 'quickbooks.csv', { compress: false });
+        const filename = `${formatDate(req.quickbooksInvoice.periodEnd)} QB Client Invoices Import.csv`;
+        req.invoiceZip.addBuffer(new Buffer(csvString), filename, { compress: false });
       });
     const addPdfs = req.clientInvoices.map(clientInvoice => {
       return clientInvoice.renderPdf()
         .then(buffer => {
-          req.invoiceZip.addBuffer(buffer, `clients/${clientInvoice.getClientName()}.pdf`, { compress: false });
+          const filename = `clients/${formatDate(clientInvoice.periodEnd)} Cut Cats Invoice - ${clientInvoice.getClientName()}.pdf`;
+          req.invoiceZip.addBuffer(buffer, filename, { compress: false });
         });
     });
     return Promise.all([
@@ -150,7 +154,6 @@ function createInvoiceZip(req, res, next) {
 function serveInvoiceZip(req, res) {
   const periodStart = reportUtils.parseDate(req.query.periodStart);
   const periodEnd = reportUtils.parseDate(req.query.periodEnd);
-  const formatDate = (date) => moment(date).format('M-D-YYYY');
   res.set({
     'Content-Type': 'application/zip',
     'Content-Disposition': `attachment; filename=invoices-${formatDate(periodStart)}-${formatDate(periodEnd)}.zip`

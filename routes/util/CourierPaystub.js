@@ -39,6 +39,10 @@ class CourierPaystub extends AccountingPeriod {
     return this.courier.name;
   }
 
+  getCourierCallNumber() {
+    return this.courier.radioCallNumber;
+  }
+
   getTipTotal(rides) {
     rides = rides || this.ridesInPeriod;
     return [
@@ -261,7 +265,7 @@ class CourierPaystub extends AccountingPeriod {
         {
           margin: [0, 20, 0, 0],
           text: _.toPairs(toCCReasons).map(reason => ({
-            text: `${reason[0]}: ${reason[1]}`,
+            text: `${reason[0]}: ${reason[1]}\n`,
             fontSize: 8
           }))
         }
