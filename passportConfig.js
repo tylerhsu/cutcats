@@ -9,7 +9,7 @@ passport.use(new GoogleStrategy({
   clientSecret: process.env.GOOGLE_CLIENT_SECRET,
   callbackURL: process.env.GOOGLE_CALLBACK_URL
 }, (accessToken, refreshToken, profile, done) => {
-  const email = profile.emails[0].value;
+  const email = profile.emails[0].value.toLowerCase();
 
   Promise.all([
     models.Courier.findOne({ email }).exec(),
