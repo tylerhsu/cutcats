@@ -1,3 +1,4 @@
+import * as _ from 'lodash';
 import React from 'react';
 import PropTypes from 'prop-types';
 import axios from 'axios';
@@ -33,11 +34,14 @@ export default class Uploader extends React.Component {
         return this.props.onValidationSuccess(file);
       })
       .catch(err => {
-        if (err.response && err.response.status === 400) {
+        const status = _.get(err, 'response.status');
+        if (status === 400) {
           const errorMessages = (err.response.data || '').split('\n');
           return this.props.onValidationFailure(errorMessages, file);
+        } else if (status === 503) {
+          return this.props.onError('The server took too long to respond. This may have been because the import file is too large. Try splitting the import into two separate halves.');
         } else {
-          return this.props.onError(err.response.data || err.message);
+          return this.props.onError(err.response.data || err.message || err);
         }
       })
       .finally(() => {
