@@ -54,7 +54,7 @@ export default class CloseShiftForm extends React.Component {
       uploaderLoading: false,
       importFile: null,
       uploaderValidationErrors: null,
-      uploaderError: err.message
+      uploaderError: err.message || err || 'An unexpected error occurred'
     });
   }
 
