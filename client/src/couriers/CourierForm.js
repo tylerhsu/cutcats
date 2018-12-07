@@ -1,5 +1,8 @@
+import 'react-dates/initialize';
+import 'react-dates/lib/css/_datepicker.css';
 import React from 'react';
 import PropTypes from 'prop-types';
+import { SingleDatePicker } from 'react-dates';
 import {
   Button,
   Form,
@@ -80,7 +83,21 @@ export default class CourierForm extends React.Component {
           </FormGroup>
           <FormGroup>
             <Label for='startDate'>Start Date</Label>
-            <Input id='startDate' type='text' name='startDate' value={this.state.courier.startDate ? moment(this.state.courier.startDate).format('M/D/YYYY') : ''} onChange={this.handleChange} />
+            <SingleDatePicker
+              date={this.state.courier.startDate ? moment(this.state.courier.startDate) : null}
+              onDateChange={date => this.handleChange({ target: { name: 'startDate', value: date } })}
+              focused={this.state.startDateFocused}
+              onFocusChange={({ focused }) => this.setState({ startDateFocused: focused })}
+              numberOfMonths={1}
+              displayFormat='M/D/YYYY'
+              openDirection='up'
+              hideKeyboardShortcutsPanel
+              small
+              block
+              isOutsideRange={() => false}
+              placeholder=''
+              id='startDate'
+            />
           </FormGroup>
           <FormGroup>
             <Label>Monthly Radio Rental?</Label>
