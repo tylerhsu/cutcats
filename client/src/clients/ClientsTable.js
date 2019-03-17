@@ -26,7 +26,7 @@ export default class ClientsTable extends React.Component {
     };
 
     this.handleFreetextChange = this.handleFreetextChange.bind(this);
-    this.debouncedFetchClients = _.debounce(this.fetchClients, 500).bind(this)
+    this.debouncedFetchClients = _.debounce(this.fetchClients, 500).bind(this);
     this.openModal = this.openModal.bind(this);
     this.closeModal = this.closeModal.bind(this);
     this.handleFormSubmit = this.handleFormSubmit.bind(this);
@@ -52,7 +52,7 @@ export default class ClientsTable extends React.Component {
     const countParams = {
       ...baseParams,
       count: true,
-    }
+    };
 
     this.setState({ loading: true });
 

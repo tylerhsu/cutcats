@@ -50,7 +50,7 @@ export default class CouriersTable extends React.Component {
     const countParams = {
       ...baseParams,
       count: true,
-    }
+    };
 
     this.setState({ loading: true });
 

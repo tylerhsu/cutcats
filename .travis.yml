@@ -1,14 +1,13 @@
 language: node_js
 install:
-  - cd pdfService && nvm install && npm install && cd ..
-  - nvm install && npm install
+- cd pdfService && nvm install && npm install && cd ..
+- nvm install && npm install
 cache:
   directories:
-    - node_modules
+  - node_modules
 deploy:
+  matrix:
   - provider: heroku
-    api_key:
-      secure: pk+dX4Kgbl8mOaCaWLUl2sQ6Kf8DqewXfUNfA5qAcKyrqBorGz0hVtdG/8dn17EgtocwdSBGunNhFGK3L2a8XMbnpZ36buPXhuIhTflZnM0sTw7TMJyx6U1BSEKWxkxqtKmsUBjvzJbIrFjYGDc2FS5JvQ3MV6Dt9JpfMWrBOPCEJvGGEozp8z0pog4yN6XMmnqFgDqm8iP3YXF/avgqcSswpiGRmEQYQW30RMx7lztkP+fl28jrtMcWl4eTU63BxesE6YfhmboE7ywAiq3Gqrfxrfm5On4KMAimZlSfWajgJ960ee8frfCLh6T5+aahwXRiNpeiW1auZxC0ZyGEMWRL8bIJmPq+Wh5j6C4eiG7B+IU0ymz7tWCK2CySr1uUvJfcPkIb4dxTYxU/bEVXTAZQTl5dcRrJY5jdYqZm3yI42ItK3Y/7tvW7LFJLyheSusCW1XIVGeN7mvFp0bVMwObPZfmC2zonm9obhIQqcMPzXGMG80Sb907xzrnYJFvqnvDB2omLqZPVfVZ6KWhGqrUshxZP4katqeH82Rd0sObePBsqAwB/PmKbMNkvfGMtSkqm11YoHcLPGo8KaZh/3xn+y3bgT92bC7CsLuBFXPWb2oTTm4r6J0JVy7GryN2rc0FOB9E/G3jB9nKCaCeTqgLzMiPg0EWjzUZXpGoTACs=
     app:
       master: cutcats-production
       develop: cutcats-staging
@@ -22,3 +21,5 @@ deploy:
     skip_cleanup: true
     on:
       branch: master
+  api_key:
+    secure: DLMfu6JQ/6FRg2xR3LWnBIeRWMucyNS0w6GCE+R2RQv6AlwY+VNwyqeQNnKpS+rfgH0SZA5r/2X/MSL4/vb8lc27RuksCqRALfmAjhlzCwIGMaA8cTQJw2Zmi9QK23mGYJV02su9egc/dOewtGJp9I8gW8ydjibOADnq8XGt9oZopCU4PERPx5SOyemLetRPCUyInujbE0ck6guGARsaf9STI+C4yNuLS+4TVld7kPBz+7cEXOxY29MrRv+B1L0xFH2XllAHVHCc0mO0JIYVM1tc+2NLnnL7cZEGIlA2OoRdeV6qwwIg5v5sIiLPNeWx3TFGyLVGYwJIG5FveeqYowaCuMcbobVTYvlKtbImeL2c67Rxrwv9OTgWrQMrYZHpoD4Om4bM4T3GreNkf65N/RC8JbAfmGmJeZHl2CehGYpm3utdrbxEgQr06LUW8/P6NTxPF3NxP4SpNlZD32VpdIfYIecFDOpZdekmXBfETuXyyCouwOHouLm1yEJCCWlyAJWP5DybEUtgNORTkA3EDAkX3bzxJKeOS/6LU/PSuQRA2C1YFAs8TK0vUFkK1m9DZ0aGyMdnHJ9vwmKOZECP/0sudwWrAq+Ch3w0WKVBS/ZRAM7GA2kOMLnBZO0PaxPbb1uwap74n9Rwizvw/YWmuKszHBI9iDmyEgpwuz6al7w=
