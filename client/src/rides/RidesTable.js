@@ -1,4 +1,5 @@
 import React from 'react';
+import _ from 'lodash';
 import axios from 'axios';
 import moment from 'moment';
 import 'react-dates/initialize';
@@ -14,26 +15,34 @@ import {
   InputGroupText,
   InputGroupAddon
 } from 'reactstrap';
-import { getErrorMessage } from '../global/misc';
+import { getErrorMessage, getUrlQuery, updateUrlQuery } from '../global/misc';
+import Paginator from '../global/Paginator';
 
 const RESULTS_PER_PAGE = 100;
+const memoizedAxios = _.memoize(axios, config => JSON.stringify(config));
 
 export default class RidesTable extends React.Component {
   constructor (props) {
     super(props);
 
+    const query = getUrlQuery();
+    const fromDate = parseInt(query.fromDate);
+    const toDate = parseInt(query.toDate);
+    const page = parseInt(query.page);
     this.state = {
       rides: [],
-      freetext: '',
-      fromDate: new Date(),
-      toDate: new Date(),
+      freetext: query.freetext || '',
+      fromDate: fromDate ? new Date(fromDate) : new Date(),
+      toDate: toDate ? new Date(toDate) : new Date(),
       loading: true,
-      page: 1,
+      page: page || 1,
       error: null
     };
 
     this.handleFreetextChange = this.handleFreetextChange.bind(this);
     this.handleDatesChange = this.handleDatesChange.bind(this);
+    this.handlePageChange = this.handlePageChange.bind(this);
+    this.debouncedFetchRides = _.debounce(this.fetchRides, 500).bind(this);
   }
 
   getFetchParams() {
@@ -61,18 +70,24 @@ export default class RidesTable extends React.Component {
 
   fetchRides () {
     let url = '/api/rides';
-    let params = this.getFetchParams();
+    let fetchParams = this.getFetchParams();
+    let countParams = {
+      ...this.getFetchParams(),
+      count: true,
+    };
+    delete countParams.page;
+    delete countParams.resultsPerPage;
 
     this.setState({ loading: true });
 
     return Promise.all([
-      axios.get(url, { params }),
-      axios.get(url, { params: { ...params, count: true } })
+      memoizedAxios({ url, params: fetchParams }),
+      memoizedAxios({ url, params: countParams })
     ])
       .then(responses => {
         this.setState({
           rides: responses[0].data,
-          count: responses[1].data.count
+          count: responses[1].data.count,
         });
       })
       .catch(err => {
@@ -88,18 +103,39 @@ export default class RidesTable extends React.Component {
   }
 
   handleFreetextChange (e) {
+    const freetext = e.target.value;
     this.setState({
-      freetext: e.target.value
+      freetext,
+      page: 1,
+      loading: true,
     }, () => {
-      this.fetchRides();
+      updateUrlQuery({
+        freetext,
+        page: null,
+      });
+      this.debouncedFetchRides();
     });
   }
 
   handleDatesChange ({ startDate, endDate }) {
     this.setState({
       fromDate: startDate,
-      toDate: endDate
+      toDate: endDate,
+      page: 1,
     }, () => {
+      updateUrlQuery({
+        fromDate: startDate.valueOf(),
+        toDate: endDate.valueOf(),
+        page: null,
+      });
+      this.fetchRides();
+    });
+  }
+
+  handlePageChange (pageObj) {
+    const page = pageObj.selected + 1;
+    this.setState({ page }, () => {
+      updateUrlQuery({ page });
       this.fetchRides();
     });
   }
@@ -126,7 +162,7 @@ export default class RidesTable extends React.Component {
 
       return (
         <React.Fragment>
-          <div className='mb-4'>Showing {this.state.count > RESULTS_PER_PAGE ? `first ${RESULTS_PER_PAGE} of ` : ''}{this.state.count} ride{this.state.count === 1 ? '' : 's'}</div>
+          {this.renderPaginator()}
           <table className="table">
             <thead>
               <tr>
@@ -143,6 +179,7 @@ export default class RidesTable extends React.Component {
               {rides}
             </tbody>
           </table>
+          {this.renderPaginator()}
         </React.Fragment>
       );
     } else {
@@ -152,6 +189,19 @@ export default class RidesTable extends React.Component {
         <div>{`No rides ${matching} ${between}`}</div>
       );
     }
+  }
+
+  renderPaginator () {
+    return (
+      <div className='d-flex justify-content-center'>
+        <Paginator
+          initialPage={this.state.page - 1}
+          pageCount={Math.ceil(this.state.count / RESULTS_PER_PAGE)}
+          onPageChange={this.handlePageChange}
+          disableInitialCallback={true}
+        />
+      </div>
+    );
   }
 
   render () {
