@@ -1,26 +1,37 @@
 import React from 'react';
+import _ from 'lodash';
 import axios from 'axios';
 import ClientForm from './ClientForm';
 import { Modal } from 'reactstrap';
-import { getErrorMessage } from '../global/misc';
+import { getErrorMessage, updateUrlQuery, getUrlQuery } from '../global/misc';
+import Paginator from '../global/Paginator';
+
+const RESULTS_PER_PAGE = 100;
+const memoizedAxios = _.memoize(axios, config => JSON.stringify(config));
 
 export default class ClientsTable extends React.Component {
   constructor (props) {
     super(props);
-
+    
+    const query = getUrlQuery();
     this.state = {
       clients: null,
       zones: null,
       freetext: '',
       modalOpen: false,
       clientBeingEdited: null,
-      formErrorMessage: ''
+      formErrorMessage: '',
+      page: query.page ? parseInt(query.page) : 1,
+      count: null,
+      loading: true,
     };
 
     this.handleFreetextChange = this.handleFreetextChange.bind(this);
+    this.debouncedFetchClients = _.debounce(this.fetchClients, 500).bind(this)
     this.openModal = this.openModal.bind(this);
     this.closeModal = this.closeModal.bind(this);
     this.handleFormSubmit = this.handleFormSubmit.bind(this);
+    this.handlePageChange = this.handlePageChange.bind(this);
   }
 
   componentDidMount () {
@@ -31,17 +42,34 @@ export default class ClientsTable extends React.Component {
   fetchClients () {
     let url = '/api/clients';
 
-    let params = {
-      q: this.state.freetext
+    const baseParams = {
+      q: this.state.freetext,
     };
-
-    if (this.state.freetext) {
-      params.q = this.state.freetext;
+    const fetchParams = {
+      ...baseParams,
+      resultsPerPage: RESULTS_PER_PAGE,
+      page: this.state.page,
+    };
+    const countParams = {
+      ...baseParams,
+      count: true,
     }
 
-    return axios.get(url, { params })
-      .then(res => {
-        this.setState({ clients: res.data });
+    this.setState({ loading: true });
+
+    return Promise.all([
+      memoizedAxios({ url, params: fetchParams }),
+      memoizedAxios({ url, params: countParams }),
+    ])
+      .then(responses => {
+        const [fetchResponse, countResponse] = responses;
+        this.setState({
+          clients: fetchResponse.data,
+          count: countResponse.data.count,
+        });
+      })
+      .finally(() => {
+        this.setState({ loading: false });
       });
   }
 
@@ -56,9 +84,12 @@ export default class ClientsTable extends React.Component {
 
   handleFreetextChange (e) {
     this.setState({
-      freetext: e.target.value
+      loading: true,
+      freetext: e.target.value,
+      page: 1,
     }, () => {
-      this.fetchClients();
+      updateUrlQuery({ page: null });
+      this.debouncedFetchClients();
     });
   }
 
@@ -111,43 +142,64 @@ export default class ClientsTable extends React.Component {
       });
   }
 
+  handlePageChange (pageObj) {
+    const page = pageObj.selected + 1;
+    this.setState({ page }, () => {
+      updateUrlQuery({ page });
+      this.fetchClients();
+    });
+  }
+
   renderTable () {
     if (!this.state.clients) {
       return null;
-    }
-
-    if (this.state.clients.length) {
+    } else if (this.state.clients.length) {
       return (
-        <table className="table">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Phone</th>
-              <th>Email</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {this.state.clients.map(client => (
-              <tr key={client._id}>
-                <td>{client.name}</td>
-                <td>{client.phone}</td>
-                <td>{client.email}</td>
-                <td>
-                  <button onClick={() => this.openModal(client)} className='btn btn-link'>
-                              Edit
-                  </button>
-                </td>
+        <React.Fragment>
+          {this.renderPaginator()}
+          <table className="table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Phone</th>
+                <th>Email</th>
+                <th></th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {this.state.clients.map(client => (
+                <tr key={client._id}>
+                  <td>{client.name}</td>
+                  <td>{client.phone}</td>
+                  <td>{client.email}</td>
+                  <td>
+                    <button onClick={() => this.openModal(client)} className='btn btn-link'>Edit</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {this.renderPaginator()}
+        </React.Fragment>
       );
     } else {
       return (
         <div>No results matching &quot;{this.state.freetext}&quot;</div>
       );
     }
+  }
+
+  renderPaginator () {
+    return (
+      <div className='d-flex justify-content-center'>
+        <Paginator
+          initialPage={this.state.page - 1}
+          pageCount={Math.ceil(this.state.count / RESULTS_PER_PAGE)}
+          onPageChange={this.handlePageChange}
+          disableInitialCallback={true}
+        />
+      </div>
+    );
   }
 
   render () {
@@ -174,7 +226,13 @@ export default class ClientsTable extends React.Component {
           </div>
           <div className="row">
             <div className="col">
-              { this.renderTable() }
+              {
+                this.state.loading ? (
+                  <em className='text-secondary'>Loading...</em>
+                ) : (
+                  this.renderTable()
+                )
+              }
             </div>
           </div>
         </div>

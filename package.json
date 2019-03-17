@@ -70,6 +70,7 @@
     "react-dom": "^16.4.1",
     "react-dropzone": "^4.2.13",
     "react-hot-loader": "^4.3.4",
+    "react-paginate": "^6.3.0",
     "react-popper": "^1.0.0",
     "react-redux": "^5.0.7",
     "react-url-query": "^1.4.0",
