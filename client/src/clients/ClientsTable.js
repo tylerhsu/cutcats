@@ -17,7 +17,7 @@ export default class ClientsTable extends React.Component {
     this.state = {
       clients: null,
       zones: null,
-      freetext: '',
+      freetext: query.freetext || '',
       modalOpen: false,
       clientBeingEdited: null,
       formErrorMessage: '',
@@ -83,12 +83,16 @@ export default class ClientsTable extends React.Component {
   }
 
   handleFreetextChange (e) {
+    const freetext = e.target.value;
     this.setState({
+      freetext,
       loading: true,
-      freetext: e.target.value,
       page: 1,
     }, () => {
-      updateUrlQuery({ page: null });
+      updateUrlQuery({
+        freetext,
+        page: null,
+      });
       this.debouncedFetchClients();
     });
   }
