@@ -123,8 +123,8 @@ export default class RidesTable extends React.Component {
       page: 1,
     }, () => {
       updateUrlQuery({
-        fromDate: startDate.valueOf(),
-        toDate: endDate.valueOf(),
+        fromDate: startDate ? startDate.valueOf() : null,
+        toDate: endDate ? endDate.valueOf() : null,
         page: null,
       });
       this.fetchRides();
