@@ -7,7 +7,6 @@ import { getErrorMessage, updateUrlQuery, getUrlQuery } from '../global/misc';
 import Paginator from '../global/Paginator';
 
 const RESULTS_PER_PAGE = 100;
-const memoizedAxios = _.memoize(axios, config => JSON.stringify(config));
 
 export default class ClientsTable extends React.Component {
   constructor (props) {
@@ -58,8 +57,8 @@ export default class ClientsTable extends React.Component {
     this.setState({ loading: true });
 
     return Promise.all([
-      memoizedAxios({ url, params: fetchParams }),
-      memoizedAxios({ url, params: countParams }),
+      axios({ url, params: fetchParams }),
+      axios({ url, params: countParams }),
     ])
       .then(responses => {
         const [fetchResponse, countResponse] = responses;
