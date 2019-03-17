@@ -18,7 +18,11 @@ export default class ClientForm extends React.Component {
     super(props);
 
     this.state = {
-      client: this.props.client || {}
+      client: this.props.client || {
+        paymentType: 'invoiced',
+        deliveryFeeStructure: 'on demand food',
+        adminFeeType: 'scale',
+      }
     };
 
     this.handleChange = this.handleChange.bind(this);
@@ -80,7 +84,7 @@ export default class ClientForm extends React.Component {
           <FormGroup>
             <Label for='deliveryFeeStructure'>Delivery Fee Structure</Label>
             <Input id='deliveryFeeStructure' type='select' name='deliveryFeeStructure' value={this.state.client.deliveryFeeStructure} onChange={this.handleChange}>
-              <option value='on demand food' >On-demand food</option>
+              <option value='on demand food'>On-demand food</option>
               <option value='legacy on demand food'>Legacy on-demand food</option>
               <option value='catering food'>Catering Food</option>
               <option value='cargo/wholesale/commissary'>Cargo/wholesale/commissary</option>
