@@ -6,8 +6,9 @@ cache:
   directories:
   - node_modules
 deploy:
-  matrix:
   - provider: heroku
+    api_key:
+      secure: DLMfu6JQ/6FRg2xR3LWnBIeRWMucyNS0w6GCE+R2RQv6AlwY+VNwyqeQNnKpS+rfgH0SZA5r/2X/MSL4/vb8lc27RuksCqRALfmAjhlzCwIGMaA8cTQJw2Zmi9QK23mGYJV02su9egc/dOewtGJp9I8gW8ydjibOADnq8XGt9oZopCU4PERPx5SOyemLetRPCUyInujbE0ck6guGARsaf9STI+C4yNuLS+4TVld7kPBz+7cEXOxY29MrRv+B1L0xFH2XllAHVHCc0mO0JIYVM1tc+2NLnnL7cZEGIlA2OoRdeV6qwwIg5v5sIiLPNeWx3TFGyLVGYwJIG5FveeqYowaCuMcbobVTYvlKtbImeL2c67Rxrwv9OTgWrQMrYZHpoD4Om4bM4T3GreNkf65N/RC8JbAfmGmJeZHl2CehGYpm3utdrbxEgQr06LUW8/P6NTxPF3NxP4SpNlZD32VpdIfYIecFDOpZdekmXBfETuXyyCouwOHouLm1yEJCCWlyAJWP5DybEUtgNORTkA3EDAkX3bzxJKeOS/6LU/PSuQRA2C1YFAs8TK0vUFkK1m9DZ0aGyMdnHJ9vwmKOZECP/0sudwWrAq+Ch3w0WKVBS/ZRAM7GA2kOMLnBZO0PaxPbb1uwap74n9Rwizvw/YWmuKszHBI9iDmyEgpwuz6al7w=
     app:
       master: cutcats-production
       develop: cutcats-staging
@@ -21,5 +22,3 @@ deploy:
     skip_cleanup: true
     on:
       branch: master
-  api_key:
-    secure: DLMfu6JQ/6FRg2xR3LWnBIeRWMucyNS0w6GCE+R2RQv6AlwY+VNwyqeQNnKpS+rfgH0SZA5r/2X/MSL4/vb8lc27RuksCqRALfmAjhlzCwIGMaA8cTQJw2Zmi9QK23mGYJV02su9egc/dOewtGJp9I8gW8ydjibOADnq8XGt9oZopCU4PERPx5SOyemLetRPCUyInujbE0ck6guGARsaf9STI+C4yNuLS+4TVld7kPBz+7cEXOxY29MrRv+B1L0xFH2XllAHVHCc0mO0JIYVM1tc+2NLnnL7cZEGIlA2OoRdeV6qwwIg5v5sIiLPNeWx3TFGyLVGYwJIG5FveeqYowaCuMcbobVTYvlKtbImeL2c67Rxrwv9OTgWrQMrYZHpoD4Om4bM4T3GreNkf65N/RC8JbAfmGmJeZHl2CehGYpm3utdrbxEgQr06LUW8/P6NTxPF3NxP4SpNlZD32VpdIfYIecFDOpZdekmXBfETuXyyCouwOHouLm1yEJCCWlyAJWP5DybEUtgNORTkA3EDAkX3bzxJKeOS/6LU/PSuQRA2C1YFAs8TK0vUFkK1m9DZ0aGyMdnHJ9vwmKOZECP/0sudwWrAq+Ch3w0WKVBS/ZRAM7GA2kOMLnBZO0PaxPbb1uwap74n9Rwizvw/YWmuKszHBI9iDmyEgpwuz6al7w=
