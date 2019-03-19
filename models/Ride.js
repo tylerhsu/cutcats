@@ -62,6 +62,8 @@ rideSchema.index({
   originName: 'text'
 });
 
+rideSchema.index({ updatedAt: 1 });
+
 // csv column -> model field
 const CSV_COLUMN_MAP = {
   'job id': 'jobId',
