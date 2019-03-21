@@ -96,8 +96,9 @@ function importRides (req, res) {
         errorCount++;
         if (errorCount >= 100) {
           // abort after first 100 errors
-          file.unpipe();
           res.end();
+          req.unpipe();
+          file.unpipe().destroy();
         }
       });
     });
