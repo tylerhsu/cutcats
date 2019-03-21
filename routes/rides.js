@@ -78,6 +78,7 @@ function importRides (req, res) {
   const save = ['true', '1'].includes((req.query.save || '').toLowerCase());
   const rideImporter = new RideImporter({ save });
   const busboy = new Busboy({ headers: req.headers });
+  let errorCount = 0;
 
   req
     .pipe(busboy)
@@ -89,11 +90,18 @@ function importRides (req, res) {
         })
         .pipe(transform(rideImporter.importRow))
         .pipe(res);
-    });
 
-  rideImporter.on('error', () => {
-    res.status(400);
-  });
+      rideImporter.on('error', () => {
+        res.status(400);
+        errorCount++;
+        if (errorCount >= 100) {
+          // abort after first 100 errors
+          req.unpipe();
+          file.unpipe().destroy();
+          res.end();
+        }
+      });
+    });
 }
 
 class RideImporter extends EventEmitter {
