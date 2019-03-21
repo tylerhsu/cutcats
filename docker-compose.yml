@@ -1,0 +1,7 @@
+version: '3'
+services:
+  mongo:
+    image: mongo:3.6
+    command: --storageEngine ephemeralForTest
+    ports:
+      - '27357:27017'
