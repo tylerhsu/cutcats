@@ -93,26 +93,23 @@ function importRides (req, res) {
 
       rideImporter.on('error', () => {
         res.status(400);
-        errorCount++;
-        if (errorCount >= 100) {
-          // abort after first 100 errors
-          res.end();
-          req.unpipe();
-          file.unpipe().destroy();
-        }
       });
     });
 }
 
 class RideImporter extends EventEmitter {
-  constructor (options = {
-    save: true,
-    fieldsForAll: {}
-  }) {
+  constructor (options = {}) {
     super();
+    options = Object.assign({
+      save: true,
+      fieldsForAll: {},
+      errorLimit: 100,
+    }, options);
     this.save = !!options.save;
     this.fieldsForAll = options.fieldsForAll;
+    this.errorLimit = options.errorLimit;
     this.currentRow = 0;
+    this.errorCount = 0;
     this.numRows = null;
     this.importRow = this.importRow.bind(this);
   }
@@ -125,6 +122,9 @@ class RideImporter extends EventEmitter {
     this.currentRow++;
     // this function can be called multiple times concurrently, so this.currentRow may change
     const row = this.currentRow;
+    if (this.errorLimit && this.errorCount >= this.errorLimit) {
+      return callback();
+    }
     return Promise.resolve(models.Ride.hydrateFromCsv(record))
       .then(fields => {
         return models.Ride.findOne({ jobId: fields.jobId }).exec()
@@ -150,6 +150,7 @@ class RideImporter extends EventEmitter {
         callback();
       })
       .catch(err => {
+        this.errorCount++;
         const message = `Problem on row ${row + 1}: ${err.message}\n`;
         this.emit('error', message);
         callback(null, message);
