@@ -1,5 +1,6 @@
 require('dotenv').config();
 
+const cluster = require('cluster');
 const express = require('express');
 const flash = require('connect-flash');
 const app = express();
@@ -8,6 +9,7 @@ const routes = require('./routes');
 const passport = require('passport');
 const compression = require('compression');
 const port = parseInt(process.env.PORT) || 3000;
+const numCPUs = require('os').cpus().length;
 require('./passportConfig');
 require('./dbConnection');
 
@@ -59,9 +61,25 @@ app.use((err, req, res, next) => {
   }
 });
 
-app.listen(port, () => {
-  if (process.env.NODE_ENV !== 'production') {
-    /* eslint-disable no-console */
-    console.log('webpack dev server listening on port ' + (port + 1));
+if (cluster.isMaster) {
+  console.log(`Master ${process.pid} is running`);
+
+  // Fork workers.
+  for (let i = 0; i < numCPUs; i++) {
+    cluster.fork();
   }
-});
+
+  cluster.on('exit', (worker, code, signal) => {
+    console.log(`worker ${worker.process.pid} died`);
+    // start a new worker to replace the one that died
+    cluster.fork();
+  });
+} else {
+  app.listen(port, () => {
+    console.log(`Worker ${process.pid} listening`);
+    if (process.env.NODE_ENV !== 'production') {
+      /* eslint-disable no-console */
+      console.log('webpack dev server listening on port ' + (port + 1));
+    }
+  });
+}
