@@ -9,7 +9,6 @@ const routes = require('./routes');
 const passport = require('passport');
 const compression = require('compression');
 const port = parseInt(process.env.PORT) || 3000;
-const numCPUs = require('os').cpus().length;
 require('./passportConfig');
 require('./dbConnection');
 
@@ -65,7 +64,9 @@ if (cluster.isMaster) {
   console.log(`Master ${process.pid} is running`);
 
   // Fork workers.
-  for (let i = 0; i < numCPUs; i++) {
+  // https://devcenter.heroku.com/articles/node-memory-use#running-multiple-processes
+  const numWorkers = parseInt(process.env.WEB_CONCURRENCY) || 1;
+  for (let i = 0; i < numWorkers; i++) {
     cluster.fork();
   }
 
