@@ -7,7 +7,7 @@
     "build": "neutrino build",
     "dev": "concurrently 'nodemon server.js' 'npm run client'",
     "pretest": "docker-compose up -d",
-    "test": "neutrino test -- ./setupTests.js \"./!(node_modules)/**/*.test.js\"",
+    "test": "neutrino test -- ./setupTests.js \"./!(node_modules|pdfService)/**/*.test.js\"",
     "start": "node server.js",
     "client": "neutrino start",
     "heroku-postbuild": "npm run build",
