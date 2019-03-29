@@ -6,8 +6,8 @@
   "scripts": {
     "build": "neutrino build",
     "dev": "concurrently 'nodemon server.js' 'npm run client'",
-    "pretest": "mongod --config testDb/mongod.conf",
-    "test": "neutrino test -- ./setupTests.js \"./models/**/*.test.js\" \"./client/**/*.test.js\" \"./routes/**/*.test.js\"; status=$?; mongod --config testDb/mongod.conf --shutdown; exit $status",
+    "pretest": "docker-compose up -d",
+    "test": "neutrino test -- ./setupTests.js \"./!(node_modules)/**/*.test.js\"",
     "start": "node server.js",
     "client": "neutrino start",
     "heroku-postbuild": "npm run build",

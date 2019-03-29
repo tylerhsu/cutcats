@@ -78,7 +78,7 @@ describe('QuickbooksPayrollNonInvoicedIncome', function() {
         Date: '01/31/2000',
         Memo: 'Cash Rides Payout',
         Account: 'Guaranteed Pay to Partners:Delivery Fee Payout',
-        Amount: 9,
+        Amount: 6,
         Class: 'CutCats'
       });
     });
