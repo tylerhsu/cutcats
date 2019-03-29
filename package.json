@@ -10,7 +10,6 @@
     "test": "neutrino test -- ./setupTests.js \"./!(node_modules|pdfService)/**/*.test.js\"",
     "start": "node server.js",
     "client": "neutrino start",
-    "heroku-postbuild": "npm run build",
     "lint": "eslint --ext .js,.jsx ."
   },
   "repository": {
@@ -18,8 +17,8 @@
     "url": "git+https://github.com/tylerhsu/cutcats.git"
   },
   "engines": {
-    "node": "8.9.4",
-    "npm": "6.9.0"
+    "node": "10.15.3",
+    "npm": "6.4.1"
   },
   "keywords": [],
   "author": "",
