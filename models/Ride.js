@@ -114,21 +114,27 @@ function hydrateBoolean (csvValue) {
   return ['true', 'yes', '1'].includes(csvValue.toLowerCase());
 }
 
-function hydrateClient (csvValue) {
-  let clientName = (csvValue || '').trim();
+function hydrateClient (csvValue, csvRow, cache = {}) {
+  const clientName = (csvValue || '').trim();
+  const cacheKey = `client:${clientName}`;
   if (!clientName) {
     throw new Error('"client name" column is missing or empty.  This column is required');
   }
 
-  return Client.find({ name: csvValue }).exec()
+  const findClient = () => {
+    return Client.find({ name: csvValue }).exec()
+      .then(results => {
+        if (!(results && results.length)) {
+          return Client.find({ $text: { $search: `"${csvValue}"` } }).exec();
+        } else {
+          return results;
+        }
+      });
+  };
+
+  return (cache.hasOwnProperty(cacheKey) ? Promise.resolve(cache[cacheKey]) : findClient())
     .then(results => {
-      if (!(results && results.length)) {
-        return Client.find({ $text: { $search: `"${csvValue}"` } }).exec();
-      } else {
-        return results;
-      }
-    })
-    .then(results => {
+      cache[cacheKey] = results;
       if (!(results && results.length)) {
         throw new Error(`Could not find client "${csvValue}"`);
       } else if (results.length > 1) {
@@ -140,15 +146,19 @@ function hydrateClient (csvValue) {
     });
 }
 
-function hydrateCourier (csvValue, csvRow) {
+function hydrateCourier (csvValue, csvRow, cache = {}) {
   const radioCallNumber = csvRow['courier number'];
+  const cacheKey = `courier:${radioCallNumber}`;
 
   if (radioCallNumber === undefined) {
     throw new Error('"courier number" column is missing or empty. This column is required.');
   }
 
-  return Courier.findOne({ radioCallNumber }).exec()
+  const findCourier = () => Courier.findOne({ radioCallNumber }).exec();
+
+  return cache.hasOwnProperty(cacheKey) ? Promise.resolve(cache[cacheKey]) : findCourier()
     .then(courier => {
+      cache[cacheKey] = courier;
       if (!courier) {
         throw new Error(`Could not find courier with call number ${radioCallNumber}`);
       } else {
@@ -157,9 +167,11 @@ function hydrateCourier (csvValue, csvRow) {
     });
 }
 
-rideSchema.statics.hydrateFromCsv = function (csvRow) {
-  return hydrateFromCsv(csvRow, CSV_COLUMN_MAP);
+rideSchema.statics.hydrateFromCsv = function (csvRow, cache = {}) {
+  return hydrateFromCsv(csvRow, CSV_COLUMN_MAP, cache);
 };
 
 module.exports = mongoose.model('Ride', rideSchema);
 module.exports.CSV_COLUMN_MAP = CSV_COLUMN_MAP;
+module.exports.hydrateClient = hydrateClient;
+module.exports.hydrateCourier = hydrateCourier

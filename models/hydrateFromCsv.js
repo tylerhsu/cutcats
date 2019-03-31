@@ -1,6 +1,4 @@
-const _ = require('lodash');
-
-module.exports = function (csvRow, columnMap) {
+module.exports = function (csvRow, columnMap, cache = {}) {
   for (let key in csvRow) {
     csvRow[key.toLowerCase()] = csvRow[key];
   }
@@ -29,7 +27,7 @@ module.exports = function (csvRow, columnMap) {
     csvValue = csvValue.trim();
 
     try {
-      return Promise.resolve(hydrateField(csvValue, csvRow))
+      return Promise.resolve(hydrateField(csvValue, csvRow, cache))
         .then(value => ({ [modelField]: value }));
     } catch (err) {
       return Promise.reject(err);

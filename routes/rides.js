@@ -112,6 +112,7 @@ class RideImporter extends EventEmitter {
     this.errorCount = 0;
     this.numRows = null;
     this.importRow = this.importRow.bind(this);
+    this.cache = {};
   }
 
   markEnd () {
@@ -125,7 +126,7 @@ class RideImporter extends EventEmitter {
     if (this.errorLimit && this.errorCount >= this.errorLimit) {
       return callback();
     }
-    return Promise.resolve(models.Ride.hydrateFromCsv(record))
+    return Promise.resolve(models.Ride.hydrateFromCsv(record, this.cache))
       .then(fields => {
         return models.Ride.findOne({ jobId: fields.jobId }).exec()
           .then(ride => {
