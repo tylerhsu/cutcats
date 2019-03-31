@@ -98,10 +98,11 @@ describe('hydrateFromCsv()', function () {
     const csvRow = { 'field 1': '1' };
     const columnMap = {
       'field 1': 'field1',
-      'field 2': 'field2'
+      'field 2': 'field2',
+      'field 3': 'field3',
     };
 
-    return hydrateFromCsv(csvRow, columnMap).should.be.rejectedWith(/Expected a column named "field 2"/);
+    return hydrateFromCsv(csvRow, columnMap).should.be.rejectedWith(/The following columns are missing: "field 2", "field 3"/);
   });
 
   it('is case-insensitive to column names', function () {

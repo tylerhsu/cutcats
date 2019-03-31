@@ -1,6 +1,18 @@
+const _ = require('lodash');
+
 module.exports = function (csvRow, columnMap) {
   for (let key in csvRow) {
     csvRow[key.toLowerCase()] = csvRow[key];
+  }
+
+  const missingColumns = Object.keys(columnMap)
+    .filter(columnName => {
+      return !csvRow.hasOwnProperty(columnName.toLowerCase())
+    });
+
+  if (missingColumns.length) {
+    const columnNames = missingColumns.map(columnName => `"${columnName}"`).join(', ');
+    return Promise.reject(new Error(`The following columns are missing: ${columnNames}`));
   }
 
   const hydrateFields = Object.keys(columnMap).map(columnName => {
@@ -12,10 +24,6 @@ module.exports = function (csvRow, columnMap) {
 
     if (typeof (modelField) === 'object') {
       modelField = modelField.name;
-    }
-
-    if (!csvRow.hasOwnProperty(columnName)) {
-      return Promise.reject(new Error(`Expected a column named "${columnName}"`));
     }
 
     csvValue = csvValue.trim();
