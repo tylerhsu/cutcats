@@ -1,4 +1,5 @@
 const express = require('express');
+const { Writable, Transform, Duplex, pipeline } = require('stream');
 const _ = require('lodash');
 const EventEmitter = require('events').EventEmitter;
 const router = express.Router();
@@ -76,7 +77,6 @@ function _getRidesQuery (req) {
 
 function importRides (req, res) {
   const save = ['true', '1'].includes((req.query.save || '').toLowerCase());
-  const rideImporter = new RideImporter({ save });
   const busboy = new Busboy({ headers: req.headers });
   let errorCount = 0;
 
@@ -85,21 +85,60 @@ function importRides (req, res) {
     .on('file', (fieldName, file) => {
       file
         .pipe(csv.parse({ columns: true }))
-        .on('end', () => {
-          rideImporter.markEnd();
+        .pipe(new AppendRowNumbers())
+        .pipe(new Batcher(100))
+        .pipe(new RideImporter({ save }))
+        .on('data', () => {
+          // The only data rideImporter supplies is error messages
+          res.status(400);
         })
-        .pipe(transform(rideImporter.importRow))
         .pipe(res);
-
-      rideImporter.on('error', () => {
-        res.status(400);
-      });
     });
 }
 
-class RideImporter extends EventEmitter {
+class AppendRowNumbers extends Transform {
+  constructor(options = {}) {
+    options.writableObjectMode = true;
+    options.readableObjectMode = true;
+    super(options);
+    this.rowNumber = 0;
+  }
+
+  _transform(chunk, encoding, callback) {
+    this.rowNumber++;
+    callback(null, [this.rowNumber, chunk]);
+  }
+}
+
+class Batcher extends Transform {
+   constructor(batchSize, options = {}) {
+     options.writableObjectMode = true;
+     options.readableObjectMode = true;
+     super(options);
+     this.batchSize = batchSize;
+     this.buffer = [];
+   }
+  
+  _transform(chunk, encoding, callback) {
+    this.buffer.push(chunk);
+    if (this.buffer.length >= this.batchSize) {
+      callback(null, this.buffer);
+      this.buffer = [];
+    } else {
+      callback();
+    }
+  }
+
+  _flush(callback) {
+    callback(null, this.buffer);
+    this.buffer = [];
+  }
+}
+
+class RideImporter extends Transform {
   constructor (options = {}) {
-    super();
+    options.writableObjectMode = true;
+    super(options);
     options = Object.assign({
       save: true,
       fieldsForAll: {},
@@ -108,53 +147,58 @@ class RideImporter extends EventEmitter {
     this.save = !!options.save;
     this.fieldsForAll = options.fieldsForAll;
     this.errorLimit = options.errorLimit;
-    this.currentRow = 0;
     this.errorCount = 0;
-    this.numRows = null;
-    this.importRow = this.importRow.bind(this);
     this.cache = {};
+    this.errors = [];
   }
 
-  markEnd () {
-    this.numRows = this.currentRow;
+  _writev(chunks, callback) {
+    chunks.forEach(chunk => {
+      this._transform(chunk.chunk, chunk.encoding, chunk.callback);
+    });
+    callback();
   }
-
-  importRow (record, callback) {
-    this.currentRow++;
-    // this function can be called multiple times concurrently, so this.currentRow may change
-    const row = this.currentRow;
-    if (this.errorLimit && this.errorCount >= this.errorLimit) {
-      return callback();
-    }
-    return Promise.resolve(models.Ride.hydrateFromCsv(record, this.cache))
-      .then(fields => {
-        return models.Ride.findOne({ jobId: fields.jobId }).exec()
-          .then(ride => {
-            if (ride) {
+  
+  _transform(batchOfRows, encoding, callback) {
+    return Promise.all(batchOfRows.map(rowData => {
+      const [rowNumber, row] = rowData;
+      return models.Ride.hydrateFromCsv(row, this.cache)
+        .catch(err => {
+          this.push(`Problem on row ${rowNumber}: ${err.message}\n`);
+        });
+    }))
+      .then(hydratedRows => {
+        hydratedRows = hydratedRows.filter(hydratedRow => !!hydratedRow);
+        const jobIds = hydratedRows.map(hydratedRow => hydratedRow.jobId);
+        if (!jobIds.length) {
+          return;
+        }
+        return models.Ride.find({ jobId: { $in: jobIds } }).exec()
+          .then(rides => {
+            const hasJobId = (jobId) => (doc) => doc.jobId === jobId;
+            const findOrCreateRide = (jobId) => {
+              const ride = rides.find(hasJobId(jobId)) || new models.Ride();
+              const hydratedRow = hydratedRows.find(hasJobId(jobId));
               ride.set({
                 ...this.fieldsForAll,
-                ...fields
+                ...hydratedRow,
               });
-            } else {
-              ride = new models.Ride({
-                ...this.fieldsForAll,
-                ...fields
-              });
-            }
-            return ride;
+              return ride;
+            };
+            const docs = jobIds.map(findOrCreateRide);
+            return Promise.all(docs.map(doc => {
+              return (this.save ? doc.save() : doc.validate())
+                .catch(err => {
+                  this.push(err);
+                });
+            }));
           });
-      })
-      .then(ride => {
-        return this.save ? ride.save() : ride.validate();
       })
       .then(() => {
         callback();
       })
       .catch(err => {
-        this.errorCount++;
-        const message = `Problem on row ${row + 1}: ${err.message}\n`;
-        this.emit('error', message);
-        callback(null, message);
+        callback(err);
       });
   }
 }
