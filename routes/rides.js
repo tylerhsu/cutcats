@@ -101,7 +101,7 @@ class AppendRowNumbers extends Transform {
     options.writableObjectMode = true;
     options.readableObjectMode = true;
     super(options);
-    this.rowNumber = 0;
+    this.rowNumber = 1;
   }
 
   _transform(chunk, encoding, callback) {
@@ -153,10 +153,15 @@ class RideImporter extends Transform {
   }
 
   _writev(chunks, callback) {
-    chunks.forEach(chunk => {
-      this._transform(chunk.chunk, chunk.encoding, chunk.callback);
-    });
-    callback();
+    Promise.all(chunks.map(chunk => {
+      return this._transform(chunk.chunk, chunk.encoding, chunk.callback);
+    }))
+      .then(() => {
+        callback();
+      })
+      .catch(err => {
+        callback(err);
+      });
   }
   
   _transform(batchOfRows, encoding, callback) {

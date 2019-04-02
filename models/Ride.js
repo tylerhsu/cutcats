@@ -156,7 +156,7 @@ function hydrateCourier (csvValue, csvRow, cache = {}) {
 
   const findCourier = () => Courier.findOne({ radioCallNumber }).exec();
 
-  return cache.hasOwnProperty(cacheKey) ? Promise.resolve(cache[cacheKey]) : findCourier()
+  return (cache.hasOwnProperty(cacheKey) ? Promise.resolve(cache[cacheKey]) : findCourier())
     .then(courier => {
       cache[cacheKey] = courier;
       if (!courier) {
