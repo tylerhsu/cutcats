@@ -152,59 +152,55 @@ class RideImporter extends Transform {
     this.errors = [];
   }
 
-  _writev(chunks, callback) {
-    Promise.all(chunks.map(chunk => {
-      return this._transform(chunk.chunk, chunk.encoding, chunk.callback);
-    }))
-      .then(() => {
-        callback();
-      })
-      .catch(err => {
-        callback(err);
-      });
+  async _writev(chunks, callback) {
+    try {
+      await Promise.all(chunks.map(async chunk => {
+        return await this._transform(chunk.chunk, chunk.encoding, chunk.callback);
+      }))
+      callback();
+    } catch (err) {
+      callback(err);
+    }
   }
   
-  _transform(batchOfRows, encoding, callback) {
-    return Promise.all(batchOfRows.map(rowData => {
-      const [rowNumber, row] = rowData;
-      return models.Ride.hydrateFromCsv(row, this.cache)
-        .catch(err => {
+  async _transform(batchOfRows, encoding, callback) {
+    try {
+      let hydratedRows = await Promise.all(batchOfRows.map(async rowData => {
+        const [rowNumber, row] = rowData;
+        try {
+          return await models.Ride.hydrateFromCsv(row, this.cache);
+        } catch (err) {
           this.push(`Problem on row ${rowNumber}: ${err.message}\n`);
-        });
-    }))
-      .then(hydratedRows => {
-        hydratedRows = hydratedRows.filter(hydratedRow => !!hydratedRow);
-        const jobIds = hydratedRows.map(hydratedRow => hydratedRow.jobId);
-        if (!jobIds.length) {
-          return;
         }
-        return models.Ride.find({ jobId: { $in: jobIds } }).exec()
-          .then(rides => {
-            const hasJobId = (jobId) => (doc) => doc.jobId === jobId;
-            const findOrCreateRide = (jobId) => {
-              const ride = rides.find(hasJobId(jobId)) || new models.Ride();
-              const hydratedRow = hydratedRows.find(hasJobId(jobId));
-              ride.set({
-                ...this.fieldsForAll,
-                ...hydratedRow,
-              });
-              return ride;
-            };
-            const docs = jobIds.map(findOrCreateRide);
-            return Promise.all(docs.map(doc => {
-              return (this.save ? doc.save() : doc.validate())
-                .catch(err => {
-                  this.push(err);
-                });
-            }));
-          });
-      })
-      .then(() => {
-        callback();
-      })
-      .catch(err => {
-        callback(err);
-      });
+      }));
+      hydratedRows = hydratedRows.filter(hydratedRow => !!hydratedRow);
+      const jobIds = hydratedRows.map(hydratedRow => hydratedRow.jobId);
+      if (!jobIds.length) {
+        return callback();
+      }
+      const rides = await models.Ride.find({ jobId: { $in: jobIds } }).exec();
+      const findOrCreateRide = (jobId) => {
+        const hasJobId = (doc) => doc.jobId === jobId;
+        const ride = rides.find(hasJobId) || new models.Ride();
+        const hydratedRow = hydratedRows.find(hasJobId);
+        ride.set({
+          ...this.fieldsForAll,
+          ...hydratedRow,
+        });
+        return ride;
+      };
+      const docs = jobIds.map(findOrCreateRide);
+      await Promise.all(docs.map(async doc => {
+        try {
+          return await (this.save ? doc.save() : doc.validate());
+        } catch (err) {
+          this.push(err);
+        }
+      }));
+      callback();
+    } catch (err) {
+      callback(err);
+    }
   }
 }
 
