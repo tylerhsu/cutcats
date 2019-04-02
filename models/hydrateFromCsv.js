@@ -5,7 +5,7 @@ module.exports = function (csvRow, columnMap, cache = {}) {
 
   const missingColumns = Object.keys(columnMap)
     .filter(columnName => {
-      return !csvRow.hasOwnProperty(columnName.toLowerCase())
+      return !csvRow.hasOwnProperty(columnName.toLowerCase());
     });
 
   if (missingColumns.length) {

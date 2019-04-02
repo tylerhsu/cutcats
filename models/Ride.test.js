@@ -1,8 +1,8 @@
 import 'should';
-import Ride, { hydrateClient, hydrateCourier } from './Ride';
+import { hydrateClient, hydrateCourier } from './Ride';
 import Client from './Client';
 import Courier from './Courier';
-import { fixtureModel, fixtureModelArray } from './fixtures';
+import { fixtureModel } from './fixtures';
 import { idsShouldBeEqual } from '../routes/util/testUtils';
 
 describe('Ride', function() {
@@ -27,7 +27,7 @@ describe('Ride', function() {
         fixtureModel('Client', { name: clientName }),
         fixtureModel('Client', { name: 'foo' }),
         fixtureModel('Client', { name: 'bar' }),
-      ]
+      ];
       return Client.ensureIndexes()
         .then(() => {
           return clients.map(client => client.save());

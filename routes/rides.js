@@ -1,12 +1,10 @@
 const express = require('express');
-const { Writable, Transform, Duplex, pipeline } = require('stream');
+const { Transform } = require('stream');
 const _ = require('lodash');
-const EventEmitter = require('events').EventEmitter;
 const router = express.Router();
 const models = require('../models');
 const csv = require('csv');
 const Busboy = require('busboy');
-const transform = require('stream-transform');
 const moment = require('moment');
 const reportUtils = require('./util/reportUtils');
 const boilerplate = require('./boilerplate');
@@ -78,7 +76,6 @@ function _getRidesQuery (req) {
 function importRides (req, res) {
   const save = ['true', '1'].includes((req.query.save || '').toLowerCase());
   const busboy = new Busboy({ headers: req.headers });
-  let errorCount = 0;
 
   req
     .pipe(busboy)
@@ -111,13 +108,13 @@ class AppendRowNumbers extends Transform {
 }
 
 class Batcher extends Transform {
-   constructor(batchSize, options = {}) {
-     options.writableObjectMode = true;
-     options.readableObjectMode = true;
-     super(options);
-     this.batchSize = batchSize;
-     this.buffer = [];
-   }
+  constructor(batchSize, options = {}) {
+    options.writableObjectMode = true;
+    options.readableObjectMode = true;
+    super(options);
+    this.batchSize = batchSize;
+    this.buffer = [];
+  }
   
   _transform(chunk, encoding, callback) {
     this.buffer.push(chunk);
@@ -156,7 +153,7 @@ class RideImporter extends Transform {
     try {
       await Promise.all(chunks.map(async chunk => {
         return await this._transform(chunk.chunk, chunk.encoding, chunk.callback);
-      }))
+      }));
       callback();
     } catch (err) {
       callback(err);

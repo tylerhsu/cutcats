@@ -174,4 +174,4 @@ rideSchema.statics.hydrateFromCsv = function (csvRow, cache = {}) {
 module.exports = mongoose.model('Ride', rideSchema);
 module.exports.CSV_COLUMN_MAP = CSV_COLUMN_MAP;
 module.exports.hydrateClient = hydrateClient;
-module.exports.hydrateCourier = hydrateCourier
+module.exports.hydrateCourier = hydrateCourier;
