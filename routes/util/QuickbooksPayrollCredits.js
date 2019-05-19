@@ -39,7 +39,7 @@ class QuickbooksPayrollCredits extends QuickbooksExport {
       [CUTCAT_NAME]: courierPaystub.getCourierName(),
       [DATE]: moment(this.periodEnd).format('MM/DD/YYYY'),
       [EXPENSE_ACCOUNT]: this.getExpenseAccount(courierPaystub),
-      [EXPENSE_AMOUNT]: courierPaystub.getDeliveryFeeOwedToRider(),
+      [EXPENSE_AMOUNT]: courierPaystub.getRiderPayoutTotal(),
       [EXPENSE_DESCRIPTION]: `Invoiced Rides Payout pay period ${moment(this.periodStart).format('MM/DD/YYYY')}-${moment(this.periodEnd).format('MM/DD/YYYY')}`,
       [EXPENSE_CLASS]: 'CutCats',
       [AP_ACCOUNT]: 'Accounts Payable'

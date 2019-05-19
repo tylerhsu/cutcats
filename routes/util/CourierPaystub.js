@@ -132,8 +132,12 @@ class CourierPaystub extends AccountingPeriod {
     }
   }
 
+  getRiderPayoutTotal() {
+    return this.getDeliveryFeeOwedToRider() - this.getToCCTotal();
+  }
+
   getPaystubTotal () {
-    return this.getDeliveryFeeOwedToRider() - this.getToCCTotal() - this.getRadioFee();
+    return this.getRiderPayoutTotal() - this.getRadioFee();
   }
 
   getPdfDocDefinition () {
