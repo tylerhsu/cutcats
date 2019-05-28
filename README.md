@@ -1,5 +1,6 @@
 # Cut Cats Accounting Software
-[![Build status][https://travis-ci.org/tylerhsu/cutcats.svg?branch=master] ][https://travis-ci.org/tylerhsu/cutcats]
+[![Build status](https://travis-ci.org/tylerhsu/cutcats.svg?branch=master)](https://travis-ci.org/tylerhsu/cutcats)
+
 A website that assists with payroll and invoice management for Cut Cats Courier.  Built with NodeJS, Express, React, and MongoDB.
 
 ## Local Development
@@ -24,7 +25,7 @@ npm run dev
 7. Navigate to localhost:3001 in your browser.
 
 ## Production Build
-The production bundle is generated with [Neutrino](https://neutrinojs.org), which is basically convenience wrapper around Webpack.  This project's .neutrinorc.js file contains the settings controlling how the site gets bundled for deployment.  Run the build with the following command:
+The production bundle is generated with [Neutrino](https://neutrinojs.org), which is a wrapper around Webpack.  This project's .neutrinorc.js file contains the settings controlling how the site gets bundled for deployment.  Run the build with the following command:
 ```
 npm run build
 ```
@@ -63,8 +64,8 @@ Heroku hosts the website and, via the mLab Heroku addon, the MongoDB database.
 
 Access is granted to members of the [Cut Cats "team" on Heroku](https://dashboard.heroku.com/teams/cutcats/apps).  Create a personal account if you don't already have one, then ask Tyler to add you to the team.
 
-[cutcats-staging on Heroku](https://dashboard.heroku.com/apps/cutcats-staging)
-[cutcats-production on Heroku](https://dashboard.heroku.com/apps/cutcats-production)
+* [cutcats-staging on Heroku](https://dashboard.heroku.com/apps/cutcats-staging)
+* [cutcats-production on Heroku](https://dashboard.heroku.com/apps/cutcats-production)
 
 ### Amazon Web Services
 Payroll and invoice PDFs are stored in S3, and Lambda is used to generate those PDFs.
