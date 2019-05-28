@@ -1,6 +1,6 @@
 # Cut Cats Accounting Software
 [![Build status][https://travis-ci.org/tylerhsu/cutcats.svg?branch=master] ][https://travis-ci.org/tylerhsu/cutcats]
-Cut Cats accounting software
+A website that assists with payroll and invoice management for Cut Cats Courier.  Built with NodeJS, Express, React, and MongoDB.
 
 ## Local Development
 1. Install [nvm](https://github.com/nvm-sh/nvm).  This project manages its node version via a .nvmrc file.
@@ -13,28 +13,72 @@ nvm install
 ```
 npm install
 ```
-5. Run the development server:
-```
-npm run dev
-```
-6. Navigate to localhost:3001 in your browser.
-7. Run tests:
+5. Run unit tests:
 ```
 npm test
 ```
+6. Run the development server:
+```
+npm run dev
+```
+7. Navigate to localhost:3001 in your browser.
 
-## Tooling
-A summary of tools being used to build, deploy, and otherwise configure the application.
+## Production Build
+The production bundle is generated with [Neutrino](https://neutrinojs.org), which is basically convenience wrapper around Webpack.  This project's .neutrinorc.js file contains the settings controlling how the site gets bundled for deployment.  Run the build with the following command:
+```
+npm run build
+```
 
-### Build
-Deployable artifacts, i.e. the production bundle, are generated with [Neutrino](https://neutrinojs.org), which is basically convenience wrapper around Webpack.  This project's .neutrinorc.js file contains the settings controlling how the site gets bundled for deployment.
+## Deployment
+### Automated Deployment
+This project contains a .travis.yml file for use with [Travis CI](https://travis-ci.org) (follow their [getting started guide](https://docs.travis-ci.com/user/tutorial/) if you're unfamiliar).  Once you've linked your Travis CI account to this repo, pushes to the `develop` and `master` branches will cause automatic deployments to staging and production, respectively.  This is the recommended way to deploy.
 
-### Deployment
-This project contains a .travis.yml file for use with [Travis CI](https://travis-ci.org).  Set up a free account there if you don't already have one, then link it to this repo.  Once you've done that, pushes to the `develop` and `master` branches will cause Travis CI to deploy to staging and production, respectively.
+### Manual Deployment
+If you'd prefer to handle deployments without Travis CI, perform the following steps (from the [Heroku docs on deploying](https://devcenter.heroku.com/articles/git)):
+1. [Install the Heroku CLI](https://devcenter.heroku.com/articles/heroku-cli#download-and-install)
+2. Add a git remote that tracks the Heroku app:
+```
+# staging
+heroku git:remote -a cutcats-staging
+git remote rename heroku heroku-staging
+
+# production
+heroku git:remote -a cutcats-production
+git remote rename heroku heroku-production
+```
+3. Deploy e.g. the master branch:
+```
+# staging
+git push heroku-staging master
+
+# production
+git push heroku-production master
+```
 
 ## Service Accounts
-The website is deployed on Heroku and uses a couple other cloud services to support specific features.  Here's a description of what those services are, how they're being used, and how to gain access to them.
-### Heroku
+Here's a list of the accounts you'll need to access in order to administer the project.
 
-### AWS
+### Heroku
+Heroku hosts the website and, via the mLab Heroku addon, the MongoDB database.
+
+Access is granted to members of the [Cut Cats "team" on Heroku](https://dashboard.heroku.com/teams/cutcats/apps).  Create a personal account if you don't already have one, then ask Tyler to add you to the team.
+
+[cutcats-staging on Heroku](https://dashboard.heroku.com/apps/cutcats-staging)
+[cutcats-production on Heroku](https://dashboard.heroku.com/apps/cutcats-production)
+
+### Amazon Web Services
+Payroll and invoice PDFs are stored in S3, and Lambda is used to generate those PDFs.
+
+The AWS account belongs to Cut Cats and is managed by Tyler.  Ask to have a user created for you.
+
 ### Google
+Users log in to the accounting site via google.
+
+OAuth client IDs for local, staging, and production website deployments are managed via the Google Developer Console.  For administrative access to the developer console, ask Tyler to add your google account to the Cut Cats project.
+
+[Cut Cats Google Developer Console](https://console.developers.google.com/apis/dashboard?authuser=0&project=cut-cats)
+
+## Addendum: PDF Service
+This project's `pdfService/` directory contains a standalone piece of software.  It's an [AWS Lambda](https://docs.aws.amazon.com/lambda/latest/dg/welcome.html) function whose purpose is to generate PDFs.  This supports the site's payroll and invoicing features, which require that tens or hundreds of PDFs be generated at once upon request.
+
+For details on developing and deploying the PDF service, consult the readme in the `pdfService/` directory.
