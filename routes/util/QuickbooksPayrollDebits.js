@@ -29,48 +29,27 @@ class QuickbooksPayrollDebits extends QuickbooksExport {
     ];
   }
 
-  getCommonFields(courierPaystub, refNumber) {
-    if (isNaN(parseInt(refNumber))) {
-      throw new Error('refNumber is required');
-    }
-    
-    return {
-      [REF_NUMBER]: refNumber,
-      [CUTCAT_NAME]: courierPaystub.getCourierName(),
-      [DATE]: moment(this.periodEnd).format('MM/DD/YYYY'),
-      [EXPENSE_CLASS]: 'CutCats',
-      [AP_ACCOUNT]: 'Accounts Payable'
-    };
-  }
-
-  getDeliveryFeeRow(courierPaystub, refNumber) {
-    return this.orderFields({
-      ...this.getCommonFields(courierPaystub, refNumber),
-      [EXPENSE_ACCOUNT]: 'Sales Income:Delivery Fee Income',
-      [EXPENSE_AMOUNT]: courierPaystub.getToCCTotal(),
-      [EXPENSE_MEMO]: `Slush owed pay period ${moment(this.periodStart).format('MM/DD/YYYY')}-${moment(this.periodEnd).format('MM/DD/YYYY')}`,
-    });
-  }
-
-  getRadioFeeRow(courierPaystub, refNumber) {
-    return this.orderFields({
-      ...this.getCommonFields(courierPaystub, refNumber),
-      [EXPENSE_ACCOUNT]: 'Radio Service Fees:Rider Monthly Service Fees',
-      [EXPENSE_AMOUNT]: courierPaystub.getRadioFee(),
-      [EXPENSE_MEMO]: 'Radio Unit',
-    });
-  }
-
   getCsvRows() {
-    const deliveryFeeRows = this.courierPaystubs.map((courierPaystub, n) => {
-      return this.getDeliveryFeeRow(courierPaystub, n);
-    });
-    const radioFeeRows = this.courierPaystubs.map((courierPaystub, n) => {
-      return this.getRadioFeeRow(courierPaystub, n + deliveryFeeRows.length);
-    });
-    return deliveryFeeRows.concat(radioFeeRows).filter(row => {
-      return row[EXPENSE_AMOUNT] !== 0;
-    });
+    return this.courierPaystubs.map(courierPaystub => {
+      return {
+        [CUTCAT_NAME]: courierPaystub.getCourierName(),
+        [DATE]: moment(this.periodEnd).format('MM/DD/YYYY'),
+        [EXPENSE_CLASS]: 'CutCats',
+        [AP_ACCOUNT]: 'Accounts Payable',
+        [EXPENSE_ACCOUNT]: 'Radio Service Fees:Rider Monthly Service Fees',
+        [EXPENSE_AMOUNT]: courierPaystub.getRadioFee(),
+        [EXPENSE_MEMO]: 'Radio Unit',
+      };
+    })
+      .filter(row => {
+        return row[EXPENSE_AMOUNT] !== 0;
+      })
+      .map((row, n) => {
+        return this.orderFields({
+          ...row,
+          [REF_NUMBER]: n,
+        });
+      });
   }
 }
 

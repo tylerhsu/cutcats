@@ -14,7 +14,7 @@ class QuickbooksExport {
     const numFieldsInRow = Object.keys(row).length;
     const numFieldsExpected = Object.keys(this.getOrderedFields()).length;
     if (numFieldsInRow !== numFieldsExpected) {
-      throw new Error(`Expected ${numFieldsExpected} but got ${numFieldsInRow}`);
+      throw new Error(`orderFields() expected an object with ${numFieldsExpected} keys but got an object with ${numFieldsInRow} keys instead`);
     }
     return this.getOrderedFields().reduce((memo, fieldName) => {
       memo[fieldName] = row[fieldName];
