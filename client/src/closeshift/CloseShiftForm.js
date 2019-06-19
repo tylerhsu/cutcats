@@ -14,11 +14,12 @@ export default class CloseShiftForm extends React.Component {
 
     this.state = {
       importFile: null,
+      numRidesInFile: null,
       uploaderValidationErrors: null,
       uploaderError: null,
       errorMessage: '',
       loading: false,
-      success: false
+      success: false,
     };
 
     this.handleValidationBegin = this.handleValidationBegin.bind(this);
@@ -32,15 +33,17 @@ export default class CloseShiftForm extends React.Component {
   handleValidationBegin (file) {
     this.setState({
       uploaderValidationErrors: null,
-      uploaderError: null
+      uploaderError: null,
+      numRidesInFile: null,
     });
   }
 
-  handleValidationSuccess (file) {
+  handleValidationSuccess (messages, file) {
     this.setState({
       importFile: file,
       uploaderValidationErrors: null,
-      uploaderError: null
+      uploaderError: null,
+      numRidesInFile: messages.length,
     });
   }
 
@@ -48,7 +51,8 @@ export default class CloseShiftForm extends React.Component {
     this.setState({
       importFile: null,
       uploaderValidationErrors: errors,
-      uploaderError: null
+      uploaderError: null,
+      numRidesInFile: null,
     });
   }
 
@@ -56,7 +60,8 @@ export default class CloseShiftForm extends React.Component {
     this.setState({
       importFile: null,
       uploaderValidationErrors: null,
-      uploaderError: err.message || err || 'An unexpected error occurred'
+      uploaderError: err.message || err || 'An unexpected error occurred',
+      numRidesInFile: null,
     });
   }
 
@@ -64,7 +69,8 @@ export default class CloseShiftForm extends React.Component {
     this.setState({
       importFile: null,
       uploaderValidationErrors: null,
-      uploaderError: null
+      uploaderError: null,
+      numRidesInFile: null,
     });
   }
 
@@ -122,11 +128,11 @@ export default class CloseShiftForm extends React.Component {
             <div className='mt-4' style={{ color: 'red' }}>There was a problem while attempting to validate the file: {this.state.uploaderError}</div>
           )}
           {!!this.state.importFile && (
-            <Button color={this.state.importFile ? 'primary' : 'secondary'} type='submit' onClick={this.submit} disabled={this.state.loading} style={{ width: '8rem' }} className='mt-4'>
+            <Button color={this.state.importFile ? 'primary' : 'secondary'} type='submit' onClick={this.submit} disabled={this.state.loading} className='mt-4'>
               {this.state.loading ? (
                 <em>Importing...</em>
               ) : (
-                'Import rides'
+                `Import ${this.state.numRidesInFile} rides`
               )}
             </Button>
           )}
@@ -144,7 +150,7 @@ export default class CloseShiftForm extends React.Component {
         <div className='mt-6' style={{ fontSize: '5rem' }}>
           <i className='fa fa-check-circle text-success' />
         </div>
-        <h3>Rides imported</h3>
+        <h3>{`${this.state.numRidesInFile} ` || ''}Rides imported</h3>
         <div>
           <a href='/rides'>View rides</a>
         </div>

@@ -1,5 +1,5 @@
 const express = require('express');
-const { Transform, pipeline } = require('stream');
+const { Transform } = require('stream');
 const _ = require('lodash');
 const router = express.Router();
 const models = require('../models');
@@ -73,10 +73,14 @@ function _getRidesQuery (req) {
   return query;
 }
 
-function importRides (req, res, next) {
+function importRides (req, res) {
   const save = ['true', '1'].includes((req.query.save || '').toLowerCase());
   const busboy = new Busboy({ headers: req.headers });
+  res.write('[');
 
+  // We want to start streaming data to the client right away to avoid timeouts.
+  // But after the first call to res.write(), we can no longer set a status code because the headers have already been sent.
+  // So we'll always return 200, and indicate errors by giving the response special attributes.
   req
     .pipe(busboy)
     .on('file', (fieldName, file) => {
@@ -86,15 +90,20 @@ function importRides (req, res, next) {
         .pipe(new Batcher(100))
         .pipe(new RideImporter({ save }))
         .on('data', (chunk) => {
-          // RideImporter only writes error messages to the stream
-          res.status(400);
-          res.write(chunk);
+          res.write(`${JSON.stringify(chunk)},`);
         })
         .on('finish', () => {
+          // one way to deal with trailing comma
+          res.write(JSON.stringify({ messageType: 'end' }));
+          res.write(']');
           res.send();
         })
         .on('error', (err) => {
-          next(err);
+          /* eslint-disable no-console */
+          console.log(err);
+          res.write(JSON.stringify({ messageType: 'criticalError', message: _.get(err, 'message', err.toString()) }));
+          res.write(']');
+          res.send();
         });
     });
 }
@@ -141,6 +150,7 @@ class Batcher extends Transform {
 class RideImporter extends Transform {
   constructor (options = {}) {
     options.writableObjectMode = true;
+    options.readableObjectMode = true;
     super(options);
     options = Object.assign({
       save: true,
@@ -168,52 +178,55 @@ class RideImporter extends Transform {
   }
   
   async _transform(batchOfRows, encoding, callback) {
-    // this is weird, but if we want an error in this function to cause the stream to emit an 'error' event,
-    // we must throw it rather than issuing callback(err) even though callback(err) is in the stream.Transform docs.
-    // I think this is maybe because of the way _writev() is implemented in this class?
-    let hydratedRows = await Promise.all(batchOfRows.map(async rowData => {
-      const [rowNumber, row] = rowData;
-      try {
-        const hydratedRow = await models.Ride.hydrateFromCsv(row, this.cache);
-        if (_.includes(this.jobIdsSeenSoFar, hydratedRow.jobId)) {
-          throw new Error(`Job ID ${hydratedRow.jobId} appears more than once`);
-        }
-        this.jobIdsSeenSoFar.push(hydratedRow.jobId);
-        return hydratedRow;
-      } catch (err) {
-        this.push(`Problem on row ${rowNumber}: ${err.message}\n`);
-        return null;
-      }
-    }));
-    hydratedRows = hydratedRows.filter(hydratedRow => !!hydratedRow);
-    const jobIds = hydratedRows.map(hydratedRow => hydratedRow.jobId);
-    if (!jobIds.length) {
-      return callback();
-    }
-    const rides = await models.Ride.find({ jobId: { $in: jobIds } }).exec();
-    const findOrCreateRide = (jobId) => {
-      const hasJobId = (doc) => doc.jobId === jobId;
-      const ride = rides.find(hasJobId) || new models.Ride();
-      const hydratedRow = hydratedRows.find(hasJobId);
-      ride.set({
-        ...this.fieldsForAll,
-        ...hydratedRow,
-      });
-      return ride;
-    };
-    const docs = jobIds.map(findOrCreateRide);
-    await Promise.all(docs.map(async doc => {
-      if (this.save) {
-        return doc.save();
-      } else {
+    try {
+      let hydratedRows = await Promise.all(batchOfRows.map(async rowData => {
+        const [rowNumber, row] = rowData;
         try {
-          return await doc.validate();
+          const hydratedRow = await models.Ride.hydrateFromCsv(row, this.cache);
+          if (_.includes(this.jobIdsSeenSoFar, hydratedRow.jobId)) {
+            throw new Error(`Job ID ${hydratedRow.jobId} appears more than once`);
+          }
+          this.jobIdsSeenSoFar.push(hydratedRow.jobId);
+          return hydratedRow;
         } catch (err) {
-          this.push(err.toString());
+          this.push({ messageType: 'validationError', message: `Problem on row ${rowNumber}: ${err.message}\n` });
+          return null;
         }
+      }));
+      hydratedRows = hydratedRows.filter(hydratedRow => !!hydratedRow);
+      const jobIds = hydratedRows.map(hydratedRow => hydratedRow.jobId);
+      if (!jobIds.length) {
+        return callback();
       }
-    }));
-    callback();
+      const rides = await models.Ride.find({ jobId: { $in: jobIds } }).exec();
+      const findOrCreateRide = (jobId) => {
+        const hasJobId = (doc) => doc.jobId === jobId;
+        const ride = rides.find(hasJobId) || new models.Ride();
+        const hydratedRow = hydratedRows.find(hasJobId);
+        ride.set({
+          ...this.fieldsForAll,
+          ...hydratedRow,
+        });
+        return ride;
+      };
+      const docs = jobIds.map(findOrCreateRide);
+      await Promise.all(docs.map(async doc => {
+        if (this.save) {
+          await doc.save();
+          this.push({ messageType: 'success', message: `Imported job ${doc.jobId}` });
+        } else {
+          try {
+            await doc.validate();
+            this.push({ messageType: 'success', message: `Validated job ${doc.jobId}` });
+          } catch (err) {
+            this.push({ messageType: 'validationError', message: err.toString() });
+          }
+        }
+      }));
+      callback();
+    } catch (err) {
+      callback(err);
+    }
   }
 }
 

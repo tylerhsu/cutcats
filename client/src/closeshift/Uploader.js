@@ -31,15 +31,22 @@ export default class Uploader extends React.Component {
     this.props.onValidationBegin();
     
     axios.post(this.props.validationUrl, data)
-      .then(() => {
-        return this.props.onValidationSuccess(file);
+      .then((response) => {
+        const messagesByType = _.groupBy(_.get(response, 'data', []), msg => msg.messageType);
+        if (messagesByType['criticalError']) {
+          const message = _.get(messagesByType, 'criticalError[0].message', 'Something unexpected went wrong');
+          return this.props.onError(message)
+        } else if (messagesByType['validationError']) {
+          const messages = messagesByType['validationError'].map(msg => msg.message);
+          return this.props.onValidationFailure(messages, file);
+        } else {
+          const messages = messagesByType['success'].map(msg => msg.message);
+          return this.props.onValidationSuccess(messages, file);
+        }
       })
       .catch(err => {
         const status = _.get(err, 'response.status');
-        if (status === 400) {
-          const errorMessages = (err.response.data || '').split('\n');
-          return this.props.onValidationFailure(errorMessages, file);
-        } else if (status === 503) {
+        if (status === 503) {
           return this.props.onError('The server took too long to respond. This may have been because the import file is too large. Try splitting the import into two separate halves.');
         } else {
           return this.props.onError(err.response.data || err.message || err);
