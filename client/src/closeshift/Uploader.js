@@ -28,6 +28,7 @@ export default class Uploader extends React.Component {
     data.append('file', file);
 
     this.setState({ loading: true });
+    this.props.onValidationBegin();
     
     axios.post(this.props.validationUrl, data)
       .then(() => {
@@ -60,7 +61,7 @@ export default class Uploader extends React.Component {
           <DropZone
             multiple={false}
             style={{ height: '8rem', border: '2px dashed lightgray', cursor: 'pointer' }}
-            className='d-flex w-100 justify-content-center align-items-center'
+            className='d-flex w-100 mt-4 justify-content-center align-items-center'
             activeClassName='bg-light'
             onDrop={this.handleDrop}
             disabled={!!this.state.loading}
@@ -76,16 +77,18 @@ export default class Uploader extends React.Component {
         )}
         {!!this.props.file && (
           <div>
-            <div className='d-flex align-items-center mt-2'>
+            <div className='d-flex align-items-center mt-4'>
               <i className='fa fa-file' style={{ fontSize: '2rem' }} />
               <div className='ml-2'>
                 <div>{this.props.file.name}</div>
                 <div className='text-secondary' style={{ fontSize: '.8rem' }}>{filesize(this.props.file.size).human('si')}</div>
               </div>
             </div>
-            <Button color='link' className='mt-2 p-0 text-secondary' onClick={this.handleClear}>
-               Choose a different file
-            </Button>
+            {!!this.props.showClear && (
+              <Button color='link' className='mt-2 p-0 text-secondary' onClick={this.handleClear}>
+                Choose a different file
+              </Button>
+            )}
           </div>
         )}
       </div>
@@ -96,8 +99,10 @@ export default class Uploader extends React.Component {
 Uploader.propTypes = {
   file: PropTypes.object,
   validationUrl: PropTypes.string.isRequired,
+  onValidationBegin: PropTypes.func.isRequired,
   onValidationSuccess: PropTypes.func.isRequired,
   onValidationFailure: PropTypes.func.isRequired,
   onError: PropTypes.func.isRequired,
-  onClear: PropTypes.func.isRequired
+  onClear: PropTypes.func.isRequired,
+  showClear: PropTypes.bool.isRequired,
 };

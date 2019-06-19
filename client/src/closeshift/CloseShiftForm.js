@@ -14,9 +14,6 @@ export default class CloseShiftForm extends React.Component {
 
     this.state = {
       importFile: null,
-      amDispatcher: '',
-      pmDispatcher: this.props.user._id,
-      comments: '',
       uploaderValidationErrors: null,
       uploaderError: null,
       errorMessage: '',
@@ -24,6 +21,7 @@ export default class CloseShiftForm extends React.Component {
       success: false
     };
 
+    this.handleValidationBegin = this.handleValidationBegin.bind(this);
     this.handleValidationSuccess = this.handleValidationSuccess.bind(this);
     this.handleValidationFailure = this.handleValidationFailure.bind(this);
     this.handleUploaderError = this.handleUploaderError.bind(this);
@@ -31,9 +29,15 @@ export default class CloseShiftForm extends React.Component {
     this.submit = this.submit.bind(this);
   }
 
+  handleValidationBegin (file) {
+    this.setState({
+      uploaderValidationErrors: null,
+      uploaderError: null
+    });
+  }
+
   handleValidationSuccess (file) {
     this.setState({
-      uploaderLoading: false,
       importFile: file,
       uploaderValidationErrors: null,
       uploaderError: null
@@ -42,7 +46,6 @@ export default class CloseShiftForm extends React.Component {
 
   handleValidationFailure (errors) {
     this.setState({
-      uploaderLoading: false,
       importFile: null,
       uploaderValidationErrors: errors,
       uploaderError: null
@@ -51,7 +54,6 @@ export default class CloseShiftForm extends React.Component {
 
   handleUploaderError (err) {
     this.setState({
-      uploaderLoading: false,
       importFile: null,
       uploaderValidationErrors: null,
       uploaderError: err.message || err || 'An unexpected error occurred'
@@ -60,7 +62,6 @@ export default class CloseShiftForm extends React.Component {
 
   handleUploaderClear () {
     this.setState({
-      uploaderLoading: false,
       importFile: null,
       uploaderValidationErrors: null,
       uploaderError: null
@@ -69,7 +70,11 @@ export default class CloseShiftForm extends React.Component {
 
   submit (e) {
     e.preventDefault();
-    this.setState({ loading: true });
+    this.setState({
+      loading: true,
+      uploaderValidationErrors: null,
+      uploaderError: null
+    });
     const data = new FormData();
     data.append('file', this.state.importFile);
     return axios.post('/api/rides/import?save=true', data)
@@ -93,16 +98,18 @@ export default class CloseShiftForm extends React.Component {
     } else {
       return (
         <Form>
-          <h3 style={{ fontWeight: 'bold' }}>
+          <h3 style={{ fontWeight: 'bold' }} className='my-0'>
             Import rides
           </h3>
           <Uploader
             file={this.state.importFile}
             validationUrl='/api/rides/import?save=false'
+            onValidationBegin={this.handleValidationBegin}
             onValidationSuccess={this.handleValidationSuccess}
             onValidationFailure={this.handleValidationFailure}
             onError={this.handleUploaderError}
             onClear={this.handleUploaderClear}
+            showClear={!this.state.loading}
           />
           {(this.state.uploaderValidationErrors && this.state.uploaderValidationErrors.length) && (
             <div className='mt-4'>
@@ -114,13 +121,15 @@ export default class CloseShiftForm extends React.Component {
           {this.state.uploaderError && (
             <div className='mt-4' style={{ color: 'red' }}>There was a problem while attempting to validate the file: {this.state.uploaderError}</div>
           )}
-          <Button color={this.state.importFile ? 'primary' : 'secondary'} type='submit' onClick={this.submit} disabled={!this.state.importFile || this.state.loading} style={{ width: '7rem' }} className='mt-4'>
-            {this.state.loading ? (
-              <em>Importing...</em>
-            ) : (
-              'Import rides'
-            )}
-          </Button>
+          {!!this.state.importFile && (
+            <Button color={this.state.importFile ? 'primary' : 'secondary'} type='submit' onClick={this.submit} disabled={this.state.loading} style={{ width: '8rem' }} className='mt-4'>
+              {this.state.loading ? (
+                <em>Importing...</em>
+              ) : (
+                'Import rides'
+              )}
+            </Button>
+          )}
           {this.state.errorMessage && (
             <div className='text-danger'>{this.state.errorMessage}</div>
           )}

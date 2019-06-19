@@ -1,4 +1,5 @@
 import qs from 'querystring';
+import * as _ from 'lodash';
 
 export function precisionRound (number, precision) {
   var factor = Math.pow(10, precision);
@@ -6,14 +7,14 @@ export function precisionRound (number, precision) {
 }
 
 export function getErrorMessage (error) {
-  if (error.response && error.response.data && error.response.data.message) {
-    if (error.response.status < 500) {
-      return error.response.data.message;
-    } else {
-      return `Something unexpected went wrong. The message from the server was "${error.response.data.message}"`;
-    }
+  const message = _.get(error, 'response.data.message') ||
+    _.get(error, 'response.data') ||
+    _.get(error, 'message') ||
+    error.toString();
+  if (_.get(error, 'response.status', 500) < 500) {
+    return message;
   } else {
-    return error.message || error.toString();
+    return `Something unexpected went wrong. The message from the server was "${message}"`;
   }
 }
 
