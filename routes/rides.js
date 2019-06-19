@@ -1,5 +1,5 @@
 const express = require('express');
-const { Transform } = require('stream');
+const { Transform, pipeline } = require('stream');
 const _ = require('lodash');
 const router = express.Router();
 const models = require('../models');
@@ -73,7 +73,7 @@ function _getRidesQuery (req) {
   return query;
 }
 
-function importRides (req, res) {
+function importRides (req, res, next) {
   const save = ['true', '1'].includes((req.query.save || '').toLowerCase());
   const busboy = new Busboy({ headers: req.headers });
 
@@ -85,11 +85,17 @@ function importRides (req, res) {
         .pipe(new AppendRowNumbers())
         .pipe(new Batcher(100))
         .pipe(new RideImporter({ save }))
-        .on('data', () => {
-          // The only data rideImporter supplies is error messages
+        .on('data', (chunk) => {
+          // RideImporter only writes error messages to the stream
           res.status(400);
+          res.write(chunk);
         })
-        .pipe(res);
+        .on('finish', () => {
+          res.send();
+        })
+        .on('error', (err) => {
+          next(err);
+        });
     });
 }
 
@@ -147,6 +153,7 @@ class RideImporter extends Transform {
     this.errorCount = 0;
     this.cache = {};
     this.errors = [];
+    this.jobIdsSeenSoFar = [];
   }
 
   async _writev(chunks, callback) {
@@ -161,43 +168,52 @@ class RideImporter extends Transform {
   }
   
   async _transform(batchOfRows, encoding, callback) {
-    try {
-      let hydratedRows = await Promise.all(batchOfRows.map(async rowData => {
-        const [rowNumber, row] = rowData;
-        try {
-          return await models.Ride.hydrateFromCsv(row, this.cache);
-        } catch (err) {
-          this.push(`Problem on row ${rowNumber}: ${err.message}\n`);
+    // this is weird, but if we want an error in this function to cause the stream to emit an 'error' event,
+    // we must throw it rather than issuing callback(err) even though callback(err) is in the stream.Transform docs.
+    // I think this is maybe because of the way _writev() is implemented in this class?
+    let hydratedRows = await Promise.all(batchOfRows.map(async rowData => {
+      const [rowNumber, row] = rowData;
+      try {
+        const hydratedRow = await models.Ride.hydrateFromCsv(row, this.cache);
+        if (_.includes(this.jobIdsSeenSoFar, hydratedRow.jobId)) {
+          throw new Error(`Job ID ${hydratedRow.jobId} appears more than once`);
         }
-      }));
-      hydratedRows = hydratedRows.filter(hydratedRow => !!hydratedRow);
-      const jobIds = hydratedRows.map(hydratedRow => hydratedRow.jobId);
-      if (!jobIds.length) {
-        return callback();
+        this.jobIdsSeenSoFar.push(hydratedRow.jobId);
+        return hydratedRow;
+      } catch (err) {
+        this.push(`Problem on row ${rowNumber}: ${err.message}\n`);
+        return null;
       }
-      const rides = await models.Ride.find({ jobId: { $in: jobIds } }).exec();
-      const findOrCreateRide = (jobId) => {
-        const hasJobId = (doc) => doc.jobId === jobId;
-        const ride = rides.find(hasJobId) || new models.Ride();
-        const hydratedRow = hydratedRows.find(hasJobId);
-        ride.set({
-          ...this.fieldsForAll,
-          ...hydratedRow,
-        });
-        return ride;
-      };
-      const docs = jobIds.map(findOrCreateRide);
-      await Promise.all(docs.map(async doc => {
-        try {
-          return await (this.save ? doc.save() : doc.validate());
-        } catch (err) {
-          this.push(err);
-        }
-      }));
-      callback();
-    } catch (err) {
-      callback(err);
+    }));
+    hydratedRows = hydratedRows.filter(hydratedRow => !!hydratedRow);
+    const jobIds = hydratedRows.map(hydratedRow => hydratedRow.jobId);
+    if (!jobIds.length) {
+      return callback();
     }
+    const rides = await models.Ride.find({ jobId: { $in: jobIds } }).exec();
+    const findOrCreateRide = (jobId) => {
+      const hasJobId = (doc) => doc.jobId === jobId;
+      const ride = rides.find(hasJobId) || new models.Ride();
+      const hydratedRow = hydratedRows.find(hasJobId);
+      ride.set({
+        ...this.fieldsForAll,
+        ...hydratedRow,
+      });
+      return ride;
+    };
+    const docs = jobIds.map(findOrCreateRide);
+    await Promise.all(docs.map(async doc => {
+      if (this.save) {
+        return doc.save();
+      } else {
+        try {
+          return await doc.validate();
+        } catch (err) {
+          this.push(err.toString());
+        }
+      }
+    }));
+    callback();
   }
 }
 
