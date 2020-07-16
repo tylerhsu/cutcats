@@ -1,7 +1,7 @@
 language: node_js
 install:
-- cd pdfService && nvm install && npm install && cd ..
-- nvm install && npm install
+- cd pdfService && nvm install && npm ci && cd ..
+- nvm install && npm ci
 cache:
   directories:
   - node_modules
