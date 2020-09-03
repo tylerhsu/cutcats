@@ -3,7 +3,7 @@ if (!process.env.MONGODB_URI) {
 }
 
 const mongoose = require('mongoose');
-mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true });
+mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true });
 mongoose.plugin(require('mongoose-deep-populate')(mongoose));
 
 const connected = new Promise(resolve => mongoose.connection.on('open', resolve));
