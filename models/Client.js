@@ -5,7 +5,7 @@ const clientSchema = new mongoose.Schema({
   address: { type: String },
   phone: { type: String },
   email: { type: String },
-  adminFeeType: { type: String, enum: ['fixed', 'scale'], required: true },
+  adminFeeType: { type: String, enum: ['fixed', 'scale', 'percentage'], required: true },
   fixedAdminFee: {
     type: Number,
     required: [
@@ -13,8 +13,16 @@ const clientSchema = new mongoose.Schema({
       'fixedAdminFee is required when adminFeeType is "fixed".'
     ]
   },
+  percentageAdminFee: {
+    type: Number,
+    required: [
+      function() { return this.adminFeeType === 'percentage'; },
+      'percentageAdminFee is required when adminFeeType is "percentage".'
+    ]
+  },
   deliveryFeeStructure: { type: String, enum: ['on demand food', 'legacy on demand food', 'catering food', 'cargo/wholesale/commissary'], required: true },
-  billingEmail: { type: String }
+  billingEmail: { type: String },
+  isSubjectToDowntownSalesTax: { type: Boolean },
 }, {
   timestamps: true
 });
@@ -24,8 +32,11 @@ clientSchema.index({
 });
 
 clientSchema.pre('save', function() {
-  if (this.adminFeeType === 'scale') {
+  if (this.adminFeeType !== 'fixed') {
     this.fixedAdminFee = undefined;
+  }
+  if (this.adminFeeType !== 'percentage') {
+    this.percentageAdminFee = undefined;
   }
 });
 

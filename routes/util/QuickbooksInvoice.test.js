@@ -110,10 +110,30 @@ describe('QuickbooksInvoice', function() {
         'Class': 'CutCats',
         'Due Date': '01/22/2000',
         'Memo': 'Administrative Fees 01/03/2000-01/04/2000',
-        'Item': 'Monthly Admin Fee:$0 Monthly Fee',
+        'Item': 'Monthly Admin Fee:$0.00 Monthly Fee',
         'Quantity': 1,
         'Description': '01/03/2000-01/04/2000',
-        'Price': this.clientInvoices[0].getAdminFee(),
+        'Price': '0.00',
+        'To Be E-Mailed': 'Y'
+      });
+    });
+
+    it('shows a period-based fee for clients on a percentage admin fee', function() {
+      const client = fixtureModel('Client', { adminFeeType: 'percentage', percentageAdminFee: 0 });
+      const clientInvoices = [new ClientInvoice(client, this.rides, this.periodStart, this.periodEnd)];
+      const quickbooksInvoice = new QuickbooksInvoice(clientInvoices, this.periodStart, this.periodEnd, this.monthStart, this.monthEnd);
+      const adminFeeRow = this.quickbooksInvoice.getAdminFeeRow(clientInvoices[0], 1);
+      adminFeeRow.should.eql({
+        'Customer': client.name,
+        'Transaction Date': '01/02/2000',
+        'RefNumber': 1,
+        'Class': 'CutCats',
+        'Due Date': '01/22/2000',
+        'Memo': 'Administrative Fees 01/01/2000-01/02/2000',
+        'Item': 'Semi-monthly Admin Fee:$0.00 Semi-monthly Fee',
+        'Quantity': 1,
+        'Description': '01/01/2000-01/02/2000',
+        'Price': '0.00',
         'To Be E-Mailed': 'Y'
       });
     });

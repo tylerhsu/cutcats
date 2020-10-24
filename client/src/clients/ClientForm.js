@@ -4,6 +4,7 @@ import {
   Button,
   Form,
   FormGroup,
+  FormText,
   Label,
   Input,
   InputGroup,
@@ -104,6 +105,12 @@ export default class ClientForm extends React.Component {
                 Fixed
               </Label>
             </FormGroup>
+            <FormGroup check>
+              <Label check>
+                <Input type='radio' name='adminFeeType' value='percentage' checked={this.state.client.adminFeeType === 'percentage'} onChange={this.handleChange} />
+                Percentage of sales
+              </Label>
+            </FormGroup>
           </FormGroup>
           {this.state.client.adminFeeType === 'fixed' && (
             <FormGroup>
@@ -113,6 +120,24 @@ export default class ClientForm extends React.Component {
                 <Input id='fixedAdminFee' type='text' name='fixedAdminFee' value={this.state.client.fixedAdminFee} onChange={this.handleChange} />
               </InputGroup>
             </FormGroup>
+          )}
+          {this.state.client.adminFeeType === 'percentage' && (
+             <React.Fragment>
+               <FormGroup>
+                 <Label for='percentageAdminFee'>Admin Fee Percentage</Label>
+                 <InputGroup>
+                   <Input id='percentageAdminFee' type='text' name='percentageAdminFee' value={this.state.client.percentageAdminFee} onChange={this.handleChange} />
+                   <InputGroupAddon addonType='append'>%</InputGroupAddon>
+                 </InputGroup>
+               </FormGroup>
+               <FormGroup check>
+                 <Label check>
+                   <Input type='checkbox' name='isSubjectToDowntownSalesTax' value={this.state.client.isSubjectToDowntownSalesTax} onChange={this.handleChange} />
+                   This business is subject to downtown sales tax
+                 </Label>
+                 <FormText>The percentage entered under "Admin Fee Percentage" is taken from the client's sales after an assumed 10.75% sales tax has been subtracted. Checking this box will change the assumed sales tax to 11.75%.</FormText>
+               </FormGroup>
+             </React.Fragment>
           )}
         </ModalBody>
         <ModalFooter>

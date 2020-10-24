@@ -34,13 +34,22 @@ describe('ClientInvoice', function() {
   });
 
   describe('this.getAdminFee() ', function() {
-    it('returns 0 if this is not a month-end invoice', function() {
+    it('returns 0 if this is a mid-month invoice and client.adminFeeType is not "percentage"', function() {
       const client = fixtureModel('Client', { adminFeeType: 'fixed', fixedAdminFee: 123 });
       const rides = fixtureModelArray('Ride', 3);
       const periodStart = new Date('2000-1-1');
       const periodEnd = new Date('2000-1-15');
       const clientInvoice = new ClientInvoice(client, rides, periodStart, periodEnd);
       clientInvoice.getAdminFee().should.eql(0);
+    });
+
+    it('returns non-zero when this is a mid-month invoice and client.adminFeeType is "percentage"', function() {
+      const client = fixtureModel('Client', { adminFeeType: 'percentage', percentageAdminFee: 1 });
+      const rides = fixtureModelArray('Ride', { readyTime: new Date('2000-1-2') }, 3);
+      const periodStart = new Date('2000-1-1');
+      const periodEnd = new Date('2000-1-15');
+      const clientInvoice = new ClientInvoice(client, rides, periodStart, periodEnd);
+      clientInvoice.getAdminFee().should.be.greaterThan(0);
     });
 
     it('when this is a month-end invoice and client.adminFeeType == "fixed", returns their fixed fee', function() {
@@ -82,7 +91,7 @@ describe('ClientInvoice', function() {
       adminFee.reason.should.be.a.String();
     });
 
-    it('throws an error when client.adminFeeType is neither "fixed" nor "scale"', function() {
+    it('throws an error when client.adminFeeType is neither "fixed" nor "scale" nor "percentage"', function() {
       const client = fixtureModel('Client', { adminFeeType: 'foo' });
       (() => {
         const clientInvoice = new ClientInvoice(client, [], new Date('2000-1-1'), new Date('2000-1-31'));
@@ -184,6 +193,45 @@ describe('ClientInvoice', function() {
     clientInvoice.getAdminFee().should.be.greaterThan(0);
     clientInvoice.getDeliveryFeeTotal().should.be.greaterThan(0);
     clientInvoice.getInvoiceTotal().should.eql(clientInvoice.getAdminFee() + clientInvoice.getDeliveryFeeTotal());
+  });
+
+  it('this.getSalesTotal() returns the sum of ride.billableTotal for each ride in the period', () => {
+    const client = fixtureModel('Client');
+    const rides = fixtureModelArray('Ride', {
+      readyTime: new Date('2000-1-20'),
+      billableTotal: 1,
+      orderTotal: 2,
+    }, 3);
+    const periodStart = new Date('2000-1-16');
+    const periodEnd = new Date('2000-1-31');
+    const clientInvoice = new ClientInvoice(client, rides, periodStart, periodEnd);
+    clientInvoice.getSalesTotal().should.eql(3);
+  });
+
+  it('this.getSalesSubtotal() returns the sales total before an assumed 10.75% tax', () => {
+    const client = fixtureModel('Client');
+    const rides = fixtureModelArray('Ride', {
+      readyTime: new Date('2000-1-20'),
+      billableTotal: 110.75,
+    }, 1);
+    const periodStart = new Date('2000-1-16');
+    const periodEnd = new Date('2000-1-31');
+    const clientInvoice = new ClientInvoice(client, rides, periodStart, periodEnd);
+    clientInvoice.getSalesTotal().should.eql(110.75);
+    clientInvoice.getSalesSubtotal().should.eql(100);
+  });
+
+  it('When client.isSubjectToDowntownSalesTax is true, then this.getSalesSubtotal() returns the sales total before an assumed 11.75% sales tax', () => {
+    const client = fixtureModel('Client', { isSubjectToDowntownSalesTax: true });
+    const rides = fixtureModelArray('Ride', {
+      readyTime: new Date('2000-1-20'),
+      billableTotal: 111.75,
+    }, 1);
+    const periodStart = new Date('2000-1-16');
+    const periodEnd = new Date('2000-1-31');
+    const clientInvoice = new ClientInvoice(client, rides, periodStart, periodEnd);
+    clientInvoice.getSalesTotal().should.eql(111.75);
+    clientInvoice.getSalesSubtotal().should.eql(100);
   });
 
   it('this.getPdfDocDefinition() returns an object', function() {

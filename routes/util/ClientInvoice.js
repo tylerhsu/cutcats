@@ -15,6 +15,8 @@ class ClientInvoice extends AccountingPeriod {
     this.getTipTotal = explainable(this.getTipTotal.bind(this));
     this.getFeeTotal = explainable(this.getFeeTotal.bind(this));
     this.getDeliveryFeeTotal = explainable(this.getDeliveryFeeTotal.bind(this));
+    this.getSalesTotal = explainable(this.getSalesTotal.bind(this));
+    this.getSalesSubtotal = explainable(this.getSalesSubtotal.bind(this));
   }
 
   getClientName() {
@@ -26,10 +28,15 @@ class ClientInvoice extends AccountingPeriod {
   }
 
   getAdminFee() {
-    if (!this.isMonthEnd) {
+    if (this.client.adminFeeType !== 'percentage' && !this.isMonthEnd) {
       return [
         0,
         'No admin fee on mid-month invoice'
+      ];
+    } else if (this.client.adminFeeType === 'percentage') {
+      return [
+        this.getSalesSubtotal() * this.client.percentageAdminFee,
+        `${this.client.percentageAdminFee}% of this period's sales without tips, fees, or ${this.getSalesTaxRate() * 100}% sales tax`,
       ];
     } else if (this.client.adminFeeType === 'fixed') {
       return [
@@ -83,6 +90,24 @@ class ClientInvoice extends AccountingPeriod {
 
   getInvoiceTotal () {
     return this.getAdminFee() + this.getDeliveryFeeTotal();
+  }
+
+  getSalesSubtotal() {
+    return [
+      this.getSalesTotal() / (1 + this.getSalesTaxRate()),
+      `Sales total before ${this.getSalesTaxRate() * 100}% sales tax`,
+    ];
+  }
+
+  getSalesTotal() {
+    return [
+      _.sumBy(this.ridesInPeriod, ride => ride.billableTotal || 0),
+      'Sum of order amounts minus tips and fees',
+    ];
+  }
+
+  getSalesTaxRate() {
+    return this.client.isSubjectToDowntownSalesTax ? 0.1175 : 0.1075;
   }
 
   getPdfDocDefinition () {

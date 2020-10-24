@@ -64,12 +64,16 @@ class QuickbooksInvoice extends QuickbooksExport {
   }
 
   getAdminFeeRow(clientInvoice, refNumber) {
+    const isPercentage = clientInvoice.client.adminFeeType === 'percentage';
+    const [startDate, endDate] = isPercentage ?
+      [this.periodStart, this.periodEnd] :
+      [this.monthStart, this.monthEnd];
     return this.orderFields({
       ...this.getCommonFields(clientInvoice, refNumber),
-      [MEMO]: `Administrative Fees ${moment(this.monthStart).format('MM/DD/YYYY')}-${moment(this.monthEnd).format('MM/DD/YYYY')}`,
-      [ITEM]: `Monthly Admin Fee:$${clientInvoice.getAdminFee()} Monthly Fee`,
-      [DESCRIPTION]: `${moment(this.monthStart).format('MM/DD/YYYY')}-${moment(this.monthEnd).format('MM/DD/YYYY')}`,
-      [PRICE]: clientInvoice.getAdminFee(),
+      [MEMO]: `Administrative Fees ${moment(startDate).format('MM/DD/YYYY')}-${moment(endDate).format('MM/DD/YYYY')}`,
+      [ITEM]: `${isPercentage ? 'Semi-monthly' : 'Monthly'} Admin Fee:$${clientInvoice.getAdminFee().toFixed(2)} ${isPercentage ? 'Semi-monthly' : 'Monthly'} Fee`,
+      [DESCRIPTION]: `${moment(startDate).format('MM/DD/YYYY')}-${moment(endDate).format('MM/DD/YYYY')}`,
+      [PRICE]: clientInvoice.getAdminFee().toFixed(2),
     });
   }
 
@@ -77,7 +81,7 @@ class QuickbooksInvoice extends QuickbooksExport {
     const rows = [];
     this.clientInvoices.forEach((clientInvoice, n) => {
       rows.push(this.getDeliveryFeeRow(clientInvoice, n));
-      if (clientInvoice.isMonthEnd) {
+      if (clientInvoice.isMonthEnd || clientInvoice.client.adminFeeType === 'percentage') {
         rows.push(this.getAdminFeeRow(clientInvoice, n));
       }
     });
