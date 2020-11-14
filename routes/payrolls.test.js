@@ -244,5 +244,33 @@ describe('payrolls routes', function () {
           this.req.quickbooksPayrollNonInvoicedIncome.should.be.ok();
         });
     });
+
+    it('includes CourierPaystubs for couriers who had no rides but did rent a radio', function () {
+      const client = fixtureModel('Client');
+      const couriers = fixtureModelArray('Courier', 3);
+      // has rides - should get a paystub
+      couriers[0].monthlyRadioRental = false;
+      // no rides but has a radio - should get a paystub
+      couriers[1].monthlyRadioRental = true;
+      // no radio, no rides - should not get a paystub
+      couriers[2].monthlyRadioRental = false;
+      const rides = [
+        fixtureModel('Ride', {  readyTime: new Date('2000-1-2'), deliveryStatus: 'complete', client, courier: couriers[0] }),
+      ];
+      this.req.query.periodStart = new Date('2000-1-1');
+      this.req.query.periodEnd = new Date('2000-1-3');
+      return save(client, couriers, rides)
+        .then(() => {
+          return new Promise(resolve => payrollRoutes.generatePaystubs(this.req, this.res, resolve));
+        })
+        .then(err => {
+          if (err) throw err;
+          this.req.courierPaystubs.should.have.length(2);
+          getId(this.req.courierPaystubs[0].courier).should.eql(getId(couriers[0]));
+          getId(this.req.courierPaystubs[1].courier).should.eql(getId(couriers[1]));
+          this.req.courierPaystubs[0].rides.should.have.length(1);
+          this.req.courierPaystubs[1].rides.should.have.length(0);
+        });
+    });
   });
 });

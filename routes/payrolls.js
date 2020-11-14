@@ -70,15 +70,22 @@ function generatePaystubs (req, res, next) {
     throw error('End date is not a recognizable date', 400);
   }
 
-  return getRidesByCourier(periodStart, periodEnd)
-    .then(ridesByCourier => {
+  return Promise.all([
+    getRidesByCourier(periodStart, periodEnd),
+    getCouriersWithRadios(),
+  ])
+    .then(([ridesByCourier, couriersWithRadios]) => {
       const courierPaystubs = ridesByCourier
         .map(rideGroup => {
           return new CourierPaystub(rideGroup.courier, rideGroup.rides, periodStart, periodEnd);
         })
-        .filter(courierPaystub => {
-          return courierPaystub.getPaystubTotal() > 0;
-        });
+        .concat(couriersWithRadios.map(courierWithRadio => {
+          if (!ridesByCourier.find(rideGroup => rideGroup.courier._id.toString() === courierWithRadio._id.toString())) {
+            return new CourierPaystub(courierWithRadio, [], periodStart, periodEnd);
+          }
+        }))
+        .filter(courierPaystub => courierPaystub !== undefined)
+        .filter(courierPaystub => courierPaystub.getPaystubTotal() !== 0);
       const quickbooksPayrollCredits = new QuickbooksPayrollCredits(courierPaystubs, periodStart, periodEnd);
       const quickbooksPayrollDebits = new QuickbooksPayrollDebits(courierPaystubs, periodStart, periodEnd);
       const quickbooksPayrollNonInvoicedIncome = new QuickbooksPayrollNonInvoicedIncome(courierPaystubs, periodStart, periodEnd);
@@ -89,6 +96,10 @@ function generatePaystubs (req, res, next) {
       next();
     })
     .catch(next);
+}
+
+function getCouriersWithRadios() {
+  return models.Courier.find({ monthlyRadioRental: true }).exec();
 }
 
 function getRidesByCourier(fromDate, toDate) {
