@@ -125,8 +125,8 @@ export default class ClientForm extends React.Component {
              <React.Fragment>
                <FormGroup>
                  <Label for='percentageAdminFee'>Admin Fee Percentage</Label>
-                 <InputGroup>
-                   <Input id='percentageAdminFee' type='text' name='percentageAdminFee' value={this.state.client.percentageAdminFee} onChange={this.handleChange} />
+                 <InputGroup style={{ width: '8em' }}>
+                   <Input id='percentageAdminFee' type='text' name='percentageAdminFee' value={this.state.client.percentageAdminFee} onChange={this.handleChange} placeholder='Ex. 1.5' />
                    <InputGroupAddon addonType='append'>%</InputGroupAddon>
                  </InputGroup>
                </FormGroup>

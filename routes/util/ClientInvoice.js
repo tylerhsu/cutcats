@@ -35,7 +35,7 @@ class ClientInvoice extends AccountingPeriod {
       ];
     } else if (this.client.adminFeeType === 'percentage') {
       return [
-        this.getSalesSubtotal() * this.client.percentageAdminFee,
+        this.getSalesSubtotal() * (this.client.percentageAdminFee / 100),
         `${this.client.percentageAdminFee}% of this period's sales without tips, fees, or ${this.getSalesTaxRate() * 100}% sales tax`,
       ];
     } else if (this.client.adminFeeType === 'fixed') {
