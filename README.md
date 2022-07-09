@@ -32,10 +32,9 @@ npm run build
 
 ## Deployment
 ### Automated Deployment
-This project contains a .travis.yml file for use with [Travis CI](https://travis-ci.org) (follow their [getting started guide](https://docs.travis-ci.com/user/tutorial/) if you're unfamiliar).  Once you've linked your Travis CI account to this repo, pushes to the `develop` and `master` branches will cause automatic deployments to staging and production, respectively.  This is the recommended way to deploy.
+This project is deployed on Heroku. Commits to the develop and master branches cause automatic deploys to staging and production, respectively.
 
 ### Manual Deployment
-If you'd prefer to handle deployments without Travis CI, perform the following steps (from the [Heroku docs on deploying](https://devcenter.heroku.com/articles/git)):
 1. [Install the Heroku CLI](https://devcenter.heroku.com/articles/heroku-cli#download-and-install)
 2. Add a git remote that tracks the Heroku app:
 ```
