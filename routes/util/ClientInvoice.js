@@ -77,7 +77,7 @@ class ClientInvoice extends AccountingPeriod {
 
   getTipCredit () {
     if (this.client.name && this.client.name.toLowerCase().startsWith(`hannah's bretzel`)) {
-      return [Math.round(this.getTipSubtotal() * 0.035 * 100) / 100, '3.5% tip credit to account for card processing fees'];
+      return [Math.round(this.getTipSubtotal() * 0.035 * 100) / 100, '3.5% of tip total to account for card processing fees'];
     }
     return 0;
   }
