@@ -64,3 +64,4 @@ client/build
 misc
 sessions
 testDb/*
+.DS_Store

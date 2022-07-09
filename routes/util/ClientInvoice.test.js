@@ -100,7 +100,7 @@ describe('ClientInvoice', function() {
     });
   });
 
-  describe('this.getTipTotal()', function() {
+  describe('this.getTipSubtotal()', function() {
     it('returns sum of ride.tip for all rides in period', function() {
       const client = fixtureModel('Client');
       const rides = [
@@ -111,7 +111,7 @@ describe('ClientInvoice', function() {
       const periodStart = new Date('2000-1-15');
       const periodEnd = new Date('2000-1-31');
       const clientInvoice = new ClientInvoice(client, rides, periodStart, periodEnd);
-      clientInvoice.getTipTotal().should.eql(5);
+      clientInvoice.getTipSubtotal().should.eql(5);
     });
 
     it('throws an error when client.paymentType is neither "paid" nor "invoiced"', function() {
@@ -121,8 +121,60 @@ describe('ClientInvoice', function() {
       const periodEnd = new Date('2000-1-1');
       (() => {
         const clientInvoice = new ClientInvoice(client, rides, periodStart, periodEnd);
-        clientInvoice.getTipTotal();
-      }).should.throw(/don't know how to calculate tip total/i);
+        clientInvoice.getTipSubtotal();
+      }).should.throw(/don't know how to calculate tip subtotal/i);
+    });
+  });
+
+  describe('this.getTipTotal()', function() {
+    it('returns tip subtotal minus tip credit', function() {
+      const client = fixtureModel('Client');
+      const rides = [
+        fixtureModel('Ride', { readyTime: new Date('2000-1-1'), tip: 1 }),
+        fixtureModel('Ride', { readyTime: new Date('2000-1-20'), tip: 2 }),
+        fixtureModel('Ride', { readyTime: new Date('2000-1-20'), tip: 3 })
+      ];
+      const periodStart = new Date('2000-1-15');
+      const periodEnd = new Date('2000-1-31');
+      const clientInvoice = new ClientInvoice(client, rides, periodStart, periodEnd);
+      clientInvoice.getTipCredit = () => 1;
+      clientInvoice.getTipTotal().should.eql(4);
+    });
+  });
+
+  describe('this.getTipCredit()', function() {
+    [
+      'hannah\'s bretzel',
+      'hannah\'s bretzel (franklin)',
+      'HANNAH\'S BRETZEL (FRANKLIN)',
+    ].forEach(clientName => {
+      it(`returns nonzero value when client name is "${clientName}"`, function() {
+        const client = fixtureModel('Client', { name: clientName });
+        const rides = [
+          fixtureModel('Ride', { readyTime: new Date('2000-1-20'), tip: 3 })
+        ];
+        const periodStart = new Date('2000-1-15');
+        const periodEnd = new Date('2000-1-31');
+        const clientInvoice = new ClientInvoice(client, rides, periodStart, periodEnd);
+        clientInvoice.getTipCredit().should.greaterThan(0);
+      })
+    });
+
+    [
+      'hannah\'s bretze',
+      'hannah\'s',
+      'foo',
+    ].forEach(clientName => {
+      it(`returns 0 when client name is "${clientName}" (does not start with "hannah's brezel')`, function() {
+        const client = fixtureModel('Client', { name: clientName });
+        const rides = [
+          fixtureModel('Ride', { readyTime: new Date('2000-1-20'), tip: 3 })
+        ];
+        const periodStart = new Date('2000-1-15');
+        const periodEnd = new Date('2000-1-31');
+        const clientInvoice = new ClientInvoice(client, rides, periodStart, periodEnd);
+        clientInvoice.getTipCredit().should.eql(0);
+      })
     });
   });
 

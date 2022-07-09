@@ -12,7 +12,9 @@ class ClientInvoice extends AccountingPeriod {
     this.client = client;
     this.ridesInMonth = this.rides;
     this.getAdminFee = explainable(this.getAdminFee.bind(this));
+    this.getTipSubtotal = explainable(this.getTipSubtotal.bind(this));
     this.getTipTotal = explainable(this.getTipTotal.bind(this));
+    this.getTipCredit = explainable(this.getTipCredit.bind(this));
     this.getFeeTotal = explainable(this.getFeeTotal.bind(this));
     this.getDeliveryFeeTotal = explainable(this.getDeliveryFeeTotal.bind(this));
     this.getSalesTotal = explainable(this.getSalesTotal.bind(this));
@@ -65,19 +67,30 @@ class ClientInvoice extends AccountingPeriod {
     }
   }
 
-  getTipTotal () {
+  getTipSubtotal () {
     switch (this.client.paymentType) {
-    case 'invoiced': return _.sumBy(this.ridesInPeriod, ride => ride.tip || 0);
-    case 'paid': return [0, 'This is a paid client'];
-    default: throw new Error(`Don't know how to calculate tip total for client with payment type "${this.client.paymentType}"`);
+      case 'invoiced': return _.sumBy(this.ridesInPeriod, ride => ride.tip || 0);
+      case 'paid': return [0, 'This is a paid client'];
+      default: throw new Error(`Don't know how to calculate tip subtotal for client with payment type "${this.client.paymentType}"`);
     }
+  }
+
+  getTipCredit () {
+    if (this.client.name && this.client.name.toLowerCase().startsWith(`hannah's bretzel`)) {
+      return [Math.round(this.getTipSubtotal() * 0.035 * 100) / 100, '3.5% tip credit to account for card processing fees'];
+    }
+    return 0;
+  }
+
+  getTipTotal () {
+    return this.getTipSubtotal() - this.getTipCredit();
   }
 
   getFeeTotal () {
     switch (this.client.paymentType) {
-    case 'invoiced': return _.sumBy(this.ridesInPeriod, ride => ride.deliveryFee || 0);
-    case 'paid': return [0, 'This is a paid client'];
-    default: throw new Error(`Don't know how to calculate fee total for client with payment type "${this.client.paymentType}"`);
+      case 'invoiced': return _.sumBy(this.ridesInPeriod, ride => ride.deliveryFee || 0);
+      case 'paid': return [0, 'This is a paid client'];
+      default: throw new Error(`Don't know how to calculate fee total for client with payment type "${this.client.paymentType}"`);
     }
   }
 
@@ -113,6 +126,8 @@ class ClientInvoice extends AccountingPeriod {
   getPdfDocDefinition () {
     const title = `${this.client.name} Invoice, ${this.getDateRange()}`;
     const { value: adminFee, reason: adminFeeReason } = this.getAdminFee({ explain: true });
+    const { value: tipSubtotal, reason: tipSubtotalReason } = this.getTipSubtotal({ explain: true });
+    const { value: tipCredit, reason: tipCreditReason } = this.getTipCredit({ explain: true });
     const { value: tipTotal, reason: tipTotalReason } = this.getTipTotal({ explain: true });
     const { value: feeTotal, reason: feeTotalReason } = this.getFeeTotal({ explain: true });
     return {
@@ -140,19 +155,23 @@ class ClientInvoice extends AccountingPeriod {
         {
           layout: 'headerLineOnly',
           table: {
-            headerRows: 2,
+            headerRows: tipCredit ? 3 : 2,
             widths: [200, '*'],
             body: [
               [
-                { text: ['Tip Total', { text: tipTotalReason ? ` (${tipTotalReason.toLowerCase()})` : '', color: 'gray' }] },
-                { text: currency(tipTotal), alignment: 'right' }
+                { text: ['Tip Total', { text: tipSubtotalReason ? ` (${tipSubtotalReason.toLowerCase()})` : '', color: 'gray' }] },
+                { text: currency(tipSubtotal), alignment: 'right' }
               ],
+              tipCredit ? [
+                { text: ['Tip Credit', { text: tipCreditReason ? ` (${tipCreditReason.toLowerCase()})` : '', color: 'gray' }] },
+                { text: `(${currency(tipCredit)})`, alignment: 'right' }
+              ] : null,
               [
                 { text: ['Fee Total', { text: feeTotalReason ? ` (${feeTotalReason.toLowerCase()})` : '', color: 'gray' }] },
                 { text: currency(feeTotal), alignment: 'right' }
               ],
               ['Delivery Total', { text: currency(this.getDeliveryFeeTotal()), alignment: 'right' }]
-            ]
+            ].filter(x => x !== null)
           }
         },
         {
@@ -203,7 +222,7 @@ class ClientInvoice extends AccountingPeriod {
     };
   }
 }
-  
+
 function currency(num) {
   return `$${(num || 0).toFixed(2)}`;
 }
