@@ -21,6 +21,7 @@ class CourierPaystub extends AccountingPeriod {
     this.getTipTotal = explainable(this.getTipTotal.bind(this));
     this.getFeeTotal = explainable(this.getFeeTotal.bind(this));
     this.getDeliveryFeeTotal = explainable(this.getDeliveryFeeTotal.bind(this));
+    this.getClientTipCredits = explainable(this.getClientTipCredits.bind(this));
     // collected by rider
     this.getTipsCollectedByRider = explainable(this.getTipsCollectedByRider.bind(this));
     this.getFeesCollectedByRider = explainable(this.getFeesCollectedByRider.bind(this));
@@ -87,8 +88,18 @@ class CourierPaystub extends AccountingPeriod {
     ];
   }
 
+  getClientTipCredits () {
+    const clientTipCredits = this.ridesInPeriod.reduce((clientTipCredits, ride) => {
+      if (ride.client.name && ride.client.name.toLowerCase().startsWith('hannah\'s bretzel')) {
+        return clientTipCredits + (ride.tip || 0) * 0.035;
+      }
+      return 0;
+    }, 0);
+    return [Math.round(clientTipCredits * 100) / 100, 'Card processing fees refunded to certain clients'];
+  }
+
   getTipsOwedToRider () {
-    return this.getTipTotal() - this.getTipsCollectedByRider();
+    return this.getTipTotal() - this.getTipsCollectedByRider() - this.getClientTipCredits();
   }
 
   getFeesOwedToRider () {
@@ -145,6 +156,7 @@ class CourierPaystub extends AccountingPeriod {
     const tipTotal = this.getTipTotal();
     const feeTotal = this.getFeeTotal();
     const deliveryFeeTotal = this.getDeliveryFeeTotal();
+    const { value: clientTipCredits, reason: clientTipCreditsReason } = this.getClientTipCredits({ explain: true });
     const { value: deliveryFeeCollectedByRider, reason: deliveryFeeCollectedByRiderReason } = this.getDeliveryFeeCollectedByRider({ explain: true });
     const deliveryFeeOwedToRider = this.getDeliveryFeeOwedToRider();
     const { value: radioFee, reason: radioFeeReason } = this.getRadioFee({ explain: true });
@@ -194,18 +206,22 @@ class CourierPaystub extends AccountingPeriod {
         {
           layout: 'headerLineOnly',
           table: {
-            headerRows: 1,
+            headerRows: clientTipCredits ? 2 : 1,
             widths: [200, '*'],
             body: [
               [
                 { text: ['Already Collected By Rider', { text: deliveryFeeCollectedByRiderReason ? ` (${deliveryFeeCollectedByRiderReason.toLowerCase()})` : '', color: 'gray' }] },
                 { text: `(${currency(deliveryFeeCollectedByRider)})`, alignment: 'right' }
               ],
+              clientTipCredits ? [
+                { text: ['Client tip credits', { text: clientTipCreditsReason ? ` (${clientTipCreditsReason.toLowerCase()})` : '', color: 'gray' }] },
+                { text: `(${currency(clientTipCredits)})`, alignment: 'right' }
+              ] : null,
               [
                 { text: 'Owed To Rider' },
                 { text: currency(deliveryFeeOwedToRider), alignment: 'right' }
               ],
-            ]
+            ].filter(x => x !== null)
           }
         },
         {

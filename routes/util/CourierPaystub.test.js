@@ -41,6 +41,43 @@ describe('CourierPaystub', function() {
     });
   });
 
+  
+  describe('getClientTipCredits()', function() {
+    [
+      'hannah\'s bretzel',
+      'hannah\'s bretzel (franklin)',
+      'HANNAH\'S BRETZEL',
+    ].forEach(clientName => {
+      it(`returns nonzero when pay period includes rides from a client called "${clientName}"`, function() {
+        const client = fixtureModel('Client', { name: clientName });
+        const courier = fixtureModel('Courier');
+        const rides = [
+          fixtureModel('Ride', { client, readyTime: new Date('2000-1-1'), tip: 1 }),
+          fixtureModel('Ride', { client, readyTime: new Date('2000-1-20'), tip: 2 }),
+          fixtureModel('Ride', { client, readyTime: new Date('2000-1-20'), tip: 3 })
+        ];
+        const periodStart = new Date('2000-1-15');
+        const periodEnd = new Date('2000-1-31');
+        const courierPaystub = new CourierPaystub(courier, rides, periodStart, periodEnd);
+        courierPaystub.getClientTipCredits().should.be.greaterThan(0);
+      });
+    });
+
+    it('returns zero when pay period does not include rides from "hannah\'s bretzel"', function() {
+      const client = fixtureModel('Client');
+      const courier = fixtureModel('Courier');
+      const rides = [
+        fixtureModel('Ride', { client, readyTime: new Date('2000-1-1'), tip: 1 }),
+        fixtureModel('Ride', { client, readyTime: new Date('2000-1-20'), tip: 2 }),
+        fixtureModel('Ride', { client, readyTime: new Date('2000-1-20'), tip: 3 })
+      ];
+      const periodStart = new Date('2000-1-15');
+      const periodEnd = new Date('2000-1-31');
+      const courierPaystub = new CourierPaystub(courier, rides, periodStart, periodEnd);
+      courierPaystub.getClientTipCredits().should.eql(0);
+    });
+  });
+
   describe('this.getFeeTotal()', function() {
     it('with no args, .getFeeTotal() returns sum of ride.deliveryFee for all rides in period', function() {
       const client = fixtureModel('Client');
