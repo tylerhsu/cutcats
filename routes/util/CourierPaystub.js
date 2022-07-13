@@ -93,7 +93,7 @@ class CourierPaystub extends AccountingPeriod {
       if (ride.client.name && ride.client.name.toLowerCase().startsWith('hannah\'s bretzel')) {
         return clientTipCredits + (ride.tip || 0) * 0.035;
       }
-      return 0;
+      return clientTipCredits;
     }, 0);
     return [Math.round(clientTipCredits * 100) / 100, 'Card processing fees refunded to certain clients'];
   }
