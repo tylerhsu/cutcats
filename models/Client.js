@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const clientSchema = new mongoose.Schema({
   name: { type: String, required: true, unique: true, trim: true },
+  quickbooksName: { type: String, unique: true, trim: true },
   paymentType: { type: String, enum: ['invoiced', 'paid', 'legacy'], lowercase: true, required: true },
   address: { type: String },
   phone: { type: String },

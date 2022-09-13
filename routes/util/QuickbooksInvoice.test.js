@@ -36,7 +36,7 @@ describe('QuickbooksInvoice', function() {
     it('returns an object with expected values', function() {
       const commonFields = this.quickbooksInvoice.getCommonFields(this.clientInvoices[0], 1);
       commonFields.should.eql({
-        'Customer': this.client.name,
+        'Customer': this.client.quickbooksName,
         'Transaction Date': '01/02/2000',
         'RefNumber': 1,
         'Class': 'CutCats',
@@ -68,7 +68,7 @@ describe('QuickbooksInvoice', function() {
     it('returns an object with expected values', function() {
       const deliveryFeeRow = this.quickbooksInvoice.getDeliveryFeeRow(this.clientInvoices[0], 1);
       deliveryFeeRow.should.eql({
-        'Customer': this.client.name,
+        'Customer': this.client.quickbooksName,
         'Transaction Date': '01/02/2000',
         'RefNumber': 1,
         'Class': 'CutCats',
@@ -104,7 +104,7 @@ describe('QuickbooksInvoice', function() {
     it('returns an object with expected values', function() {
       const adminFeeRow = this.quickbooksInvoice.getAdminFeeRow(this.clientInvoices[0], 1);
       adminFeeRow.should.eql({
-        'Customer': this.client.name,
+        'Customer': this.client.quickbooksName,
         'Transaction Date': '01/02/2000',
         'RefNumber': 1,
         'Class': 'CutCats',
@@ -124,7 +124,7 @@ describe('QuickbooksInvoice', function() {
       const quickbooksInvoice = new QuickbooksInvoice(clientInvoices, this.periodStart, this.periodEnd, this.monthStart, this.monthEnd);
       const adminFeeRow = this.quickbooksInvoice.getAdminFeeRow(clientInvoices[0], 1);
       adminFeeRow.should.eql({
-        'Customer': client.name,
+        'Customer': client.quickbooksName,
         'Transaction Date': '01/02/2000',
         'RefNumber': 1,
         'Class': 'CutCats',

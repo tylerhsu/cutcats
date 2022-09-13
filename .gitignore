@@ -65,3 +65,4 @@ misc
 sessions
 testDb/*
 .DS_Store
+.log

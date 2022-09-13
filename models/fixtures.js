@@ -26,6 +26,7 @@ const FIXTURES = {
   }),
   Client: () => ({
     name: `client ${new ObjectID()} name`,
+    quickbooksName: `client ${new ObjectID()} quickbooksName`,
     paymentType: 'invoiced',
     adminFeeType: 'scale',
     deliveryFeeStructure: 'on demand food'

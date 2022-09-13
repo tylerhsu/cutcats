@@ -43,7 +43,7 @@ class QuickbooksInvoice extends QuickbooksExport {
     }
     
     return {
-      [CUSTOMER]: clientInvoice.client.name,
+      [CUSTOMER]: clientInvoice.client.quickbooksName || clientInvoice.client.name,
       [TRANSACTION_DATE]: moment(this.periodEnd).format('MM/DD/YYYY'),
       [REF_NUMBER]: refNumber,
       [CLASS]: 'CutCats',

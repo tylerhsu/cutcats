@@ -59,6 +59,10 @@ export default class ClientForm extends React.Component {
             <Input id='name' type='text' name='name' value={this.state.client.name || ''} onChange={this.handleChange} autoFocus />
           </FormGroup>
           <FormGroup>
+            <Label for='quickbooksName'>Quickbooks Name</Label>
+            <Input id='quickbooksName' type='text' name='quickbooksName' value={this.state.client.quickbooksName || ''} onChange={this.handleChange} autoFocus />
+          </FormGroup>
+          <FormGroup>
             <Label for='address'>Address</Label>
             <Input id='address' type='text' name='address' value={this.state.client.address || ''} onChange={this.handleChange} />
           </FormGroup>
