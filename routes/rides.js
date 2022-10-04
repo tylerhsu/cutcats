@@ -29,7 +29,6 @@ function getRidesCsv (req, res, next) {
   let query = _getRidesQuery(req)
     .populate('client courier')
     .skip(0)
-    .limit(10000)
     .lean();
 
   return query
