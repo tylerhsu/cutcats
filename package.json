@@ -63,7 +63,7 @@
     "passport": "^0.4.0",
     "passport-google-oauth": "^1.0.0",
     "prop-types": "^15.6.2",
-    "qs": "^6.5.1",
+    "qs": "^6.5.3",
     "querystring": "^0.2.0",
     "react": "^16.4.1",
     "react-dates": "^18.2.2",
