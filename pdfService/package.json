@@ -13,7 +13,7 @@
   "author": "Tyler Hsu",
   "license": "ISC",
   "devDependencies": {
-    "serverless": "^1.44.1"
+    "serverless": "^1.83.3"
   },
   "dependencies": {
     "pdfmake": "^0.1.56"
