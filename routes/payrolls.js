@@ -135,6 +135,7 @@ function getRidesByCourier(fromDate, toDate) {
     .addFields({
       courier: { $arrayElemAt: ['$courier', 0] }
     })
+    .allowDiskUse(true)
     .exec();
 }
 

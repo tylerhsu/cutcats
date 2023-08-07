@@ -1,7 +1,10 @@
 version: '3'
 services:
   mongo:
-    image: mongo:4.4
-    command: --storageEngine ephemeralForTest
+    image: mongo:6
     ports:
-      - '27357:27017'
+      - '55000:27017'
+    volumes:
+      - mongo:/data/db
+volumes:
+  mongo:

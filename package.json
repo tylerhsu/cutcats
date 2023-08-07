@@ -6,7 +6,7 @@
   "scripts": {
     "build": "neutrino build",
     "dev": "concurrently 'npm run dev-server' 'npm run dev-client'",
-    "pretest": "docker-compose up -d",
+    "pretest": "docker-compose --file docker-compose-for-tests.yml up -d",
     "test": "neutrino test -- ./setupTests.js \"./!(node_modules|pdfService)/**/*.test.js\"",
     "start": "node server.js",
     "dev-server": "nodemon server.js",
@@ -97,6 +97,6 @@
     "sinon": "^4.4.2"
   },
   "volta": {
-    "node": "10.15.3"
+    "node": "12.22.12"
   }
 }

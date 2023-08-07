@@ -111,6 +111,7 @@ function getRidesByClient(fromDate, toDate) {
     .addFields({
       client: { $arrayElemAt: ['$client', 0] }
     })
+    .allowDiskUse(true)
     .exec();
 }
 

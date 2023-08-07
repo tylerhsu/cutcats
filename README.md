@@ -4,11 +4,11 @@
 A website that assists with payroll and invoice management for Cut Cats Courier.  Built with NodeJS, Express, React, and MongoDB.
 
 ## Local Development
-1. Install [nvm](https://github.com/nvm-sh/nvm).  This project manages its node version via a .nvmrc file.
-2. Install [Docker](https://docs.docker.com/install).  Docker is used to run a local db during unit tests.
-3. Use `nvm` to install the project's node version:
+1. Install [volta](https://volta.sh/).  This project manages its node version via a "volta" entry in package.json.
+2. Install [Docker](https://docs.docker.com/install).  Docker is used to run a local db during unit tests and optionally a local db for development.
+3. Run a local db:
 ```
-nvm install
+docker-compose up -d
 ```
 4. Install dependencies:
 ```
