@@ -90,6 +90,7 @@ function generateInvoices (req, res, next) {
 
 function getRidesByClient(fromDate, toDate) {
   return models.Ride.aggregate()
+    .allowDiskUse(true)
     .match({
       readyTime: {
         $gte: fromDate,
@@ -111,7 +112,6 @@ function getRidesByClient(fromDate, toDate) {
     .addFields({
       client: { $arrayElemAt: ['$client', 0] }
     })
-    .allowDiskUse(true)
     .exec();
 }
 

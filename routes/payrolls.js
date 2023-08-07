@@ -104,6 +104,7 @@ function getCouriersWithRadios() {
 
 function getRidesByCourier(fromDate, toDate) {
   return models.Ride.aggregate()
+    .allowDiskUse(true)
     .match({
       readyTime: {
         $gte: fromDate,
@@ -135,7 +136,6 @@ function getRidesByCourier(fromDate, toDate) {
     .addFields({
       courier: { $arrayElemAt: ['$courier', 0] }
     })
-    .allowDiskUse(true)
     .exec();
 }
 
