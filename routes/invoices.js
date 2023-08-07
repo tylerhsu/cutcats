@@ -1,4 +1,5 @@
 const express = require('express');
+const _ = require('lodash');
 const path = require('path');
 const yazl = require('yazl');
 const moment = require('moment');
@@ -89,30 +90,78 @@ function generateInvoices (req, res, next) {
 }
 
 function getRidesByClient(fromDate, toDate) {
-  return models.Ride.aggregate()
-    .allowDiskUse(true)
-    .match({
-      readyTime: {
-        $gte: fromDate,
-        $lt: toDate
-      },
-      deliveryStatus: 'complete'
-    })
-    .group({
-      _id: { client: '$client' },
-      rides: { $push: '$$ROOT' }
-    })
-    .lookup({
-      from: 'clients',
-      localField: '_id.client',
-      foreignField: '_id',
-      as: 'client'
-    })
-    // lookup stage always gives an array. Un-arrayify the client field.
-    .addFields({
-      client: { $arrayElemAt: ['$client', 0] }
-    })
-    .exec();
+  function doQuery(from, to) {
+    return models.Ride.aggregate()
+      // We need to watch the memory footprint on this query because
+      // mongo can hit the 100mb aggregation stage memory limiton
+      // periods with many rides. Mongodb's allowDiskUse() gets around
+      // that but our shared mongo instance doesn't support it.
+      .project({
+        jobId: 1,
+        client: 1,
+        courier: 1,
+        destinationAddress1: 1,
+        deliveryStatus: 1,
+        readyTime: 1,
+        orderTotal: 1,
+        billableTotal: 1,
+        tip: 1,
+        deliveryFee: 1,
+      })
+      .match({
+        readyTime: {
+          $gte: from,
+          $lt: to
+        },
+        deliveryStatus: 'complete'
+      })
+      .group({
+        _id: { client: '$client' },
+        rides: { $push: '$$ROOT' }
+      })
+      .lookup({
+        from: 'clients',
+        localField: '_id.client',
+        foreignField: '_id',
+        as: 'client'
+      })
+      // lookup stage always gives an array. Un-arrayify the client field.
+      .addFields({
+        client: { $arrayElemAt: ['$client', 0] }
+      })
+      // prod does not allow allowDiskUse(true) but local dev db has
+      // it enabled by default. Set it false here so dev behaves like
+      // prod. allowDiskUse(true) prevents errors resulting from
+      // mongo's 100mb memory limit on aggregation stages by allowing
+      // temp files to be written to disk.
+      .allowDiskUse(false)
+      .exec();
+  }
+
+  // Split up the time period into four separate queries to reduce the
+  // memory footprint of each individual one, then combine the
+  // results.
+  const partitions = 4;
+  const partitionSize = Math.floor((toDate.valueOf() - fromDate.valueOf()) / partitions);
+  const periods = [];
+  for (let from = fromDate.valueOf(); from <= toDate.valueOf(); from += partitionSize + 1) {
+    periods.push([new Date(from), new Date(from + partitionSize)]);
+  }
+  const queries = periods.map(period => doQuery(period[0], period[1]));
+  return Promise.all(queries)
+    .then((allResults) => {
+      const combined = _.flatten(allResults).reduce((memo, rideGroup) => {
+        let group = memo.find(group => group.client._id.toString() === rideGroup.client._id.toString());
+        if (!group) {
+          group = rideGroup;
+          memo.push(group);
+        } else {
+          group.rides.push(...rideGroup.rides);
+        }
+        return memo;
+      }, []);
+      return combined;
+    });
 }
 
 function createInvoiceZip(req, res, next) {
