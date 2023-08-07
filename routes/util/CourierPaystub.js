@@ -5,6 +5,7 @@ const fs = require('fs');
 const logoBase64 = fs.readFileSync(path.resolve(__dirname, './pdf-logo.png')).toString('base64');
 const explainable = require('./explainable');
 const AccountingPeriod = require('./AccountingPeriod');
+const { precisionRound } = require('./reportUtils');
 
 class CourierPaystub extends AccountingPeriod {
   constructor(courier, rides, periodStart, periodEnd, lambda) {
@@ -117,14 +118,11 @@ class CourierPaystub extends AccountingPeriod {
     case 'legacy on demand food':
       // falls through
     case 'catering food':
-      return [
-        Math.floor(ride.deliveryFee * .25),
-        ['*', '25% of fee rounded down (on-demand or catering food ride)']
-      ];
+      // falls through
     case 'cargo/wholesale/commissary':
       return [
-        Math.floor(ride.deliveryFee * .12),
-        ['†', '12% of fee rounded down (cargo/wholesale/commissary ride)']
+        precisionRound(ride.deliveryFee * .25, 2),
+        ['*', '25% of fee']
       ];
     default:
       throw new Error(`Don't know how to calculate toCC for a ride whose client's delivery fee structure is "${ride.client.deliveryFeeStructure}"`);

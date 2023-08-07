@@ -17,6 +17,7 @@ export default class CouriersTable extends React.Component {
     this.state = {
       couriers: null,
       freetext: query.freetext || '',
+      hasRadio: query.hasRadio || '',
       modalOpen: false,
       courierBeingEdited: null,
       formErrorMessage: '',
@@ -25,6 +26,7 @@ export default class CouriersTable extends React.Component {
     };
 
     this.handleFreetextChange = this.handleFreetextChange.bind(this);
+    this.handleHasRadioChange = this.handleHasRadioChange.bind(this);
     this.handlePageChange = this.handlePageChange.bind(this);
     this.openModal = this.openModal.bind(this);
     this.closeModal = this.closeModal.bind(this);
@@ -40,7 +42,8 @@ export default class CouriersTable extends React.Component {
     let url = '/api/couriers';
 
     const baseParams = {
-      q: this.state.freetext
+      q: this.state.freetext,
+      hasRadio: this.state.hasRadio,
     };
     const fetchParams = {
       ...baseParams,
@@ -79,6 +82,21 @@ export default class CouriersTable extends React.Component {
     }, () => {
       updateUrlQuery({
         freetext,
+        page: null,
+      });
+      this.debouncedFetchCouriers();
+    });
+  }
+
+  handleHasRadioChange (e) {
+    const hasRadio = e.target.value;
+    this.setState({
+      hasRadio,
+      loading: true,
+      page: 1,
+    }, () => {
+      updateUrlQuery({
+        hasRadio: hasRadio === '' ? null : hasRadio,
         page: null,
       });
       this.debouncedFetchCouriers();
@@ -221,10 +239,18 @@ export default class CouriersTable extends React.Component {
                 <input id="freetext" className="form-control" name="freetext" type="text" value={this.state.freetext} onChange={this.handleFreetextChange} placeholder="Search by name or email" />
               </div>
             </div>
+            <div className="col-lg-2 mb-4 d-flex align-items-center" style={{ gap: '.5rem' }}>
+              <label htmlFor="has-radio" style={{ flexShrink: 0, margin: 0 }}>Has radio?</label>
+              <select id="has-radio" name="hasRadio" className="form-control" value={this.state.hasRadio} onChange={this.handleHasRadioChange}>
+                <option value=""></option>
+                <option value="true">Yes</option>
+                <option value="false">No</option>
+              </select>
+            </div>
             <div className="col text-lg-right mb-4">
               <button className="btn btn-info" onClick={() => this.openModal()}>
                 <i className="fa fa-plus mr-2" />
-                      Add Courier
+                  Add Courier
               </button>
             </div>
           </div>

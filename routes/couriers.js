@@ -16,6 +16,11 @@ function getCouriers (req, res, next) {
     query.find({ $text: { $search: req.query.q } });
   }
 
+  if (req.query.hasRadio === 'true' || req.query.hasRadio === 'false') {
+    const monthlyRadioRental = req.query.hasRadio === 'true' ? true : false;
+    query.find({ monthlyRadioRental });
+  }
+
   return boilerplate.list.respond(query, req, res, next);
 }
 

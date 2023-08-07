@@ -124,11 +124,10 @@ class ClientInvoice extends AccountingPeriod {
   }
 
   getPdfDocDefinition () {
-    const title = `${this.client.name} Invoice, ${this.getDateRange()}`;
+    const title = `${this.client.name} Twinjet Delivery List, ${this.getDateRange()}`;
     const { value: adminFee, reason: adminFeeReason } = this.getAdminFee({ explain: true });
     const { value: tipSubtotal, reason: tipSubtotalReason } = this.getTipSubtotal({ explain: true });
     const { value: tipCredit, reason: tipCreditReason } = this.getTipCredit({ explain: true });
-    const { value: tipTotal, reason: tipTotalReason } = this.getTipTotal({ explain: true });
     const { value: feeTotal, reason: feeTotalReason } = this.getFeeTotal({ explain: true });
     return {
       info: {

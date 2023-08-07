@@ -62,7 +62,7 @@ rideSchema.index({
   originName: 'text'
 });
 
-rideSchema.index({ updatedAt: 1 });
+rideSchema.index({ readyTime: 1, updatedAt: -1 });
 
 // csv column -> model field
 const CSV_COLUMN_MAP = {

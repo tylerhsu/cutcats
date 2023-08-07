@@ -18,8 +18,8 @@
     "url": "git+https://github.com/tylerhsu/cutcats.git"
   },
   "engines": {
-    "node": "10.15.3",
-    "npm": "6.4.1"
+    "node": "12.22.12",
+    "npm": "6.14.16"
   },
   "keywords": [],
   "author": "",
