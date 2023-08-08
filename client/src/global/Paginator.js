@@ -6,7 +6,7 @@ export default function Paginator (props) {
     <ReactPaginate
       pageRangeDisplayed={5}
       marginPagesDisplayed={1}
-      containerClassName={'pagination'}
+      containerClassName={'paginator'}
       pageClassName={'page-item'}
       previousClassName={'page-item'}
       nextClassName={'page-item'}

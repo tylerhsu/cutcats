@@ -159,7 +159,6 @@ export default class ClientsTable extends React.Component {
     } else if (this.state.clients.length) {
       return (
         <React.Fragment>
-          {this.renderPaginator()}
           <table className="table">
             <thead>
               <tr>
@@ -194,7 +193,10 @@ export default class ClientsTable extends React.Component {
 
   renderPaginator () {
     return (
-      <div className='d-flex justify-content-center'>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'flex-end', marginBottom: '1rem' }}>
+        <div>
+          Showing {this.state.count !== undefined ? this.state.count : ''} clients
+        </div>
         <Paginator
           initialPage={this.state.page - 1}
           pageCount={Math.ceil(this.state.count / RESULTS_PER_PAGE)}
@@ -229,6 +231,7 @@ export default class ClientsTable extends React.Component {
           </div>
           <div className="row">
             <div className="col">
+              {this.renderPaginator()}
               {
                 this.state.loading ? (
                   <em className='text-secondary'>Loading...</em>

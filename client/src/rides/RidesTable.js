@@ -161,7 +161,6 @@ export default class RidesTable extends React.Component {
 
       return (
         <React.Fragment>
-          {this.renderPaginator()}
           <table className="table">
             <thead>
               <tr>
@@ -192,7 +191,10 @@ export default class RidesTable extends React.Component {
 
   renderPaginator () {
     return (
-      <div className='d-flex justify-content-center'>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'flex-end', marginBottom: '1rem' }}>
+        <div>
+          Showing {this.state.count !== undefined ? this.state.count : ''} rides
+        </div>
         <Paginator
           initialPage={this.state.page - 1}
           pageCount={Math.ceil(this.state.count / RESULTS_PER_PAGE)}
@@ -250,9 +252,12 @@ export default class RidesTable extends React.Component {
           <div className="col">
             {this.state.error ? (
               <div className="text-danger">{this.state.error}</div>
-            ) :
-              this.renderTable()
-            }
+            ) : (
+              <React.Fragment>
+                {this.renderPaginator()}
+                {this.renderTable()}
+              </React.Fragment>
+            )}
           </div>
         </div>
       </div>
