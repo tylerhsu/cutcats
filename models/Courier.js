@@ -17,4 +17,6 @@ courierSchema.index({
   email: 'text'
 });
 
+courierSchema.index({ name: 1 });
+
 module.exports = mongoose.model('Courier', courierSchema);

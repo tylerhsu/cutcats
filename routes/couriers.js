@@ -21,6 +21,8 @@ function getCouriers (req, res, next) {
     query.find({ monthlyRadioRental });
   }
 
+  query.sort({ name: 1 });
+
   return boilerplate.list.respond(query, req, res, next);
 }
 
