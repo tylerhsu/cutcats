@@ -77,7 +77,7 @@ export class PayrollRow extends React.Component {
         </td>
         <td>
           {this.props.downloadUrl && (
-            <a href={this.props.downloadUrl}>Download Payrolls</a>
+            <a href={this.props.downloadUrl}>Download Payroll</a>
           )}
           {this.state.runPayrollLoading && (
             <em className='text-secondary'>Running payroll...</em>
