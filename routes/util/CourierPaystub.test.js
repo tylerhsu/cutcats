@@ -226,60 +226,60 @@ describe('CourierPaystub', function() {
       this.courierPaystub = new CourierPaystub(courier, [], periodStart, periodEnd);
     });
     
-    it('when ride\'s client has deliveryFeeStructure == "on demand food", returns 25% of ride fee', function() {
+    it('when ride\'s client has deliveryFeeStructure == "on demand food", returns 25% of ride fee + ride tip', function() {
       const client = fixtureModel('Client', { deliveryFeeStructure: 'on demand food' });
       const rides = [
-        fixtureModel('Ride', { client, deliveryFee: 3 }),
-        fixtureModel('Ride', { client, deliveryFee: 4 }),
-        fixtureModel('Ride', { client, deliveryFee: 5 }),
-        fixtureModel('Ride', { client, deliveryFee: 10 })
+        fixtureModel('Ride', { client, deliveryFee: 2, tip: 10 }),
+        fixtureModel('Ride', { client, deliveryFee: 6, tip: 10 }),
+        fixtureModel('Ride', { client, deliveryFee: 6, tip: undefined }),
+        fixtureModel('Ride', { client, deliveryFee: 10, tip: 10 })
       ];
-      this.courierPaystub.getToCC(rides[0]).should.eql(.75);
-      this.courierPaystub.getToCC(rides[1]).should.eql(1);
-      this.courierPaystub.getToCC(rides[2]).should.eql(1.25);
-      this.courierPaystub.getToCC(rides[3]).should.eql(2.5);
+      this.courierPaystub.getToCC(rides[0]).should.eql(3);
+      this.courierPaystub.getToCC(rides[1]).should.eql(4);
+      this.courierPaystub.getToCC(rides[2]).should.eql(1.5);
+      this.courierPaystub.getToCC(rides[3]).should.eql(5);
     });
 
-    it('when ride\'s client has deliveryFeeStructure == "legacy on demand food", returns 25% of ride fee', function() {
+    it('when ride\'s client has deliveryFeeStructure == "legacy on demand food", returns 25% of ride fee + ride tip', function() {
       const client = fixtureModel('Client', { deliveryFeeStructure: 'legacy on demand food' });
       const rides = [
-        fixtureModel('Ride', { client, deliveryFee: 3 }),
-        fixtureModel('Ride', { client, deliveryFee: 4 }),
-        fixtureModel('Ride', { client, deliveryFee: 5 }),
-        fixtureModel('Ride', { client, deliveryFee: 10 })
+        fixtureModel('Ride', { client, deliveryFee: 2, tip: 10 }),
+        fixtureModel('Ride', { client, deliveryFee: 6, tip: 10 }),
+        fixtureModel('Ride', { client, deliveryFee: 6, tip: undefined }),
+        fixtureModel('Ride', { client, deliveryFee: 10, tip: 10 })
       ];
-      this.courierPaystub.getToCC(rides[0]).should.eql(.75);
-      this.courierPaystub.getToCC(rides[1]).should.eql(1);
-      this.courierPaystub.getToCC(rides[2]).should.eql(1.25);
-      this.courierPaystub.getToCC(rides[3]).should.eql(2.5);
+      this.courierPaystub.getToCC(rides[0]).should.eql(3);
+      this.courierPaystub.getToCC(rides[1]).should.eql(4);
+      this.courierPaystub.getToCC(rides[2]).should.eql(1.5);
+      this.courierPaystub.getToCC(rides[3]).should.eql(5);
     });
 
-    it('when ride\'s client has deliveryFeeStructure == "catering food", returns 25% of ride fee', function() {
+    it('when ride\'s client has deliveryFeeStructure == "catering food", returns 25% of ride fee + ride tip', function() {
       const client = fixtureModel('Client', { deliveryFeeStructure: 'catering food' });
       const rides = [
-        fixtureModel('Ride', { client, deliveryFee: 3 }),
-        fixtureModel('Ride', { client, deliveryFee: 4 }),
-        fixtureModel('Ride', { client, deliveryFee: 5 }),
-        fixtureModel('Ride', { client, deliveryFee: 10 })
+        fixtureModel('Ride', { client, deliveryFee: 2, tip: 10 }),
+        fixtureModel('Ride', { client, deliveryFee: 6, tip: 10 }),
+        fixtureModel('Ride', { client, deliveryFee: 6, tip: undefined }),
+        fixtureModel('Ride', { client, deliveryFee: 10, tip: 10 })
       ];
-      this.courierPaystub.getToCC(rides[0]).should.eql(.75);
-      this.courierPaystub.getToCC(rides[1]).should.eql(1);
-      this.courierPaystub.getToCC(rides[2]).should.eql(1.25);
-      this.courierPaystub.getToCC(rides[3]).should.eql(2.5);
+      this.courierPaystub.getToCC(rides[0]).should.eql(3);
+      this.courierPaystub.getToCC(rides[1]).should.eql(4);
+      this.courierPaystub.getToCC(rides[2]).should.eql(1.5);
+      this.courierPaystub.getToCC(rides[3]).should.eql(5);
     });
 
-    it('when ride\'s client has deliveryFeeStructure == "cargo/wholesale/commissary", returns 25% of ride fee', function() {
+    it('when ride\'s client has deliveryFeeStructure == "cargo/wholesale/commissary", returns 25% of ride fee + ride tip', function() {
       const client = fixtureModel('Client', { deliveryFeeStructure: 'cargo/wholesale/commissary' });
       const rides = [
-        fixtureModel('Ride', { client, deliveryFee: 3 }),
-        fixtureModel('Ride', { client, deliveryFee: 4 }),
-        fixtureModel('Ride', { client, deliveryFee: 5 }),
-        fixtureModel('Ride', { client, deliveryFee: 10 })
+        fixtureModel('Ride', { client, deliveryFee: 2, tip: 10 }),
+        fixtureModel('Ride', { client, deliveryFee: 6, tip: 10 }),
+        fixtureModel('Ride', { client, deliveryFee: 6, tip: undefined }),
+        fixtureModel('Ride', { client, deliveryFee: 10, tip: 10 })
       ];
-      this.courierPaystub.getToCC(rides[0]).should.eql(.75);
-      this.courierPaystub.getToCC(rides[1]).should.eql(1);
-      this.courierPaystub.getToCC(rides[2]).should.eql(1.25);
-      this.courierPaystub.getToCC(rides[3]).should.eql(2.5);
+      this.courierPaystub.getToCC(rides[0]).should.eql(3);
+      this.courierPaystub.getToCC(rides[1]).should.eql(4);
+      this.courierPaystub.getToCC(rides[2]).should.eql(1.5);
+      this.courierPaystub.getToCC(rides[3]).should.eql(5);
     });
 
     it('throws an error when ride\'s client has an unrecognized deliveryFeeStructure', function() {

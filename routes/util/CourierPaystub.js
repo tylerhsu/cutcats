@@ -120,9 +120,10 @@ class CourierPaystub extends AccountingPeriod {
     case 'catering food':
       // falls through
     case 'cargo/wholesale/commissary':
+      const amount = ((ride.deliveryFee || 0) + (ride.tip || 0)) * .25;
       return [
-        precisionRound(ride.deliveryFee * .25, 2),
-        ['*', '25% of fee']
+        precisionRound(amount, 2),
+        ['*', '25% of tip + fee']
       ];
     default:
       throw new Error(`Don't know how to calculate toCC for a ride whose client's delivery fee structure is "${ride.client.deliveryFeeStructure}"`);
