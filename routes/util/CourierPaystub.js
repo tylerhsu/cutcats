@@ -113,24 +113,20 @@ class CourierPaystub extends AccountingPeriod {
 
   getToCC(ride) {
     switch(ride.client.deliveryFeeStructure) {
-      case 'catering food':
-        const cateringAmount = ((ride.deliveryFee || 0) + (ride.tip || 0)) * .25;
-        return [
-          precisionRound(cateringAmount, 2),
-          ['†', 'Catering client. 25% of tip + 25% of fee.']
-        ];
-      case 'on demand food':
-        // falls through
-      case 'legacy on demand food':
-        // falls through
-      case 'cargo/wholesale/commissary':
-        const amount = (ride.deliveryFee || 0) * .25;
-        return [
-          precisionRound(amount, 2),
-          ['*', 'Non-catering client. 25% of fee.']
-        ];
-      default:
-        throw new Error(`Don't know how to calculate toCC for a ride whose client's delivery fee structure is "${ride.client.deliveryFeeStructure}"`);
+    case 'on demand food':
+      // falls through
+    case 'legacy on demand food':
+      // falls through
+    case 'catering food':
+      // falls through
+    case 'cargo/wholesale/commissary':
+      const amount = ((ride.deliveryFee || 0) + (ride.tip || 0)) * .25;
+      return [
+        precisionRound(amount, 2),
+        ['*', '25% of tip + fee']
+      ];
+    default:
+      throw new Error(`Don't know how to calculate toCC for a ride whose client's delivery fee structure is "${ride.client.deliveryFeeStructure}"`);
     }
   }
 
@@ -254,7 +250,7 @@ class CourierPaystub extends AccountingPeriod {
         {
           layout: 'headerLineOnly',
           margin: [0, 10, 0, 0],
-          fontSize: 8,
+          fontSize: 10,
           table: {
             headerRows: 1,
             widths: ['auto', '*', 'auto', '*', 'auto', 'auto', 'auto', 'auto', 'auto'],
@@ -288,7 +284,7 @@ class CourierPaystub extends AccountingPeriod {
         {
           margin: [0, 20, 0, 0],
           text: _.toPairs(toCCReasons).map(reason => ({
-            text: `${reason[0]} ${reason[1]}\n`,
+            text: `${reason[0]}: ${reason[1]}\n`,
             fontSize: 8
           }))
         }
