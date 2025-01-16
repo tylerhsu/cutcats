@@ -17,6 +17,7 @@ export default class ClientsTable extends React.Component {
       clients: null,
       zones: null,
       freetext: query.freetext || '',
+      deliveryFeeStructure: query.deliveryFeeStructure || '',
       modalOpen: false,
       clientBeingEdited: null,
       formErrorMessage: '',
@@ -26,6 +27,7 @@ export default class ClientsTable extends React.Component {
     };
 
     this.handleFreetextChange = this.handleFreetextChange.bind(this);
+    this.handleDeliveryFeeStructureChange = this.handleDeliveryFeeStructureChange.bind(this);
     this.debouncedFetchClients = _.debounce(this.fetchClients, 500).bind(this);
     this.openModal = this.openModal.bind(this);
     this.closeModal = this.closeModal.bind(this);
@@ -43,6 +45,7 @@ export default class ClientsTable extends React.Component {
 
     const baseParams = {
       q: this.state.freetext,
+      deliveryFeeStructure: this.state.deliveryFeeStructure,
     };
     const fetchParams = {
       ...baseParams,
@@ -90,6 +93,21 @@ export default class ClientsTable extends React.Component {
     }, () => {
       updateUrlQuery({
         freetext,
+        page: null,
+      });
+      this.debouncedFetchClients();
+    });
+  }
+
+  handleDeliveryFeeStructureChange (e) {
+    const deliveryFeeStructure = e.target.value;
+    this.setState({
+      deliveryFeeStructure,
+      loading: true,
+      page: 1,
+    }, () => {
+      updateUrlQuery({
+        deliveryFeeStructure,
         page: null,
       });
       this.debouncedFetchClients();
@@ -222,10 +240,19 @@ export default class ClientsTable extends React.Component {
                 <input id="freetext" className="form-control" name="freetext" type="text" value={this.state.freetext} onChange={this.handleFreetextChange} placeholder="Search by name" />
               </div>
             </div>
+            <div className="col">
+              <select id="deliveryFeeStructure" className="form-control" name="deliveryFeeStructure" value={this.state.deliveryFeeStructure} onChange={this.handleDeliveryFeeStructureChange}>
+              <option value=''>Any fee structure</option>
+              <option value='on demand food'>On-demand food</option>
+              <option value='legacy on demand food'>Legacy on-demand food</option>
+              <option value='catering food'>Catering Food</option>
+              <option value='cargo/wholesale/commissary'>Cargo/wholesale/commissary</option>
+              </select>
+            </div>
             <div className="col text-lg-right mb-4">
               <button className="btn btn-info" onClick={() => this.openModal()}>
                 <i className="fa fa-plus mr-2" />
-                      Add Client
+                Add Client
               </button>
             </div>
           </div>

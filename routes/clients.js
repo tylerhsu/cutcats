@@ -16,6 +16,10 @@ function getClients (req, res, next) {
     query.find({ $text: { $search: req.query.q } });
   }
 
+  if (req.query.deliveryFeeStructure) {
+    query.find({ deliveryFeeStructure: req.query.deliveryFeeStructure });
+  }
+
   return boilerplate.list.respond(query, req, res, next);
 }
 
