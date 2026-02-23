@@ -71,12 +71,13 @@ export const runInvoicingError = (err, fromDate, toDate) => ({
   fromDate,
   toDate
 });
-export function runInvoicing(fromDate, toDate) {
+export function runInvoicing(fromDate, toDate, filename) {
   fromDate = new Date(fromDate).valueOf();
   toDate = new Date(toDate).valueOf();
   return dispatch => {
     dispatch(runInvoicingBegin(fromDate, toDate));
-    return axios.post(`/api/invoices/generate?periodStart=${fromDate}&periodEnd=${toDate}`)
+    const filenameParam = filename ? `&filename=${filename}` : '';
+    return axios.post(`/api/invoices/generate?periodStart=${fromDate}&periodEnd=${toDate}${filenameParam}`)
       .then(res => {
         dispatch(runInvoicingSuccess(res.data, fromDate, toDate));
       })

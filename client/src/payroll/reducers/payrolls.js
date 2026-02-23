@@ -71,12 +71,13 @@ export const runPayrollError = (err, fromDate, toDate) => ({
   fromDate,
   toDate
 });
-export function runPayroll(fromDate, toDate) {
+export function runPayroll(fromDate, toDate, filename) {
   fromDate = new Date(fromDate).valueOf();
   toDate = new Date(toDate).valueOf();
   return dispatch => {
     dispatch(runPayrollBegin(fromDate, toDate));
-    return axios.post(`/api/payrolls/generate?periodStart=${fromDate}&periodEnd=${toDate}`)
+    const filenameParam = filename ? `&filename=${filename}` : '';
+    return axios.post(`/api/payrolls/generate?periodStart=${fromDate}&periodEnd=${toDate}${filenameParam}`)
       .then(res => {
         dispatch(runPayrollSuccess(res.data, fromDate, toDate));
       })

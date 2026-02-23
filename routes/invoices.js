@@ -42,9 +42,10 @@ function downloadInvoice(s3) {
   return (req, res, next) => {
     return boilerplate.getOne.getQuery(models.Invoice, req)
       .then(invoice => {
+        const filename = req.query.filename ? path.basename(req.query.filename) : path.basename(invoice.filePath);
         res.set({
           'Content-Type': 'application/zip',
-          'Content-Disposition': `attachment; filename=${path.basename(invoice.filePath)}`
+          'Content-Disposition': `attachment; filename=${filename}`
         });
         s3.getObject({
           Bucket: process.env.S3_BUCKET,
@@ -204,9 +205,10 @@ function createInvoiceZip(req, res, next) {
 function serveInvoiceZip(req, res) {
   const periodStart = reportUtils.parseDate(req.query.periodStart);
   const periodEnd = reportUtils.parseDate(req.query.periodEnd);
+  const filename = req.query.filename ? path.basename(req.query.filename) : `invoices-${formatDate(periodStart)}-${formatDate(periodEnd)}.zip`;
   res.set({
     'Content-Type': 'application/zip',
-    'Content-Disposition': `attachment; filename=invoices-${formatDate(periodStart)}-${formatDate(periodEnd)}.zip`
+    'Content-Disposition': `attachment; filename=${filename}`
   });
   req.invoiceZip.outputStream.pipe(res);
 }
@@ -216,7 +218,7 @@ function saveInvoiceZip(s3) {
     const periodStart = reportUtils.parseDate(req.query.periodStart);
     const periodEnd = reportUtils.parseDate(req.query.periodEnd);
     const formatDate = (date) => moment(date).format('M-D-YYYY');
-    const filename = `invoices-${formatDate(periodStart)}-${formatDate(periodEnd)}.zip`;
+    const filename = req.query.filename ? path.basename(req.query.filename) : `invoices-${formatDate(periodStart)}-${formatDate(periodEnd)}.zip`;
     return new Promise((resolve, reject) => {
       s3.putObject({
         Bucket: process.env.S3_BUCKET,

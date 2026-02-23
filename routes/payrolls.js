@@ -44,9 +44,10 @@ function downloadPayroll(s3) {
   return (req, res, next) => {
     return boilerplate.getOne.getQuery(models.Payroll, req)
       .then(payroll => {
+        const filename = req.query.filename ? path.basename(req.query.filename) : path.basename(payroll.filePath);
         res.set({
           'Content-Type': 'application/zip',
-          'Content-Disposition': `attachment; filename=${path.basename(payroll.filePath)}`
+          'Content-Disposition': `attachment; filename=${filename}`
         });
         s3.getObject({
           Bucket: process.env.S3_BUCKET,
@@ -240,9 +241,10 @@ function createPayrollZip(req, res, next) {
 function servePayrollZip(req, res) {
   const periodStart = reportUtils.parseDate(req.query.periodStart);
   const periodEnd = reportUtils.parseDate(req.query.periodEnd);
+  const filename = req.query.filename ? path.basename(req.query.filename) : `paystubs-${formatDate(periodStart)}-${formatDate(periodEnd)}.zip`;
   res.set({
     'Content-Type': 'application/zip',
-    'Content-Disposition': `attachment; filename=paystubs-${formatDate(periodStart)}-${formatDate(periodEnd)}.zip`
+    'Content-Disposition': `attachment; filename=${filename}`
   });
   req.payrollZip.outputStream.pipe(res);
 }
@@ -252,7 +254,7 @@ function savePayrollZip(s3) {
     const periodStart = reportUtils.parseDate(req.query.periodStart);
     const periodEnd = reportUtils.parseDate(req.query.periodEnd);
     const formatDate = (date) => moment(date).format('M-D-YYYY');
-    const filename = `paystubs-${formatDate(periodStart)}-${formatDate(periodEnd)}.zip`;
+    const filename = req.query.filename ? path.basename(req.query.filename) : `paystubs-${formatDate(periodStart)}-${formatDate(periodEnd)}.zip`;
     return new Promise((resolve, reject) => {
       s3.putObject({
         Bucket: process.env.S3_BUCKET,

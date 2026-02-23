@@ -28,7 +28,7 @@ export class PayrollRow extends React.Component {
       runPayrollLoading: true,
       error: ''
     });
-    this.props.runPayroll(this.props.periodStart, this.props.periodEnd)
+    this.props.runPayroll(this.props.periodStart, this.props.periodEnd, this.getFilename())
       .catch(err => {
         this.setState({
           error: getErrorMessage(err),
@@ -37,20 +37,24 @@ export class PayrollRow extends React.Component {
       });
   }
 
+  getFilename() {
+    return `paystubs-${moment(this.props.periodStart).format('M-D-YYYY')}-${moment(this.props.periodEnd).format('M-D-YYYY')}.zip`;
+  }
+
   handleDryRun(e) {
     e.preventDefault();
     const periodStartStamp = new Date(this.props.periodStart).valueOf();
     const periodEndStamp = new Date(this.props.periodEnd).valueOf();
+    const filename = this.getFilename();
     this.setState({
       dryRunLoading: true,
       error: ''
     });
     // this url works fine as an ordinary link. The only reason it's an xhr is so we can show a spinner.
-    axios.get(`/api/payrolls/generate?periodStart=${periodStartStamp}&periodEnd=${periodEndStamp}`, {
+    axios.get(`/api/payrolls/generate?periodStart=${periodStartStamp}&periodEnd=${periodEndStamp}&filename=${filename}`, {
       responseType: 'arraybuffer'
     })
       .then(res => {
-        const filename = res.headers['content-disposition'].split('=')[1] || 'payrolls.zip';
         fileDownload(res.data, filename);
       })
       .catch(err => {
@@ -77,7 +81,7 @@ export class PayrollRow extends React.Component {
         </td>
         <td>
           {this.props.downloadUrl && (
-            <a href={this.props.downloadUrl}>Download Payroll</a>
+            <a href={`${this.props.downloadUrl}?filename=${this.getFilename()}`}>Download Payroll</a>
           )}
           {this.state.runPayrollLoading && (
             <em className='text-secondary'>Running payroll...</em>
