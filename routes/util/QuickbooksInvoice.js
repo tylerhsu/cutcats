@@ -57,9 +57,19 @@ class QuickbooksInvoice extends QuickbooksExport {
     return this.orderFields({
       ...this.getCommonFields(clientInvoice, refNumber),
       [MEMO]: `Delivery Fees ${moment(this.periodStart).format('MM/DD/YYYY')}-${moment(this.periodEnd).format('MM/DD/YYYY')}`,
-      [ITEM]: 'Delivery Fees:Delivery Fees',
+      [ITEM]: 'Delivery Fees:Fees',
       [DESCRIPTION]: `${moment(this.periodStart).format('MM/DD/YYYY')}-${moment(this.periodEnd).format('MM/DD/YYYY')}`,
-      [PRICE]: clientInvoice.getDeliveryFeeTotal(),
+      [PRICE]: clientInvoice.getFeeTotal(),
+    });
+  }
+
+  getTipRow(clientInvoice, refNumber) {
+    return this.orderFields({
+      ...this.getCommonFields(clientInvoice, refNumber),
+      [MEMO]: `Tips ${moment(this.periodStart).format('MM/DD/YYYY')}-${moment(this.periodEnd).format('MM/DD/YYYY')}`,
+      [ITEM]: 'Delivery Fees:Tips',
+      [DESCRIPTION]: `${moment(this.periodStart).format('MM/DD/YYYY')}-${moment(this.periodEnd).format('MM/DD/YYYY')}`,
+      [PRICE]: clientInvoice.getTipTotal().toFixed(2),
     });
   }
 
@@ -81,6 +91,7 @@ class QuickbooksInvoice extends QuickbooksExport {
     const rows = [];
     this.clientInvoices.forEach((clientInvoice, n) => {
       rows.push(this.getDeliveryFeeRow(clientInvoice, n));
+      rows.push(this.getTipRow(clientInvoice, n));
       if (clientInvoice.isMonthEnd || clientInvoice.client.adminFeeType === 'percentage') {
         rows.push(this.getAdminFeeRow(clientInvoice, n));
       }

@@ -111,12 +111,33 @@ class CourierPaystub extends AccountingPeriod {
     return this.getTipsOwedToRider() + this.getFeesOwedToRider();
   }
 
+  getTipsToCC(ride) {
+    if (ride.client.deliveryFeeStructure === 'catering food') {
+      const cateringAmount = (ride.tip || 0) * .25;
+      return precisionRound(cateringAmount, 2);
+    }
+    return 0;
+  }
+
+  getTipsToCCTotal() {
+    return _.sumBy(this.ridesInPeriod, ride => this.getTipsToCC(ride));
+  }
+
+  getFeesToCC(ride) {
+    const amount = (ride.deliveryFee || 0) * 0.25;
+    return precisionRound(amount, 2);
+  }
+
+  getFeesToCCTotal() {
+    return _.sumBy(this.ridesInPeriod, ride => this.getFeesToCC(ride));
+  }
+
   getToCC(ride) {
+    const toCC = this.getTipsToCC(ride) + this.getFeesToCC(ride);
     switch(ride.client.deliveryFeeStructure) {
       case 'catering food':
-        const cateringAmount = ((ride.deliveryFee || 0) + (ride.tip || 0)) * .25;
         return [
-          precisionRound(cateringAmount, 2),
+          toCC,
           ['†', 'Catering client. 25% of tip + 25% of fee.']
         ];
       case 'on demand food':
@@ -124,9 +145,8 @@ class CourierPaystub extends AccountingPeriod {
       case 'legacy on demand food':
         // falls through
       case 'cargo/wholesale/commissary':
-        const amount = (ride.deliveryFee || 0) * .25;
         return [
-          precisionRound(amount, 2),
+          toCC,
           ['*', 'Non-catering client. 25% of fee.']
         ];
       default:

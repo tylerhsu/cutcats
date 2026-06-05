@@ -29,7 +29,7 @@ class QuickbooksPayrollCredits extends QuickbooksExport {
     ];
   }
 
-  getRow(courierPaystub, refNumber) {
+  getFeeRow(courierPaystub, refNumber) {
     if (isNaN(parseInt(refNumber))) {
       throw new Error('refNumber is required');
     }
@@ -39,8 +39,25 @@ class QuickbooksPayrollCredits extends QuickbooksExport {
       [CUTCAT_NAME]: courierPaystub.getCourierName(),
       [DATE]: moment(this.periodEnd).format('MM/DD/YYYY'),
       [EXPENSE_ACCOUNT]: this.getExpenseAccount(courierPaystub),
-      [EXPENSE_AMOUNT]: courierPaystub.getRiderPayoutTotal(),
-      [EXPENSE_DESCRIPTION]: `Invoiced Rides Payout pay period ${moment(this.periodStart).format('MM/DD/YYYY')}-${moment(this.periodEnd).format('MM/DD/YYYY')}`,
+      [EXPENSE_AMOUNT]: (courierPaystub.getFeesOwedToRider() - courierPaystub.getFeesToCCTotal()).toFixed(2),
+      [EXPENSE_DESCRIPTION]: `Invoiced Rides Delivery Fee Payout pay period ${moment(this.periodStart).format('MM/DD/YYYY')}-${moment(this.periodEnd).format('MM/DD/YYYY')}`,
+      [EXPENSE_CLASS]: 'CutCats',
+      [AP_ACCOUNT]: 'Accounts Payable'
+    });
+  }
+
+  getTipRow(courierPaystub, refNumber) {
+    if (isNaN(parseInt(refNumber))) {
+      throw new Error('refNumber is required');
+    }
+    
+    return this.orderFields({
+      [REF_NUMBER]: refNumber,
+      [CUTCAT_NAME]: courierPaystub.getCourierName(),
+      [DATE]: moment(this.periodEnd).format('MM/DD/YYYY'),
+      [EXPENSE_ACCOUNT]: this.getExpenseAccount(courierPaystub),
+      [EXPENSE_AMOUNT]: (courierPaystub.getTipsOwedToRider() - courierPaystub.getTipsToCCTotal()).toFixed(2),
+      [EXPENSE_DESCRIPTION]: `Invoiced Rides Tips Payout pay period ${moment(this.periodStart).format('MM/DD/YYYY')}-${moment(this.periodEnd).format('MM/DD/YYYY')}`,
       [EXPENSE_CLASS]: 'CutCats',
       [AP_ACCOUNT]: 'Accounts Payable'
     });
@@ -55,13 +72,14 @@ class QuickbooksPayrollCredits extends QuickbooksExport {
   }
 
   getCsvRows() {
-    return this.courierPaystubs
-      .map((courierPaystub, n) => {
-        return this.getRow(courierPaystub, n);
-      })
-      .filter(row => {
-        return row[EXPENSE_AMOUNT] !== 0;
-      });
+    const rows = [];
+    this.courierPaystubs.forEach((courierPaystub, n) => {
+      rows.push(this.getFeeRow(courierPaystub, n));
+      rows.push(this.getTipRow(courierPaystub, n));
+    });
+    return rows.filter(row => {
+      return row[EXPENSE_AMOUNT] !== 0;
+    });
   }
 }
 

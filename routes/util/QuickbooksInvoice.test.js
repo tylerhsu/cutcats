@@ -74,7 +74,7 @@ describe('QuickbooksInvoice', function() {
         'Class': 'CutCats',
         'Due Date': '01/22/2000',
         'Memo': 'Delivery Fees 01/01/2000-01/02/2000',
-        'Item': 'Delivery Fees:Delivery Fees',
+        'Item': 'Delivery Fees:Fees',
         'Quantity': 1,
         'Description': '01/01/2000-01/02/2000',
         'Price': this.clientInvoices[0].getDeliveryFeeTotal(),
@@ -85,6 +85,42 @@ describe('QuickbooksInvoice', function() {
     it('throws an error if the second argument is not supplied', function() {
       (() => {
         this.quickbooksInvoice.getDeliveryFeeRow(this.clientInvoices[0]);
+      }).should.throw(/refNumber is required/);
+    });
+  });
+
+  describe('this.getTipRow()', function() {
+    beforeEach(function() {
+      this.client = fixtureModel('Client');
+      this.rides = fixtureModelArray('Ride', 3);
+      this.periodStart = new Date('2000-1-1');
+      this.periodEnd = new Date('2000-1-2');
+      this.monthStart = new Date('2000-1-3');
+      this.monthEnd = new Date('2000-1-4');
+      this.clientInvoices = [new ClientInvoice(this.client, this.rides, this.periodStart, this.periodEnd)];
+      this.quickbooksInvoice = new QuickbooksInvoice(this.clientInvoices, this.periodStart, this.periodEnd, this.monthStart, this.monthEnd);
+    });
+
+    it('returns an object with expected values', function() {
+      const deliveryFeeRow = this.quickbooksInvoice.getTipRow(this.clientInvoices[0], 1);
+      deliveryFeeRow.should.eql({
+        'Customer': this.client.quickbooksName,
+        'Transaction Date': '01/02/2000',
+        'RefNumber': 1,
+        'Class': 'CutCats',
+        'Due Date': '01/22/2000',
+        'Memo': 'Tips 01/01/2000-01/02/2000',
+        'Item': 'Delivery Fees:Tips',
+        'Quantity': 1,
+        'Description': '01/01/2000-01/02/2000',
+        'Price': '0.00',
+        'To Be E-Mailed': 'Y'
+      });
+    });
+
+    it('throws an error if the second argument is not supplied', function() {
+      (() => {
+        this.quickbooksInvoice.getTipRow(this.clientInvoices[0]);
       }).should.throw(/refNumber is required/);
     });
   });
