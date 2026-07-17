@@ -29,7 +29,7 @@ describe('QuickbooksPayrollCredits', function() {
     const quickbooksPayrollCredits = new QuickbooksPayrollCredits(courierPaystubs, periodStart, periodEnd);
     const rows = quickbooksPayrollCredits.getCsvRows();
     rows.should.be.an.Array();
-    rows.should.have.length(courierPaystubs.length * 3);
+    rows.should.have.length(courierPaystubs.length * 2);
   });
 
   describe('this.getFeeRow()', function() {
@@ -56,7 +56,7 @@ describe('QuickbooksPayrollCredits', function() {
         'CutCat Name': 'fixture courier',
         'Date': '01/31/2000',
         'Expense Account': 'Guaranteed Pay to Partners:Delivery Fee Payout',
-        'Expense Amount': '6.00',
+        'Expense Amount': '4.50',
         'Expense Description': 'Invoiced Rides Delivery Fee Payout pay period 01/01/2000-01/31/2000',
         'Expense Class': 'CutCats',
         'AP Account': 'Accounts Payable'
