@@ -38,7 +38,7 @@ class QuickbooksPayrollCredits extends QuickbooksExport {
       [REF_NUMBER]: refNumber,
       [CUTCAT_NAME]: courierPaystub.getCourierName(),
       [DATE]: moment(this.periodEnd).format('MM/DD/YYYY'),
-      [EXPENSE_ACCOUNT]: this.getExpenseAccount(courierPaystub),
+      [EXPENSE_ACCOUNT]: this.getExpenseAccountForFee(courierPaystub),
       [EXPENSE_AMOUNT]: (courierPaystub.getFeesOwedToRider() - courierPaystub.getFeesToCCTotal()).toFixed(2),
       [EXPENSE_DESCRIPTION]: `Invoiced Rides Delivery Fee Payout pay period ${moment(this.periodStart).format('MM/DD/YYYY')}-${moment(this.periodEnd).format('MM/DD/YYYY')}`,
       [EXPENSE_CLASS]: 'CutCats',
@@ -55,7 +55,7 @@ class QuickbooksPayrollCredits extends QuickbooksExport {
       [REF_NUMBER]: refNumber,
       [CUTCAT_NAME]: courierPaystub.getCourierName(),
       [DATE]: moment(this.periodEnd).format('MM/DD/YYYY'),
-      [EXPENSE_ACCOUNT]: this.getExpenseAccount(courierPaystub),
+      [EXPENSE_ACCOUNT]: this.getExpenseAccountForTip(courierPaystub),
       [EXPENSE_AMOUNT]: (courierPaystub.getTipsOwedToRider() - courierPaystub.getTipsToCCTotal()).toFixed(2),
       [EXPENSE_DESCRIPTION]: `Invoiced Rides Tips Payout pay period ${moment(this.periodStart).format('MM/DD/YYYY')}-${moment(this.periodEnd).format('MM/DD/YYYY')}`,
       [EXPENSE_CLASS]: 'CutCats',
@@ -63,11 +63,19 @@ class QuickbooksPayrollCredits extends QuickbooksExport {
     });
   }
 
-  getExpenseAccount(courierPaystub) {
+  getExpenseAccountForFee(courierPaystub) {
     switch(courierPaystub.courier.status) {
-    case 'member': return 'Guaranteed Pay to Partners:Delivery Fee Payout';
-    case 'guest': return 'Non-Partner Rider Payouts:Delivery Fee Payout';
-    default: throw new Error(`Don't know what to put in the "Expense Account" field for a courier whose account mapping is "${courierPaystub.courier.status}"`);
+      case 'member': return 'Guaranteed Pay to Partners:Delivery Fee Payout';
+      case 'guest': return 'Non-Partner Rider Payouts:Delivery Fee Payout';
+      default: throw new Error(`Don't know what to put in the "Expense Account" field for a courier whose account mapping is "${courierPaystub.courier.status}"`);
+    }
+  }
+
+  getExpenseAccountForTip(courierPaystub) {
+    switch(courierPaystub.courier.status) {
+      case 'member': return 'Guaranteed Pay to Partners:Delivery Fee Payout:Tips';
+      case 'guest': return 'Non-Partner Rider Payouts:Delivery Fee Payout:Tips';
+      default: throw new Error(`Don't know what to put in the "Expense Account" field for a courier whose account mapping is "${courierPaystub.courier.status}"`);
     }
   }
 
@@ -78,7 +86,7 @@ class QuickbooksPayrollCredits extends QuickbooksExport {
       rows.push(this.getTipRow(courierPaystub, n));
     });
     return rows.filter(row => {
-      return row[EXPENSE_AMOUNT] !== 0;
+      return row[EXPENSE_AMOUNT] !== '0.00';
     });
   }
 }
