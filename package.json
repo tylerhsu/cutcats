@@ -47,7 +47,7 @@
     "enzyme": "^3.10.0",
     "enzyme-adapter-react-16": "^1.1.1",
     "eslint-plugin-mocha": "^5.1.0",
-    "express": "^4.16.2",
+    "express": "^4.17.3",
     "express-react-views": "^0.11.0",
     "express-session": "^1.15.6",
     "file-size": "^1.0.0",
