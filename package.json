@@ -29,7 +29,7 @@
   },
   "homepage": "https://github.com/tylerhsu/cutcats#readme",
   "dependencies": {
-    "@neutrinojs/mocha": "^8.3.0",
+    "@neutrinojs/mocha": "^9.5.0",
     "@neutrinojs/react": "^8.3.0",
     "auto-loader": "^0.2.0",
     "aws-sdk": "^2.303.0",
