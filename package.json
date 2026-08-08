@@ -55,7 +55,7 @@
     "history": "^4.7.2",
     "js-file-download": "^0.4.1",
     "lodash": "^4.17.19",
-    "moment": "^2.21.0",
+    "moment": "^2.29.4",
     "mongoose": "^5.10.10",
     "mongoose-deep-populate": "^3.2.0",
     "neutrino": "^8.3.0",
