@@ -124,6 +124,19 @@ describe('ClientInvoice', function() {
         clientInvoice.getTipSubtotal();
       }).should.throw(/don't know how to calculate tip subtotal/i);
     });
+
+    it('still sums over this.ridesInPeriod when called with { explain: true }', function() {
+      const client = fixtureModel('Client');
+      const rides = [
+        fixtureModel('Ride', { readyTime: new Date('2000-1-20'), tip: 2 }),
+        fixtureModel('Ride', { readyTime: new Date('2000-1-20'), tip: 3 })
+      ];
+      const periodStart = new Date('2000-1-15');
+      const periodEnd = new Date('2000-1-31');
+      const clientInvoice = new ClientInvoice(client, rides, periodStart, periodEnd);
+      // The explain option must not land in the specificRides parameter.
+      clientInvoice.getTipSubtotal({ explain: true }).value.should.eql(5);
+    });
   });
 
   describe('this.getTipTotal()', function() {
@@ -175,6 +188,48 @@ describe('ClientInvoice', function() {
         const clientInvoice = new ClientInvoice(client, rides, periodStart, periodEnd);
         clientInvoice.getTipCredit().should.eql(0);
       })
+    });
+
+    it('credits 3.5% of non-grubhub tips only, ignoring tips from grubhub rides', function() {
+      const client = fixtureModel('Client', { name: 'hannah\'s bretzel' });
+      const rides = [
+        fixtureModel('Ride', { readyTime: new Date('2000-1-20'), provider: 'GrubHub', tip: 100 }),
+        fixtureModel('Ride', { readyTime: new Date('2000-1-20'), provider: 'toast', tip: 100 })
+      ];
+      const periodStart = new Date('2000-1-15');
+      const periodEnd = new Date('2000-1-31');
+      const clientInvoice = new ClientInvoice(client, rides, periodStart, periodEnd);
+      // 3.5% of the toast ride's tip alone, not 3.5% of both tips
+      clientInvoice.getTipCredit().should.eql(3.5);
+    });
+
+    [
+      'GrubHub',
+      'grubhub',
+      'GRUBHUB',
+    ].forEach(provider => {
+      it(`returns 0 when every ride in the period has provider "${provider}"`, function() {
+        const client = fixtureModel('Client', { name: 'hannah\'s bretzel' });
+        const rides = [
+          fixtureModel('Ride', { readyTime: new Date('2000-1-20'), provider, tip: 100 }),
+          fixtureModel('Ride', { readyTime: new Date('2000-1-25'), provider, tip: 200 })
+        ];
+        const periodStart = new Date('2000-1-15');
+        const periodEnd = new Date('2000-1-31');
+        const clientInvoice = new ClientInvoice(client, rides, periodStart, periodEnd);
+        clientInvoice.getTipCredit().should.eql(0);
+      })
+    });
+
+    it('credits rides with no provider set', function() {
+      const client = fixtureModel('Client', { name: 'hannah\'s bretzel' });
+      const rides = [
+        fixtureModel('Ride', { readyTime: new Date('2000-1-20'), provider: '', tip: 100 })
+      ];
+      const periodStart = new Date('2000-1-15');
+      const periodEnd = new Date('2000-1-31');
+      const clientInvoice = new ClientInvoice(client, rides, periodStart, periodEnd);
+      clientInvoice.getTipCredit().should.eql(3.5);
     });
   });
 

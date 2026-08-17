@@ -67,17 +67,24 @@ class ClientInvoice extends AccountingPeriod {
     }
   }
 
-  getTipSubtotal () {
+  getTipSubtotal (specificRides = null) {
+    const rides = specificRides || this.ridesInPeriod;
     switch (this.client.paymentType) {
-      case 'invoiced': return _.sumBy(this.ridesInPeriod, ride => ride.tip || 0);
+      case 'invoiced': return _.sumBy(rides, ride => ride.tip || 0);
       case 'paid': return [0, 'This is a paid client'];
       default: throw new Error(`Don't know how to calculate tip subtotal for client with payment type "${this.client.paymentType}"`);
     }
   }
 
   getTipCredit () {
-    if (this.client.name && this.client.name.toLowerCase().startsWith('hannah\'s bretzel')) {
-      return [Math.round(this.getTipSubtotal() * 0.035 * 100) / 100, '3.5% of tip total to account for card processing fees'];
+    // Hannah's Bretzel gets credited 3.5% of non-grubhub tips.
+    const isHannahsBretzel = this.client.name && this.client.name.toLowerCase().startsWith('hannah\'s bretzel');
+    if (isHannahsBretzel) {
+      const nonGrubhubRides = this.ridesInPeriod.filter(ride => (ride.provider || '').toLowerCase() !== 'grubhub');
+      return [
+        Math.round(this.getTipSubtotal(nonGrubhubRides) * 0.035 * 100) / 100,
+        '3.5% of non-GrubHub tip total to account for card processing fees',
+      ];
     }
     return 0;
   }

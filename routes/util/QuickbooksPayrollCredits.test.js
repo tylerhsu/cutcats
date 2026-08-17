@@ -93,7 +93,7 @@ describe('QuickbooksPayrollCredits', function() {
         'RefNumber': 1,
         'CutCat Name': 'fixture courier',
         'Date': '01/31/2000',
-        'Expense Account': 'Guaranteed Pay to Partners:Delivery Fee Payout',
+        'Expense Account': 'Guaranteed Pay to Partners:Delivery Fee Payout:Tips',
         'Expense Amount': '3.00',
         'Expense Description': 'Invoiced Rides Tips Payout pay period 01/01/2000-01/31/2000',
         'Expense Class': 'CutCats',

@@ -10,7 +10,9 @@ module.exports = function explainable(func) {
   return (...args) => {
     const lastArg = args[args.length - 1];
     const explain = typeof(lastArg) === 'object' && lastArg.explain;
-    const result = func(...args);
+    // The explain option belongs to this wrapper, not to func. Don't leak it
+    // through as a positional argument.
+    const result = func(...(explain ? args.slice(0, -1) : args));
     const [value, reason] = Array.isArray(result) ? result : [result, ''];
     return explain ? { value, reason } : value;
   };
