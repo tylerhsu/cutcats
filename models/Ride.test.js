@@ -3,7 +3,7 @@ import { hydrateClient, hydrateCourier } from './Ride';
 import Client from './Client';
 import Courier from './Courier';
 import { fixtureModel } from './fixtures';
-import { idsShouldBeEqual } from '../routes/util/testUtils';
+import { idsShouldBeEqual, save } from '../routes/util/testUtils';
 
 describe('Ride', function() {
   describe('hydrateClient()', function() {
@@ -30,7 +30,7 @@ describe('Ride', function() {
       ];
       return Client.ensureIndexes()
         .then(() => {
-          return clients.map(client => client.save());
+          return save(clients);
         })
         .then(() => {
           return hydrateClient('client');
