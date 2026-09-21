@@ -56,7 +56,7 @@
     "js-file-download": "^0.4.1",
     "lodash": "^4.17.19",
     "moment": "^2.21.0",
-    "mongoose": "^5.10.10",
+    "mongoose": "^5.13.15",
     "mongoose-deep-populate": "^3.2.0",
     "neutrino": "^8.3.0",
     "node-sass": "^4.12.0",
