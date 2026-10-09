@@ -97,7 +97,7 @@ class QuickbooksInvoice extends QuickbooksExport {
       }
     });
     return rows.filter(row => {
-      return row[PRICE] !== 0;
+      return Number(row[PRICE]) !== 0;
     });
   }
 }

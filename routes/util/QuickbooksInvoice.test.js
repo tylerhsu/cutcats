@@ -180,4 +180,33 @@ describe('QuickbooksInvoice', function() {
       }).should.throw(/refNumber is required/);
     });
   });
+
+  describe('this.getCsvRows()', function() {
+    beforeEach(function() {
+      this.periodStart = new Date('2000-1-16');
+      this.periodEnd = new Date('2000-1-31');
+      this.monthStart = new Date('2000-1-1');
+      this.monthEnd = new Date('2000-1-31');
+      this.rides = fixtureModelArray('Ride', { readyTime: new Date('2000-1-20') }, 3);
+    });
+
+    it('excludes $0 tip and fee rows for paid clients', function() {
+      const client = fixtureModel('Client', { paymentType: 'paid', adminFeeType: 'fixed', fixedAdminFee: 50 });
+      const clientInvoices = [new ClientInvoice(client, this.rides, this.periodStart, this.periodEnd)];
+      const quickbooksInvoice = new QuickbooksInvoice(clientInvoices, this.periodStart, this.periodEnd, this.monthStart, this.monthEnd);
+      quickbooksInvoice.getCsvRows().map(row => row['Memo']).should.eql([
+        'Administrative Fees 01/01/2000-01/31/2000',
+      ]);
+    });
+
+    it('includes nonzero tip and fee rows for invoiced clients', function() {
+      const client = fixtureModel('Client', { paymentType: 'invoiced', adminFeeType: 'percentage', percentageAdminFee: 0 });
+      const clientInvoices = [new ClientInvoice(client, this.rides, this.periodStart, this.periodEnd)];
+      const quickbooksInvoice = new QuickbooksInvoice(clientInvoices, this.periodStart, this.periodEnd, this.monthStart, this.monthEnd);
+      quickbooksInvoice.getCsvRows().map(row => row['Memo']).should.eql([
+        'Delivery Fees 01/16/2000-01/31/2000',
+        'Tips 01/16/2000-01/31/2000',
+      ]);
+    });
+  });
 });
